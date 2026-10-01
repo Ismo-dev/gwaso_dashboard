@@ -171,6 +171,11 @@ h1 {
 
 .justificatif {
   display: flex;
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   align-items: center;
   gap: var(--gw-espace-3);
   padding: var(--gw-espace-3) var(--gw-espace-4);
@@ -295,23 +300,13 @@ h1 {
   font-size: var(--gw-taille-petit);
 }
 
-.profil-droits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--gw-espace-1);
-  margin: var(--gw-espace-4) 0 0;
-  padding: 0;
-  list-style: none;
+.profil-choix {
+  width: 100%;
+  margin-top: var(--gw-espace-4);
+}
 
-  li {
-    padding: 2px var(--gw-espace-2);
-    border-radius: var(--gw-rayon-sm);
-    background: var(--gw-karite-pale);
-    color: var(--gw-karite);
-    font-family: ui-monospace, monospace;
-    font-size: 0.75rem;
-    overflow-wrap: anywhere;
-  }
+.profil-droits {
+  margin-top: var(--gw-espace-4);
 }
 
 .profil-lien {

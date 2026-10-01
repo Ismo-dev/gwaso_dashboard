@@ -8,6 +8,20 @@ export const VIDEOS_ROUTES: Routes = [
     loadComponent: () => import('./pages/videos-liste/videos-liste').then((m) => m.VideosListe),
   },
   {
+    path: 'nouvelle',
+    data: { filAriane: 'Publier une vidéo' },
+    title: 'Publier une vidéo',
+    loadComponent: () =>
+      import('./pages/video-formulaire/video-formulaire').then((m) => m.VideoFormulaire),
+  },
+  {
+    path: ':id/modifier',
+    data: { filAriane: 'Modifier' },
+    title: 'Modifier la vidéo',
+    loadComponent: () =>
+      import('./pages/video-formulaire/video-formulaire').then((m) => m.VideoFormulaire),
+  },
+  {
     // Placée avant « :id » : sinon « fil » serait lu comme un identifiant de vidéo
     path: 'fil',
     data: { filAriane: 'Fil' },

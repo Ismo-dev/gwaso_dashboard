@@ -20,7 +20,10 @@ export const erreurInterceptor: HttpInterceptorFn = (req, next) => {
       } else if (erreur.status === 403) {
         notification.erreur("Vous n'avez pas le droit d'effectuer cette action.");
       } else if (erreur.status >= 500) {
-        notification.erreur('Une erreur est survenue sur le serveur. Réessayez plus tard.');
+        // Le serveur renvoie une référence (réf. XXXX) qui permet de retrouver le détail dans son journal
+        notification.erreur(
+          erreur.error?.message ?? 'Une erreur est survenue sur le serveur. Réessayez plus tard.',
+        );
       }
 
       return throwError(() => erreur);

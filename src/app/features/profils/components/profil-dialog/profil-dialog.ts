@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
+import { MatCheckbox } from '@angular/material/checkbox';
 import {
   MAT_DIALOG_DATA,
   MatDialogActions,
@@ -22,14 +23,15 @@ import { ProfilService } from '../../services/profil.service';
 export interface DonneesProfilDialog {
   /** Profil à modifier ; absent pour une création. */
   profil?: ProfilResponse;
-  /** Tous les profils : un accès déjà pris par un autre profil n'est pas proposé. */
+  /** Tous les profils : pour dire quel profil est aujourd'hui celui des inscriptions. */
   profils: ProfilResponse[];
 }
 
 /**
- * Création ou modification d'un profil : nom, description et accès donné
+ * Création ou modification d'un profil : nom, description et type de compte
  * (dashboard, ou application en tant que cuisinier, chef ou producteur).
  * Chaque utilisateur a un seul profil ; ses droits sont ceux du profil.
+ * Plusieurs profils peuvent avoir le même type de compte : tous les types sont toujours proposés.
  * La boîte enregistre elle-même : en cas d'erreur, elle reste ouverte et garde la saisie.
  * Elle renvoie le profil enregistré, ou undefined si l'utilisateur annule.
  */
@@ -47,6 +49,7 @@ export interface DonneesProfilDialog {
     MatHint,
     MatError,
     MatProgressSpinner,
+    MatCheckbox,
     NgIcon,
   ],
   selector: 'app-profil-dialog',
@@ -62,6 +65,7 @@ export class ProfilDialog {
     nom: [this.donnees.profil?.nom ?? '', [Validators.required, Validators.maxLength(60)]],
     description: [this.donnees.profil?.description ?? '', Validators.maxLength(255)],
     role: [(this.donnees.profil?.role ?? null) as Role | null, Validators.required],
+    parDefaut: [this.donnees.profil?.parDefaut ?? false],
   });
 
   protected readonly acces = ACCES_PROFIL;
@@ -70,13 +74,10 @@ export class ProfilDialog {
     initialValue: this.formulaire.controls.role.value,
   });
 
-  /** Création alors que chaque accès a déjà son profil : on explique au lieu de tout griser. */
-  protected toutPris = !this.donnees.profil && ORDRE_ACCES.every((role) => !!this.pris(role));
-
-  /** Profil qui utilise déjà cet accès (null s'il est libre). */
-  protected pris(role: Role): ProfilResponse | null {
+  /** Profil donné aujourd'hui aux inscriptions de ce type (autre que celui modifié). */
+  protected profilDesInscriptions(role: Role | null): ProfilResponse | null {
     return (
-      this.donnees.profils.find((p) => p.role === role && p.id !== this.donnees.profil?.id) ?? null
+      this.donnees.profils.find((p) => p.role === role && p.parDefaut && p.id !== this.donnees.profil?.id) ?? null
     );
   }
 
@@ -87,7 +88,7 @@ export class ProfilDialog {
     if (this.formulaire.invalid) {
       this.formulaire.markAllAsTouched();
       if (this.formulaire.controls.role.invalid) {
-        this.erreur.set('Choisissez l’accès donné par ce profil.');
+        this.erreur.set('Choisissez le type de compte créé avec ce profil.');
       }
       return;
     }
@@ -99,6 +100,7 @@ export class ProfilDialog {
       nom: valeurs.nom.trim(),
       description: valeurs.description.trim() || undefined,
       role: valeurs.role as Role,
+      parDefaut: valeurs.parDefaut,
     };
     const profil = this.donnees.profil;
     const appel = profil

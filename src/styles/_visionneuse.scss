@@ -1,0 +1,97 @@
+// =============================================================================
+// Photo affichée en grand par-dessus la page (photos d'un défi...).
+// <div class="gw-visionneuse" role="dialog" aria-modal="true"><img ... /><button>Fermer</button></div>
+// =============================================================================
+.gw-visionneuse {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-4);
+  background: rgb(31 22 18 / 88%);
+  animation: gw-apparition var(--gw-duree-lente) var(--gw-courbe);
+
+  img {
+    max-width: min(100%, 1000px);
+    max-height: calc(100vh - 120px);
+    border-radius: var(--gw-rayon);
+    object-fit: contain;
+  }
+}
+
+@keyframes gw-apparition {
+  from {
+    opacity: 0;
+  }
+}
+
+// Galerie de vignettes qui s'ouvrent dans la visionneuse
+.gw-galerie {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--gw-espace-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gw-vignette {
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond);
+  cursor: zoom-in;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--gw-duree-lente) var(--gw-courbe);
+  }
+
+  &:hover img {
+    transform: scale(1.04);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gw-action);
+    outline-offset: 2px;
+  }
+}
+
+// Vignette avec sa légende (ingrédients d'une devinette...)
+.gw-vignette-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+
+  figcaption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-petit);
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .gw-etiquette {
+    margin: 0;
+  }
+}
+
+img.gw-vignette {
+  aspect-ratio: 1;
+  object-fit: cover;
+  cursor: default;
+}

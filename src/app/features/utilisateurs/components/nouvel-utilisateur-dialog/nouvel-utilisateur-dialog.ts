@@ -111,7 +111,7 @@ export class NouvelUtilisateurDialog implements OnInit {
     { validators: contactValide },
   );
 
-  /** Profils utilisables pour un compte (ceux dont l'accès est défini), dans l'ordre des accès. */
+  /** Tous les profils de la table (les profils sans accès renseigné ne peuvent pas encore être choisis). */
   protected profils = signal<ProfilResponse[]>([]);
   protected chargementProfils = signal(true);
   protected profilChoisi = toSignal(
@@ -123,6 +123,9 @@ export class NouvelUtilisateurDialog implements OnInit {
   /** Droits du profil choisi, affichés pour que l'admin sache ce qu'il donne. */
   protected droitsProfil = signal<ProfilDroitsResponse[]>([]);
   protected motDePasseVisible = signal(false);
+  /** Chef ou producteur : pièce qui prouve le statut (photo ou PDF, obligatoire). */
+  protected justificatif = signal<File | null>(null);
+  protected erreurJustificatif = signal('');
   protected enCours = signal(false);
   protected erreur = signal('');
 
@@ -153,10 +156,12 @@ export class NouvelUtilisateurDialog implements OnInit {
   ngOnInit(): void {
     this.profilService.getAll().subscribe({
       next: (profils) => {
-        const utilisables = profils
-          .filter((p) => p.role !== null)
-          .sort((a, b) => ORDRE_ACCES.indexOf(a.role!) - ORDRE_ACCES.indexOf(b.role!));
-        this.profils.set(utilisables);
+        // Profils actifs ; ceux dont le type de compte n'est pas renseigné sont affichés à la fin, grisés
+        const rang = (p: ProfilResponse) => (p.role ? ORDRE_ACCES.indexOf(p.role) : ORDRE_ACCES.length);
+        this.profils.set(
+          profils.filter((p) => p.actif).sort((a, b) => rang(a) - rang(b) || a.nom.localeCompare(b.nom, 'fr')),
+        );
+        const utilisables = this.profils().filter((p) => p.role !== null);
         this.chargementProfils.set(false);
         // Le profil des cuisiniers est le plus fréquent : il est choisi d'avance
         const parDefaut = utilisables.find((p) => p.role === 'CUISINIER') ?? utilisables[0];
@@ -178,7 +183,28 @@ export class NouvelUtilisateurDialog implements OnInit {
     this.motDePasseVisible.set(true);
   }
 
+  choisirJustificatif(champ: HTMLInputElement): void {
+    const fichier = champ.files?.[0] ?? null;
+    champ.value = '';
+    if (!fichier) {
+      return;
+    }
+    const types = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!types.includes(fichier.type) || fichier.size > 5 * 1024 * 1024) {
+      this.erreurJustificatif.set('Photo (JPG, PNG, WebP) ou PDF de 5 Mo maximum.');
+      return;
+    }
+    this.erreurJustificatif.set('');
+    this.justificatif.set(fichier);
+  }
+
   enregistrer(): void {
+    if (this.aValider() && !this.justificatif()) {
+      this.formulaire.markAllAsTouched();
+      this.erreurJustificatif.set('Le justificatif est obligatoire.');
+      this.erreur.set('Ajoutez le justificatif du statut (diplôme, attestation, carte professionnelle...).');
+      return;
+    }
     if (this.formulaire.invalid) {
       this.formulaire.markAllAsTouched();
       this.erreur.set(
@@ -212,14 +238,21 @@ export class NouvelUtilisateurDialog implements OnInit {
       return appel;
     };
 
+    // Chef et producteur : le justificatif part d'abord, son adresse accompagne la création du compte
+    const justificatif = this.justificatif();
+    const preuve$: Observable<string> = justificatif
+      ? this.utilisateurService.envoyerJustificatif(justificatif)
+      : of('');
+
     let creation: Observable<unknown>;
     switch (v.role) {
       case 'ADMIN':
         creation = this.utilisateurService.creerAdmin(commun);
         break;
       case 'CHEF':
-        creation = this.utilisateurService
-          .creerChef(commun)
+        creation = preuve$.pipe(
+          switchMap((preuveUrl) => this.utilisateurService.creerChef({ ...commun, preuveUrl })),
+        )
           .pipe(
             switchMap((chef) =>
               v.validerDirectement ? valider(this.utilisateurService.validerChef(chef.id)) : of(chef),
@@ -227,8 +260,12 @@ export class NouvelUtilisateurDialog implements OnInit {
           );
         break;
       case 'PRODUCTEUR':
-        creation = this.utilisateurService
-          .creerProducteur({ ...commun, localite: v.localite.trim() })
+        creation = preuve$
+          .pipe(
+            switchMap((preuveUrl) =>
+              this.utilisateurService.creerProducteur({ ...commun, localite: v.localite.trim(), preuveUrl }),
+            ),
+          )
           .pipe(
             switchMap((producteur) =>
               v.validerDirectement
@@ -241,7 +278,17 @@ export class NouvelUtilisateurDialog implements OnInit {
         creation = this.utilisateurService.creerCuisinier({ ...commun, niveau: v.niveau });
     }
 
-    creation.subscribe({
+    // Le compte est créé avec le profil par défaut de son type : on lui donne ensuite celui choisi
+    const profilId = v.profilId;
+    const avecProfil = creation.pipe(
+      switchMap((compte) => {
+        compteCree = true;
+        const c = compte as { id: string; profilId: string | null };
+        return c.profilId === profilId ? of(compte) : this.utilisateurService.changerProfil(c.id, profilId);
+      }),
+    );
+
+    avecProfil.subscribe({
       next: () =>
         this.fenetre.close({
           message:
@@ -254,7 +301,7 @@ export class NouvelUtilisateurDialog implements OnInit {
         if (compteCree) {
           // Le compte existe déjà : on ferme, la demande reste dans « Demandes à valider »
           this.fenetre.close({
-            message: `Le compte de ${personne} est créé, mais son statut n'a pas pu être validé. Validez-le depuis « Demandes à valider ».`,
+            message: `Le compte de ${personne} est créé, mais la dernière étape (validation du statut ou profil choisi) n'a pas pu être faite. Vérifiez sa fiche.`,
             aVerifier: true,
           });
           return;

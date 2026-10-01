@@ -30,41 +30,86 @@
   </nav>
 
   <div class="actions">
-    <!-- Éléments en attente de décision -->
+    <!-- Notifications : ce qui s'est passé, dont ce qui attend une décision -->
     <button
       matIconButton
       type="button"
       class="bouton-cloche"
-      [matMenuTriggerFor]="menuAValider"
+      [matMenuTriggerFor]="menuNotifications"
+      (menuOpened)="chargerDernieres()"
       [attr.aria-label]="
-        aValider.total() > 0 ? aValider.total() + ' éléments à valider' : 'Aucun élément à valider'
+        notifications.nombreNonLues() > 0
+          ? notifications.nombreNonLues() + ' notifications non lues'
+          : 'Notifications'
       "
     >
       <ng-icon name="lucideBell" size="1.25rem" aria-hidden="true" />
-      @if (aValider.total() > 0) {
+      @if (notifications.nombreNonLues() > 0) {
         <span class="pastille gw-chiffres" aria-hidden="true">{{
-          aValider.total() > 99 ? '99+' : aValider.total()
+          notifications.nombreNonLues() > 99 ? '99+' : notifications.nombreNonLues()
         }}</span>
       }
     </button>
 
-    <mat-menu #menuAValider="matMenu" xPosition="before" class="gw-menu-a-valider">
+    <mat-menu #menuNotifications="matMenu" xPosition="before" class="gw-menu-notifications">
       <div class="menu-entete" role="presentation">
-        <p class="menu-titre">À valider</p>
-        <p class="menu-sous-titre">Contenus et comptes qui attendent votre décision</p>
+        <p class="menu-titre">Notifications</p>
+        <p class="menu-sous-titre">
+          @if (notifications.nombreNonLues() > 0) {
+            {{ notifications.nombreNonLues() }} non lue{{ notifications.nombreNonLues() > 1 ? 's' : '' }}
+          } @else {
+            Vous êtes à jour
+          }
+        </p>
       </div>
-      @for (element of elementsAValider(); track element.libelle) {
-        <a mat-menu-item [routerLink]="element.lien" [queryParams]="element.parametres">
-          <ng-icon [name]="element.icone" size="1.125rem" aria-hidden="true" />
-          <span class="menu-libelle">{{ element.libelle }}</span>
-          <span class="menu-nombre gw-chiffres">{{ element.nombre }}</span>
+
+      @if (elementsAValider().length > 0) {
+        <div class="a-valider" role="presentation">
+          <p class="a-valider-titre">À valider</p>
+          <div class="a-valider-liste">
+            @for (element of elementsAValider(); track element.libelle) {
+              <a class="a-valider-puce" [routerLink]="element.lien" [queryParams]="element.parametres">
+                <ng-icon [name]="element.icone" size="0.875rem" aria-hidden="true" />
+                {{ element.libelle }}
+                <span class="gw-chiffres">{{ element.nombre }}</span>
+              </a>
+            }
+          </div>
+        </div>
+      }
+      <mat-divider />
+
+      @for (n of dernieres(); track n.id) {
+        <a
+          mat-menu-item
+          class="notif"
+          [class.notif-non-lue]="!n.lue"
+          routerLink="/notifications"
+          [queryParams]="{ id: n.id }"
+        >
+          <span [class]="'notif-icone ton-' + infos[n.type].ton" aria-hidden="true">
+            <ng-icon [name]="infos[n.type].icone" size="1rem" />
+          </span>
+          <span class="notif-textes">
+            <span class="notif-titre">{{ n.titre }}</span>
+            <span class="notif-date">{{ n.dateCreation | depuis }}</span>
+          </span>
+          @if (!n.lue) {
+            <span class="notif-point" aria-label="Non lue"></span>
+          }
         </a>
       } @empty {
         <div class="menu-vide" role="presentation">
           <ng-icon name="lucideCircleCheck" size="1.5rem" aria-hidden="true" />
-          <p>Tout est à jour. Rien n'attend votre validation.</p>
+          <p>Aucune notification pour le moment.</p>
         </div>
       }
+
+      <mat-divider />
+      <a mat-menu-item class="voir-tout" routerLink="/notifications">
+        <span>Voir toutes les notifications</span>
+        <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
+      </a>
     </mat-menu>
 
     <!-- Compte de l'administrateur -->

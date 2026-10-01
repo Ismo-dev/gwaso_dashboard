@@ -1,4 +1,4 @@
-<div class="scene">
+<div class="scene" [class.avec-commentaires]="!!commentairesDe()">
   <!-- Barre du haut : retour et choix du fil -->
   <div class="barre">
     <a matButton routerLink="/videos" class="retour">
@@ -41,6 +41,8 @@
             muted
             preload="metadata"
             (click)="basculerLecture(i)"
+            (timeupdate)="suivreTemps(i, lecteur)"
+            (loadedmetadata)="suivreTemps(i, lecteur)"
           ></video>
 
           <!-- Informations en bas, comme dans l'application -->
@@ -56,8 +58,13 @@
               <span class="date">· {{ video.dateSoumission ?? video.dateCreation | depuis }}</span>
             </div>
             <h2 class="titre">{{ video.titre }}</h2>
-            @if (video.description) {
-              <p class="description">{{ video.description }}</p>
+            @if (video.description; as description) {
+              <p class="description" [class.ouverte]="descriptionsOuvertes().has(video.id)">{{ description }}</p>
+              @if (description.length > 80) {
+                <button type="button" class="voir-plus" (click)="basculerDescription(video.id)">
+                  {{ descriptionsOuvertes().has(video.id) ? 'voir moins' : 'voir plus' }}
+                </button>
+              }
             }
             <p class="etiquette">
               <ng-icon name="lucideTag" size="0.875rem" aria-hidden="true" />
@@ -67,6 +74,25 @@
               }
             </p>
           </div>
+
+          <!-- Avancement et durée (vidéo à l'écran seulement) -->
+          @if (i === actif() && temps().total > 0) {
+            <div class="progression">
+              <input
+                #curseur
+                type="range"
+                min="0"
+                [max]="temps().total"
+                step="0.1"
+                [value]="temps().courant"
+                [style.--avance.%]="(temps().courant / temps().total) * 100"
+                aria-label="Position dans la vidéo"
+                [attr.aria-valuetext]="formaterDuree(temps().courant) + ' sur ' + formaterDuree(temps().total)"
+                (input)="avancer(i, curseur)"
+              />
+              <span class="temps gw-chiffres">{{ formaterDuree(temps().courant) }} / {{ formaterDuree(temps().total) }}</span>
+            </div>
+          }
 
           <button
             type="button"
@@ -80,14 +106,33 @@
 
         <!-- Colonne d'actions à droite de la vidéo -->
         <div class="actions" role="group" [attr.aria-label]="'Actions sur ' + video.titre">
-          <span class="stat" matTooltip="J'aime" matTooltipPosition="left">
+          <button
+            type="button"
+            class="stat stat-bouton"
+            [class.aime]="jaime()[video.id]"
+            [matTooltip]="video.statut === 'PUBLIEE' ? 'J’aime' : 'Disponible une fois la vidéo publiée'"
+            matTooltipPosition="left"
+            [attr.aria-pressed]="!!jaime()[video.id]"
+            [attr.aria-label]="'J’aime (' + video.nbJaime + ')'"
+            [disabled]="video.statut !== 'PUBLIEE'"
+            (click)="basculerJaime(video)"
+          >
             <ng-icon name="lucideHeart" size="1.5rem" aria-hidden="true" />
             <span class="gw-chiffres">{{ video.nbJaime | number: '1.0-0' : 'fr' }}</span>
-          </span>
-          <span class="stat" matTooltip="Commentaires" matTooltipPosition="left">
+          </button>
+          <button
+            type="button"
+            class="stat stat-bouton"
+            [class.ouvert]="commentairesDe()?.id === video.id"
+            matTooltip="Commentaires"
+            matTooltipPosition="left"
+            [attr.aria-expanded]="commentairesDe()?.id === video.id"
+            [attr.aria-label]="'Commentaires (' + video.nbCommentaires + ')'"
+            (click)="basculerCommentaires(video)"
+          >
             <ng-icon name="lucideMessageCircle" size="1.5rem" aria-hidden="true" />
             <span class="gw-chiffres">{{ video.nbCommentaires | number: '1.0-0' : 'fr' }}</span>
-          </span>
+          </button>
           <span class="stat" matTooltip="Vues" matTooltipPosition="left">
             <ng-icon name="lucideEye" size="1.5rem" aria-hidden="true" />
             <span class="gw-chiffres">{{ video.nbVues | number: '1.0-0' : 'fr' }}</span>
@@ -185,4 +230,14 @@
       </div>
     }
   </div>
+
+  <!-- Commentaires de la vidéo à l'écran -->
+  @if (commentairesDe(); as video) {
+    <app-commentaires-video
+      class="panneau-commentaires"
+      [video]="video"
+      (fermer)="commentairesDe.set(null)"
+      (nombreChange)="compterCommentaire(video.id, $event)"
+    />
+  }
 </div>

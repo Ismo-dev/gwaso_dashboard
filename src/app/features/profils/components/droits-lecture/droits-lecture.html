@@ -1,0 +1,27 @@
+@for (groupe of groupes(); track groupe.cle) {
+  <section class="groupe" [attr.aria-label]="groupe.libelle">
+    <p class="groupe-titre">
+      <ng-icon [name]="groupe.icone" size="0.875rem" aria-hidden="true" />
+      {{ groupe.libelle }}
+      <span class="gw-chiffres">{{ groupe.droits.length }}</span>
+    </p>
+    <ul>
+      @for (droit of groupe.droits; track droit.id) {
+        <li [class.inactif]="!droit.actif">
+          <ng-icon class="coche" [name]="droit.actif ? 'lucideCheck' : 'lucideBan'" size="0.875rem" aria-hidden="true" />
+          <span class="textes">
+            <span class="libelle">{{ libelleDroit(droit) }}</span>
+            @if (!compact()) {
+              <span class="code">{{ droit.action }}</span>
+            }
+          </span>
+          @if (!droit.actif) {
+            <span class="gw-etiquette gw-etiquette-neutre">Désactivé</span>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+} @empty {
+  <p class="vide">Ce profil n'a encore aucun droit.</p>
+}

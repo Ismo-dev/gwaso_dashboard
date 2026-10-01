@@ -1,10 +1,67 @@
+import { Role } from '../../../core/models/enums.model';
 import { Pagination } from '../../../core/models/page-response.model';
 
 /**
- * Cycle de vie d'un défi : PROPOSE (par un chef) → VALIDE ou REJETE (admin) ;
- * VALIDE → EN_COURS → TERMINE ; ANNULE à tout moment. Un défi créé par un admin est validé directement.
+ * Cycle de vie d'un défi : PROPOSE (par un chef) → VALIDE ou REJETE (admin).
+ * Ensuite le statut suit les dates, sans action de l'admin : VALIDE → EN_COURS le jour du début,
+ * → TERMINE après le jour de fin. Seule l'annulation (ANNULE) est manuelle.
+ * Un défi créé par un admin est validé directement.
  */
 export type StatutDefi = 'PROPOSE' | 'VALIDE' | 'REJETE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
+
+/** Comment on participe : REALISATION (photo, vidéo d'un plat) ou REPONSE (devinette). */
+export type ModeParticipation = 'REALISATION' | 'REPONSE';
+
+/**
+ * Ce que les participants voient pour répondre : rien de plus, des ingrédients du catalogue
+ * (« quel plat avec ces ingrédients ? ») ou un ustensile en photo (« quel est cet ustensile ? »).
+ */
+export type ElementsDefi = 'AUCUN' | 'INGREDIENTS' | 'USTENSILES';
+
+export const LIBELLES_ELEMENTS: Record<ElementsDefi, { titre: string; aide: string; icone: string }> = {
+  AUCUN: { titre: 'Rien de plus', aide: 'La question et les photos du défi suffisent', icone: 'lucideCircleHelp' },
+  INGREDIENTS: { titre: 'Des ingrédients', aide: 'On les montre en photo : quel plat peut-on faire ?', icone: 'lucideCarrot' },
+  USTENSILES: { titre: 'Un ustensile', aide: 'On montre sa photo, sans son nom : comment s’appelle-t-il ?', icone: 'lucideUtensilsCrossed' },
+};
+
+/** Ingrédient ou ustensile montré aux participants (ElementDefiDTO). Nom null : ustensile à deviner. */
+export interface ElementDefi {
+  id: string | null;
+  nom: string | null;
+  photoUrl: string | null;
+}
+
+export const LIBELLES_MODE: Record<ModeParticipation, string> = {
+  REALISATION: 'Réalisation (photo ou vidéo)',
+  REPONSE: 'Réponse (devinette)',
+};
+
+/** TypeDefiResponseDTO côté backend : « Recette imposée », « Plat libre », « Devinette »... */
+export interface TypeDefiResponse {
+  id: string;
+  nom: string;
+  description: string | null;
+  /** true : le défi doit être lié à une recette. */
+  recetteObligatoire: boolean;
+  modeParticipation: ModeParticipation;
+  elements: ElementsDefi;
+}
+
+export interface TypeDefiRequest {
+  nom: string;
+  description: string | null;
+  recetteObligatoire: boolean;
+  modeParticipation: ModeParticipation;
+  elements: ElementsDefi;
+}
+
+/** PhotoDefiResponseDTO côté backend. */
+export interface PhotoDefiResponse {
+  id: string;
+  defiId: string;
+  url: string;
+  dateAjout: string;
+}
 
 /** DefiResponseDTO côté backend. */
 export interface DefiResponse {
@@ -22,6 +79,11 @@ export interface DefiResponse {
   motifRejet: string | null;
   classementPublie: boolean;
   datePublicationClassement: string | null;
+  typeDefiId: string | null;
+  typeDefiNom: string | null;
+  modeParticipation: ModeParticipation | null;
+  /** Devinette : la bonne réponse (visible par l'auteur et les admins seulement). */
+  reponseAttendue: string | null;
   recetteId: string | null;
   recetteNom: string | null;
   /** Null pour un défi créé par l'administration. */
@@ -29,33 +91,50 @@ export interface DefiResponse {
   chefCuisinierNom: string | null;
   valideParAdminId: string | null;
   valideParAdminNom: string | null;
+  /** true : ce sont les admins qui notent ; false : c'est le chef auteur du défi. */
+  noteParAdmin: boolean;
+  nbParticipants: number;
+  photoCouvertureUrl: string | null;
+  elements: ElementsDefi | null;
+  ingredients: ElementDefi[];
+  ustensiles: ElementDefi[];
 }
 
 /** DefiRequestDTO côté backend (création / modification). Dates au format AAAA-MM-JJ. */
 export interface DefiRequest {
   nom: string;
+  typeDefiId: string;
   description: string;
   regles?: string | null;
   dateDebut: string;
   dateFin: string;
   conditionsParticipation?: string | null;
   criteresClassement?: string | null;
-  recetteId: string;
+  /** Obligatoire seulement si le type l'exige. */
+  recetteId?: string | null;
+  reponseAttendue?: string | null;
+  /** Devinette « quel plat avec ces ingrédients ? ». */
+  ingredientIds?: string[];
+  /** Devinette « quel est cet ustensile ? ». */
+  ustensileIds?: string[];
 }
 
-/** ParticipationDefiResponseDTO côté backend : un cuisinier inscrit au défi. */
+/** ParticipationDefiResponseDTO côté backend : un membre inscrit au défi (cuisinier, chef, producteur ou admin). */
 export interface ParticipationDefiResponse {
   id: string;
-  cuisinierId: string;
-  cuisinierNom: string;
-  cuisinierPrenom: string | null;
-  cuisinierPhotoProfil: string | null;
+  participantId: string;
+  participantNom: string;
+  participantPrenom: string | null;
+  participantPhotoProfil: string | null;
+  participantRole: Role | null;
   defiId: string;
   defiNom: string;
   dateParticipation: string;
   dateSoumission: string | null;
   /** Photo ou vidéo envoyée comme preuve. */
   preuveUrl: string | null;
+  /** Devinette : la réponse proposée. */
+  reponse: string | null;
   score: number | null;
   classement: number | null;
 }
@@ -69,4 +148,17 @@ export interface FiltresDefis extends Pagination {
 /** Une preuve vidéo se reconnaît à son extension (sinon c'est une photo). */
 export function estVideo(url: string | null): boolean {
   return !!url && /\.(mp4|mov|webm|mkv|m4v)(\?|$)/i.test(url);
+}
+
+/** Icône d'un type de défi : recette imposée, devinette, ou plat libre. */
+export function iconeType(
+  type: Pick<TypeDefiResponse, 'recetteObligatoire' | 'modeParticipation'> & { elements?: ElementsDefi | null } | null,
+): string {
+  if (type?.elements === 'INGREDIENTS' || type?.elements === 'USTENSILES') {
+    return LIBELLES_ELEMENTS[type.elements].icone;
+  }
+  if (type?.modeParticipation === 'REPONSE') {
+    return 'lucideCircleHelp';
+  }
+  return type?.recetteObligatoire ? 'lucideBookOpen' : 'lucideCookingPot';
 }

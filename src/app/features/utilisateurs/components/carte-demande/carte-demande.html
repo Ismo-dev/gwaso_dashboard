@@ -45,15 +45,12 @@
   </dl>
 
   <!-- Le justificatif est la pièce principale de la décision : il est mis en évidence -->
-  @if (d.preuveUrl | fichier; as preuve) {
-    <a class="justificatif" [href]="preuve" target="_blank" rel="noopener">
+  @if (d.preuveUrl) {
+    <button type="button" class="justificatif" (click)="voirJustificatif()">
       <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
-      <span>
-        <strong>Voir le justificatif</strong>
-        <span class="sr-only"> (nouvel onglet)</span>
-      </span>
+      <strong>Voir le justificatif</strong>
       <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
-    </a>
+    </button>
   } @else {
     <p class="justificatif justificatif-absent">
       <ng-icon name="lucideTriangleAlert" size="1.125rem" aria-hidden="true" />

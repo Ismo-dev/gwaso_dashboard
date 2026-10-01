@@ -70,6 +70,15 @@ export const routes: Routes = [
           import('./features/ustensiles/ustensiles.routes').then((m) => m.USTENSILES_ROUTES),
       },
       {
+        path: 'notifications',
+        title: 'Notifications',
+        data: { filAriane: 'Notifications' },
+        loadComponent: () =>
+          import('./features/notifications/pages/notifications/notifications').then(
+            (m) => m.Notifications,
+          ),
+      },
+      {
         path: 'mon-profil',
         title: 'Mon profil',
         data: { filAriane: 'Mon profil' },

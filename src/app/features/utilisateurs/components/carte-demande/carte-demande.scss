@@ -78,6 +78,11 @@
 
 .justificatif {
   display: flex;
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   align-items: center;
   gap: var(--gw-espace-3);
   padding: var(--gw-espace-3) var(--gw-espace-4);

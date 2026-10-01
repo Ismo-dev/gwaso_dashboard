@@ -1,0 +1,201 @@
+@if (chargement()) {
+  <div class="gw-squelette sq-bloc" aria-busy="true" aria-label="Chargement de la vidéo"></div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state titre="Vidéo introuvable" message="Elle a peut-être été supprimée." icone="lucideFileQuestion">
+      <a matButton="filled" routerLink="/videos">Voir toutes les vidéos</a>
+    </app-empty-state>
+  </div>
+} @else {
+  <app-page-header
+    surtitre="Vidéos"
+    [titre]="estNouvelle() ? 'Publier une vidéo' : 'Modifier la vidéo'"
+    [description]="
+      estNouvelle()
+        ? 'Une vidéo publiée par l’administration est en ligne tout de suite, sans validation.'
+        : 'Les changements sont visibles dès l’enregistrement.'
+    "
+  />
+
+  <div class="disposition">
+    <!-- ===================== Vidéo et miniature ===================== -->
+    <div class="colonne-media">
+      @let source = apercu() ?? (video()?.videoUrl | fichier);
+      @if (source) {
+        <div class="scene">
+          <video
+            #lecteur
+            [src]="source"
+            controls
+            playsinline
+            preload="metadata"
+            (loadedmetadata)="lireDuree(lecteur)"
+            aria-label="Aperçu de la vidéo"
+          ></video>
+        </div>
+        <div class="fichier-infos">
+          <ng-icon name="lucideFilm" size="1rem" aria-hidden="true" />
+          <span class="fichier-nom">{{ fichier()?.name ?? 'Vidéo enregistrée' }}</span>
+          @if (duree()) {
+            <span class="gw-chiffres">{{ duree() }}</span>
+          }
+          @if (taille()) {
+            <span class="gw-chiffres">{{ taille() }}</span>
+          }
+          <button matButton type="button" [disabled]="enCours()" (click)="champVideo.click()">Remplacer</button>
+        </div>
+
+        <!-- Miniature : l'image qui donne envie de cliquer -->
+        <section class="gw-carte miniature" aria-labelledby="titre-miniature">
+          <div class="miniature-apercu">
+            @if (apercuMiniature() ?? (video()?.miniatureUrl | fichier); as image) {
+              <img [src]="image" alt="Miniature choisie" />
+            } @else {
+              <ng-icon name="lucideImage" size="1.5rem" aria-hidden="true" />
+            }
+          </div>
+          <div class="miniature-textes">
+            <h2 id="titre-miniature">
+              Miniature
+              @if (miniatureAuto()) {
+                <span class="facultatif">prise automatiquement</span>
+              }
+            </h2>
+            <p>
+              L'image affichée avant la lecture. Pour la changer : mettez la vidéo sur la plus belle image et capturez-la,
+              ou choisissez une photo.
+            </p>
+            <div class="miniature-actions">
+              <button matButton="outlined" type="button" [disabled]="enCours()" (click)="capturer(lecteur)">
+                <ng-icon name="lucideImagePlus" size="1rem" aria-hidden="true" />
+                Capturer cette image
+              </button>
+              <button matButton type="button" [disabled]="enCours()" (click)="champImage.click()">Choisir une photo</button>
+              @if (apercuMiniature()) {
+                <button matButton type="button" [disabled]="enCours()" (click)="retirerMiniature()">Retirer</button>
+              }
+            </div>
+          </div>
+        </section>
+      } @else {
+        <!-- Zone de dépôt : glisser le fichier ou cliquer -->
+        <button
+          type="button"
+          class="depot"
+          [class.depot-survol]="survol()"
+          (click)="champVideo.click()"
+          (dragover)="$event.preventDefault(); survol.set(true)"
+          (dragleave)="survol.set(false)"
+          (drop)="deposer($event)"
+        >
+          <span class="depot-icone" aria-hidden="true"><ng-icon name="lucideUpload" size="2rem" /></span>
+          <span class="depot-titre">Glissez votre vidéo ici</span>
+          <span class="depot-texte">ou cliquez pour la choisir</span>
+          <span class="depot-formats">MP4, WebM, MOV ou MKV · {{ tailleMax }} Mo maximum · format vertical conseillé</span>
+        </button>
+      }
+      @if (erreurFichier()) {
+        <p class="erreur-fichier" role="alert">{{ erreurFichier() }}</p>
+      }
+      <input #champVideo class="sr-only" type="file" tabindex="-1" [accept]="formatsVideo" (change)="choisirFichier($event)" />
+      <input #champImage class="sr-only" type="file" tabindex="-1" [accept]="formatsImage" (change)="choisirMiniature($event)" />
+    </div>
+
+    <!-- ===================== Informations ===================== -->
+    <form class="colonne-infos" [formGroup]="formulaire" (ngSubmit)="enregistrer(true)" novalidate>
+      @if (erreur()) {
+        <p class="erreur" role="alert">{{ erreur() }}</p>
+      }
+
+      <section class="gw-carte bloc" aria-labelledby="titre-infos">
+        <h2 id="titre-infos" class="bloc-titre">Informations</h2>
+        <mat-form-field class="large">
+          <mat-label>Titre</mat-label>
+          <input matInput formControlName="titre" maxlength="150" placeholder="Ex. Bien piler le mil" />
+          <mat-error>Le titre est obligatoire.</mat-error>
+        </mat-form-field>
+        <mat-form-field class="large">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="4" maxlength="3000"></textarea>
+          <mat-hint>Facultatif · ce que l'on apprend dans la vidéo</mat-hint>
+          <mat-hint align="end" class="gw-chiffres">{{ longueurDescription() }} / 3000</mat-hint>
+        </mat-form-field>
+
+        <p class="libelle-sujet" id="libelle-sujet">De quoi parle la vidéo ?</p>
+        <mat-button-toggle-group
+          formControlName="sujet"
+          class="sujets"
+          aria-labelledby="libelle-sujet"
+          hideSingleSelectionIndicator
+        >
+          <mat-button-toggle value="RECETTE"><ng-icon name="lucideBookOpen" size="1rem" aria-hidden="true" /> Recette</mat-button-toggle>
+          <mat-button-toggle value="ASTUCE">Astuce</mat-button-toggle>
+          <mat-button-toggle value="TECHNIQUE">Technique</mat-button-toggle>
+          <mat-button-toggle value="GENERAL">Général</mat-button-toggle>
+        </mat-button-toggle-group>
+
+        @if (sujet() === 'RECETTE') {
+          <mat-form-field class="large champ-recette">
+            <mat-label>Recette montrée</mat-label>
+            <ng-icon matPrefix class="icone-champ" name="lucideSearch" size="1.125rem" aria-hidden="true" />
+            <input matInput [formControl]="champRecette" [matAutocomplete]="listeRecettes" placeholder="Tapez pour chercher une recette publiée" />
+            <mat-autocomplete #listeRecettes="matAutocomplete" [displayWith]="nomRecette">
+              @for (recette of suggestionsRecettes(); track recette.id) {
+                <mat-option [value]="recette">{{ recette.nom }}</mat-option>
+              } @empty {
+                <mat-option disabled>Aucune recette publiée ne correspond</mat-option>
+              }
+            </mat-autocomplete>
+            <mat-hint>La vidéo apparaîtra aussi sur la fiche de la recette</mat-hint>
+          </mat-form-field>
+        }
+      </section>
+
+      <!-- ===================== Publication ===================== -->
+      <section class="gw-carte publication" aria-labelledby="titre-publication">
+        <h2 id="titre-publication" class="bloc-titre">
+          <ng-icon name="lucideSend" size="1.125rem" aria-hidden="true" />
+          Publication
+        </h2>
+
+        @if (enCours()) {
+          <ol class="etapes" aria-live="polite">
+            <li [class.faite]="etape() !== 'infos'" [class.active]="etape() === 'infos'">Informations</li>
+            <li [class.faite]="etape() === 'miniature' || etape() === 'publication'" [class.active]="etape() === 'fichier'">
+              Envoi de la vidéo
+              @if (etape() === 'fichier') {
+                <span class="gw-chiffres">{{ progression() }} %</span>
+              }
+            </li>
+            <li [class.faite]="etape() === 'publication'" [class.active]="etape() === 'miniature'">Miniature</li>
+            <li [class.active]="etape() === 'publication'">Mise en ligne</li>
+          </ol>
+          @if (etape() === 'fichier') {
+            <mat-progress-bar mode="determinate" [value]="progression()" aria-label="Envoi de la vidéo" />
+          } @else {
+            <mat-progress-bar mode="indeterminate" aria-label="Enregistrement" />
+          }
+          <p class="aide">Gardez cette page ouverte pendant l'envoi.</p>
+        } @else {
+          <p class="aide">
+            @if (video()?.statut === 'PUBLIEE') {
+              Cette vidéo est en ligne : vos changements seront visibles tout de suite.
+            } @else {
+              Publiée par l'administration, la vidéo est en ligne immédiatement. Vous pouvez aussi la garder en brouillon.
+            }
+          </p>
+          <div class="boutons">
+            <button matButton="filled" type="submit" class="bouton-principal">
+              <ng-icon name="lucideSend" size="1.125rem" aria-hidden="true" />
+              {{ video()?.statut === 'PUBLIEE' ? 'Enregistrer' : 'Publier maintenant' }}
+            </button>
+            @if (video()?.statut !== 'PUBLIEE') {
+              <button matButton="outlined" type="button" (click)="enregistrer(false)">Enregistrer en brouillon</button>
+            }
+            <a matButton [routerLink]="video() ? ['/videos', video()!.id] : ['/videos']">Annuler</a>
+          </div>
+        }
+      </section>
+    </form>
+  </div>
+}

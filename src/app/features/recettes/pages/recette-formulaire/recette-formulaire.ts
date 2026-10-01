@@ -24,7 +24,7 @@ import { MatSelect } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
-import { concat, firstValueFrom, forkJoin, last, of, startWith } from 'rxjs';
+import { concat, firstValueFrom, forkJoin, last, startWith } from 'rxjs';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { FilArianeService } from '../../../../core/services/fil-ariane.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -315,6 +315,8 @@ export class RecetteFormulaire implements OnInit {
     this.erreurInfos.set('');
 
     const v = this.formulaire.getRawValue();
+    // Un nom tapé mais pas encore validé (Entrée) compte aussi
+    const nomTape = this.champNom.value.trim().replace(/,$/, '').trim();
     const requete: RecetteRequest = {
       nom: (v.nom ?? '').trim(),
       categorieId: v.categorieId ?? '',
@@ -326,6 +328,9 @@ export class RecetteFormulaire implements OnInit {
       telechargeable: v.telechargeable ?? true,
     };
     const existante = this.recette();
+    if (!existante) {
+      requete.autresNoms = [...this.nomsEnAttente(), ...(nomTape ? [nomTape] : [])];
+    }
     const appel = existante
       ? this.recetteService.modifier(existante.id, requete)
       : this.recetteService.creer(requete);
@@ -337,21 +342,18 @@ export class RecetteFormulaire implements OnInit {
         this.formulaire.markAsPristine();
         if (existante) {
           this.notification.succes('Les informations sont enregistrées.');
+          if (nomTape) {
+            this.ajouterNom();
+          }
         } else {
+          // Les autres noms sont enregistrés par l'API avec la recette
+          this.nomsEnAttente.set([]);
+          this.champNom.setValue('');
           this.notification.succes(
             'Recette créée en brouillon. Ajoutez maintenant la photo, les ingrédients et les étapes.',
           );
-          const enAttente = this.nomsEnAttente();
-          const noms$ = enAttente.length
-            ? forkJoin(enAttente.map((nom) => this.recetteService.ajouterNom(recette.id, nom)))
-            : of([]);
           // L'adresse devient celle de la modification : un rafraîchissement ne perd rien
-          noms$.subscribe({
-            complete: () =>
-              this.router.navigate(['/recettes', recette.id, 'modifier'], { replaceUrl: true }),
-            error: () =>
-              this.router.navigate(['/recettes', recette.id, 'modifier'], { replaceUrl: true }),
-          });
+          this.router.navigate(['/recettes', recette.id, 'modifier'], { replaceUrl: true });
         }
       },
       error: (erreur: unknown) => {

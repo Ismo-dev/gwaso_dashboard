@@ -169,6 +169,7 @@
 
 .compteur {
   flex-shrink: 0;
+  margin-left: auto; // reste à droite même sans texte d'aide
   color: var(--gw-texte-doux);
 }
 

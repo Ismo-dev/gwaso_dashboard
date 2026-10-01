@@ -1,0 +1,128 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--gw-surface);
+  color: var(--gw-texte);
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-espace-2) var(--gw-espace-2) var(--gw-espace-2) var(--gw-espace-4);
+  border-bottom: 1px solid var(--gw-bordure);
+
+  h2 {
+    color: var(--gw-cacao);
+    font-size: 1rem;
+    font-weight: 700;
+
+    span {
+      margin-left: 4px;
+      color: var(--gw-texte-doux);
+      font-weight: 500;
+    }
+  }
+}
+
+.liste {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--gw-espace-2) var(--gw-espace-4);
+}
+
+.commentaire {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-2) 0;
+
+  &:hover .supprimer,
+  &:focus-within .supprimer {
+    opacity: 1;
+  }
+}
+
+.textes {
+  flex: 1;
+  min-width: 0;
+}
+
+.auteur {
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}
+
+.date {
+  color: var(--gw-texte-doux);
+  font-weight: 400;
+}
+
+.contenu {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.supprimer {
+  --mat-icon-button-icon-color: var(--gw-danger);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--gw-duree) var(--gw-courbe);
+
+  // Pas de survol sur écran tactile : toujours visible
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+.etat {
+  display: flex;
+  justify-content: center;
+  padding: var(--gw-espace-6) 0;
+}
+
+.vide {
+  color: var(--gw-texte-doux);
+  text-align: center;
+}
+
+.saisie {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-3) var(--gw-espace-3) var(--gw-espace-3) var(--gw-espace-4);
+  border-top: 1px solid var(--gw-bordure);
+
+  textarea {
+    flex: 1;
+    min-width: 0;
+    max-height: 120px;
+    padding: var(--gw-espace-2) var(--gw-espace-3);
+    border: 1px solid var(--gw-contour-champ);
+    border-radius: 18px;
+    background: var(--gw-surface);
+    color: var(--gw-texte);
+    font: inherit;
+    field-sizing: content;
+    resize: none;
+
+    &:focus {
+      border-color: var(--gw-action);
+      outline: 1px solid var(--gw-action);
+    }
+  }
+}
+
+.envoyer {
+  --mat-icon-button-icon-color: var(--gw-action);
+  flex-shrink: 0;
+}
+
+.ferme {
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-top: 1px solid var(--gw-bordure);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}

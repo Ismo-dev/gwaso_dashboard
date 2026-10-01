@@ -65,35 +65,6 @@
   color: var(--gw-texte-doux);
 }
 
-.dates {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--gw-espace-3);
-
-  mat-form-field {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .fleche {
-    margin-top: 18px;
-    color: var(--gw-texte-doux);
-  }
-
-  @include ecran.mobile {
-    flex-direction: column;
-    gap: 0;
-
-    mat-form-field {
-      width: 100%;
-    }
-
-    .fleche {
-      display: none;
-    }
-  }
-}
-
 .riche {
   display: block;
   margin-top: var(--gw-espace-4);
@@ -106,11 +77,91 @@
   color: var(--gw-danger);
 }
 
-.erreur-champ {
-  margin: calc(-1 * var(--gw-espace-2)) 0 var(--gw-espace-2);
-  color: var(--gw-danger);
+// ----- Type de défi -----
+.sans-type {
+  color: var(--gw-texte-doux);
+}
+
+.sq-choix {
+  height: 64px;
+  border-radius: var(--gw-rayon);
+}
+
+// ----- Photos -----
+.photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--gw-espace-3);
+}
+
+.photo {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  aspect-ratio: 1;
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.retirer {
+  --mat-icon-button-state-layer-size: 32px;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: rgb(31 22 18 / 70%);
+  color: var(--gw-blanc);
+}
+
+.nouvelle {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  padding: 1px 8px;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-terre-cuite);
+  color: var(--gw-cacao-profond);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.depot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-espace-2);
+  aspect-ratio: 1;
+  padding: var(--gw-espace-2);
+  border: 2px dashed var(--gw-contour-champ);
+  border-radius: var(--gw-rayon);
+  color: var(--gw-karite);
   font-size: var(--gw-taille-petit);
-  font-weight: 500;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--gw-duree) var(--gw-courbe),
+    background-color var(--gw-duree) var(--gw-courbe);
+
+  &:hover,
+  &.depot-survol {
+    border-color: var(--gw-action);
+    background: var(--gw-terre-cuite-pale);
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--gw-action);
+    outline-offset: 2px;
+  }
 }
 
 // ----- Colonne d'action -----
@@ -153,4 +204,20 @@
 .sq-bloc {
   height: 420px;
   border-radius: var(--gw-rayon-lg);
+}
+
+// ----- Devinette : ingrédients / ustensile montrés -----
+.elements {
+  margin-bottom: var(--gw-espace-4);
+}
+
+.elements-titre {
+  margin-bottom: var(--gw-espace-2);
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.sq-elements {
+  height: 180px;
+  border-radius: var(--gw-rayon);
 }

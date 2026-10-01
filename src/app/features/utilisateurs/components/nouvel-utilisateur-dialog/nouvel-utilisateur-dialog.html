@@ -25,16 +25,30 @@
       } @else {
         <div class="gw-choix-grille" role="radiogroup" aria-label="Profil du compte">
           @for (profil of profils(); track profil.id) {
-            <label class="gw-choix" [class.gw-choix-actif]="profilChoisi()?.id === profil.id">
-              <input type="radio" formControlName="profilId" [value]="profil.id" class="sr-only" />
+            <label
+              class="gw-choix"
+              [class.gw-choix-actif]="profilChoisi()?.id === profil.id"
+              [class.gw-choix-desactive]="!profil.role"
+            >
+              <input
+                type="radio"
+                formControlName="profilId"
+                [value]="profil.id"
+                class="sr-only"
+                [attr.disabled]="profil.role ? null : ''"
+              />
               <span class="gw-choix-icone" aria-hidden="true">
-                <ng-icon [name]="acces[profil.role!].icone" size="1.125rem" />
+                <ng-icon [name]="profil.role ? acces[profil.role].icone : 'lucideCircleAlert'" size="1.125rem" />
               </span>
               <span class="gw-choix-textes">
                 <span class="gw-choix-titre">{{ profil.nom }}</span>
                 <span class="gw-choix-aide gw-chiffres">
-                  {{ profil.nbDroits }} droit{{ profil.nbDroits > 1 ? 's' : '' }} ·
-                  {{ acces[profil.role!].libelle }}
+                  @if (profil.role) {
+                    {{ profil.nbDroits }} droit{{ profil.nbDroits > 1 ? 's' : '' }} ·
+                    {{ acces[profil.role].libelle }}
+                  } @else {
+                    Type de compte à choisir dans Profils et droits
+                  }
                 </span>
               </span>
             </label>
@@ -140,6 +154,33 @@
           <mat-error>La localité est obligatoire pour un producteur.</mat-error>
         </mat-form-field>
       }
+    }
+
+    <!-- Chef et producteur : justificatif obligatoire -->
+    @if (aValider()) {
+      <div class="justificatif" [class.justificatif-erreur]="erreurJustificatif()">
+        <ng-icon [name]="justificatif() ? 'lucideBadgeCheck' : 'lucideUpload'" size="1.25rem" aria-hidden="true" />
+        <div class="justificatif-textes">
+          <p class="justificatif-titre">
+            {{ justificatif()?.name ?? 'Justificatif du statut' }}
+            @if (!justificatif()) {
+              <span class="obligatoire">obligatoire</span>
+            }
+          </p>
+          <p class="aide">{{ erreurJustificatif() || 'Photo ou PDF : diplôme, attestation, carte professionnelle…' }}</p>
+        </div>
+        <button matButton="outlined" type="button" (click)="champJustificatif.click()">
+          {{ justificatif() ? 'Changer' : 'Choisir' }}
+        </button>
+        <input
+          #champJustificatif
+          type="file"
+          class="sr-only"
+          tabindex="-1"
+          accept="image/jpeg,image/png,image/webp,application/pdf"
+          (change)="choisirJustificatif(champJustificatif)"
+        />
+      </div>
     }
 
     <!-- Droits donnés par le profil choisi : l'admin sait ce qu'il accorde -->

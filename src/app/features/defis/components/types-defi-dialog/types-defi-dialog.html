@@ -1,0 +1,116 @@
+@if (edition(); as enEdition) {
+  <h2 mat-dialog-title>{{ enEdition === 'nouveau' ? 'Nouveau type de défi' : 'Modifier « ' + enEdition.nom + ' »' }}</h2>
+
+  <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+    <mat-dialog-content>
+      @if (erreur()) {
+        <p class="erreur" role="alert">{{ erreur() }}</p>
+      }
+
+      <mat-form-field class="champ">
+        <mat-label>Nom du type</mat-label>
+        <input matInput formControlName="nom" maxlength="80" placeholder="Ex. Plat traditionnel" />
+        <mat-error>Le nom est obligatoire.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="champ">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="2" maxlength="500"></textarea>
+      </mat-form-field>
+
+      <fieldset class="groupe">
+        <legend>Comment participe-t-on ?</legend>
+        <div class="gw-choix-grille" role="radiogroup">
+          @for (mode of modes; track mode) {
+            <label class="gw-choix" [class.gw-choix-actif]="formulaire.controls.modeParticipation.value === mode">
+              <input type="radio" class="sr-only" formControlName="modeParticipation" [value]="mode" />
+              <span class="gw-choix-icone" aria-hidden="true">
+                <ng-icon [name]="mode === 'REPONSE' ? 'lucideCircleHelp' : 'lucideCookingPot'" size="1.125rem" />
+              </span>
+              <span class="gw-choix-textes">
+                <span class="gw-choix-titre">{{ libellesMode[mode] }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      @if (formulaire.controls.modeParticipation.value === 'REALISATION') {
+        <mat-checkbox formControlName="recetteObligatoire">Le défi impose une recette</mat-checkbox>
+      } @else {
+        <fieldset class="groupe">
+          <legend>Que voient les participants pour répondre ?</legend>
+          <div class="gw-choix-grille elements" role="radiogroup">
+            @for (choix of choixElements; track choix) {
+              <label class="gw-choix" [class.gw-choix-actif]="formulaire.controls.elements.value === choix">
+                <input type="radio" class="sr-only" formControlName="elements" [value]="choix" />
+                <span class="gw-choix-icone" aria-hidden="true">
+                  <ng-icon [name]="libellesElements[choix].icone" size="1.125rem" />
+                </span>
+                <span class="gw-choix-textes">
+                  <span class="gw-choix-titre">{{ libellesElements[choix].titre }}</span>
+                  <span class="gw-choix-aide">{{ libellesElements[choix].aide }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      }
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button matButton="outlined" type="button" (click)="edition.set(null)">Retour</button>
+      <button matButton="filled" type="submit" [disabled]="enCours()">
+        @if (enCours()) {
+          <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+        }
+        Enregistrer
+      </button>
+    </mat-dialog-actions>
+  </form>
+} @else {
+  <h2 mat-dialog-title>Types de défi</h2>
+
+  <mat-dialog-content>
+    @if (types(); as types) {
+      <ul class="types">
+        @for (type of types; track type.id) {
+          <li class="type">
+            <span class="type-icone" aria-hidden="true"><ng-icon [name]="iconeType(type)" size="1.125rem" /></span>
+            <div class="type-textes">
+              <p class="type-nom">{{ type.nom }}</p>
+              @if (type.description) {
+                <p class="type-description">{{ type.description }}</p>
+              }
+              <p class="type-etiquettes">
+                <span class="etiquette">{{ libellesMode[type.modeParticipation] }}</span>
+                @if (type.recetteObligatoire) {
+                  <span class="etiquette">Recette imposée</span>
+                }
+                @if (type.elements && type.elements !== 'AUCUN') {
+                  <span class="etiquette">{{ libellesElements[type.elements].titre }} en photo</span>
+                }
+              </p>
+            </div>
+            <div class="type-actions">
+              <button matButton type="button" (click)="ouvrir(type)">Modifier</button>
+              <button matButton type="button" class="texte-danger" (click)="retirer(type)">Retirer</button>
+            </div>
+          </li>
+        } @empty {
+          <li class="vide">Aucun type de défi pour le moment.</li>
+        }
+      </ul>
+    } @else {
+      <div class="gw-squelette sq-liste" aria-busy="true"></div>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" mat-dialog-close>Fermer</button>
+    <button matButton="filled" type="button" (click)="ouvrir('nouveau')">
+      <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+      Nouveau type
+    </button>
+  </mat-dialog-actions>
+}

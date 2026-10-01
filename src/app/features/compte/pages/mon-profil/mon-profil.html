@@ -25,13 +25,9 @@
           <dd class="gw-chiffres">{{ u.telephone ?? '—' }}</dd>
         </div>
       </dl>
-      @if (u.droits.length > 0) {
-        <p class="droits-titre">Droits de mon profil</p>
-        <ul class="droits">
-          @for (droit of u.droits; track droit) {
-            <li>{{ droit }}</li>
-          }
-        </ul>
+      @if (droits().length > 0) {
+        <p class="droits-titre">Ce que mon profil me permet</p>
+        <app-droits-lecture class="droits" [droits]="droits()" [compact]="true" />
       }
     </aside>
 

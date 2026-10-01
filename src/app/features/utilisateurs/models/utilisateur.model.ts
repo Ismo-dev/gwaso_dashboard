@@ -173,6 +173,8 @@ export interface ChefCuisinierRequest {
   email?: string;
   telephone?: string;
   motDePasse: string;
+  /** Obligatoire : adresse renvoyée par POST /fichiers/justificatifs. */
+  preuveUrl: string;
 }
 
 /** ProducteurRequestDTO côté backend. */
@@ -183,6 +185,8 @@ export interface ProducteurRequest {
   telephone?: string;
   motDePasse: string;
   localite: string;
+  /** Obligatoire : adresse renvoyée par POST /fichiers/justificatifs. */
+  preuveUrl: string;
 }
 
 /** ValidationRoleRequestDTO côté backend (rejet d'un chef ou d'un producteur). */

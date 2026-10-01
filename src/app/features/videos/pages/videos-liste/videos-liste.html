@@ -1,11 +1,15 @@
 <app-page-header
   surtitre="Modération"
   titre="Vidéos"
-  description="Les vidéos postées par la communauté. Vérifiez qu'il s'agit bien de cuisine avant de publier."
+  description="Les vidéos de la communauté, et les vôtres. Vérifiez qu'il s'agit bien de cuisine avant de publier."
 >
-  <a matButton="filled" routerLink="fil" [queryParams]="{ statut: statutActif() === 'EN_ATTENTE_VALIDATION' ? 'EN_ATTENTE_VALIDATION' : null }">
+  <a matButton="outlined" routerLink="fil" [queryParams]="{ statut: statutActif() === 'EN_ATTENTE_VALIDATION' ? 'EN_ATTENTE_VALIDATION' : null }">
     <ng-icon name="lucideSmartphone" size="1.125rem" aria-hidden="true" />
     Parcourir comme un membre
+  </a>
+  <a matButton="filled" routerLink="nouvelle">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+    Publier une vidéo
   </a>
 </app-page-header>
 

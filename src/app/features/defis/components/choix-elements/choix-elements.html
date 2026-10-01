@@ -1,0 +1,40 @@
+<div class="outils">
+  <label class="recherche">
+    <ng-icon name="lucideSearch" size="1rem" aria-hidden="true" />
+    <span class="sr-only">Rechercher</span>
+    <input type="search" placeholder="Rechercher" [value]="recherche()" (input)="recherche.set($any($event.target).value)" />
+  </label>
+  <span class="compte gw-chiffres" aria-live="polite">{{ selection().length }} / {{ max() }} choisi{{ selection().length > 1 ? 's' : '' }}</span>
+</div>
+
+<ul class="grille" [attr.aria-label]="libelle()">
+  @for (element of filtres(); track element.id) {
+    @let choisi = selection().includes(element.id);
+    <li>
+      <button
+        type="button"
+        class="vignette"
+        [class.choisie]="choisi"
+        [disabled]="!element.photoUrl || (!choisi && plein())"
+        [attr.aria-pressed]="choisi"
+        [attr.aria-label]="element.nom + (element.photoUrl ? '' : ' (sans photo)')"
+        (click)="basculer(element)"
+      >
+        <span class="image">
+          @if (element.photoUrl | fichier; as photo) {
+            <img [src]="photo" alt="" loading="lazy" />
+          } @else {
+            <ng-icon name="lucideImageOff" size="1.5rem" aria-hidden="true" />
+            <span class="sans-photo">Sans photo</span>
+          }
+          @if (choisi) {
+            <span class="coche" aria-hidden="true"><ng-icon name="lucideCheck" size="1rem" /></span>
+          }
+        </span>
+        <span class="nom">{{ element.nom }}</span>
+      </button>
+    </li>
+  } @empty {
+    <li class="vide">Rien ne correspond à « {{ recherche() }} ».</li>
+  }
+</ul>

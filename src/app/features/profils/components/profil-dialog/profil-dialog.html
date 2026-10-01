@@ -3,8 +3,8 @@
 <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
   <mat-dialog-content>
     <p class="intro">
-      Chaque utilisateur a un seul profil, et ses droits sont ceux de ce profil. Exemples :
-      Administrateur, Cuisinier, Chef cuisinier, Producteur.
+      Chaque utilisateur a un seul profil, et ses droits sont ceux de ce profil. Exemples : Administrateur, Consultant,
+      Cuisinier, Chef cuisinier, Producteur.
     </p>
 
     @if (erreur()) {
@@ -18,48 +18,43 @@
     </mat-form-field>
 
     <fieldset class="groupe">
-      <legend>Accès donné par ce profil</legend>
+      <legend>Type de compte</legend>
       <p class="explication">
-        Détermine où la personne se connecte et les informations demandées à la création du compte
-        (niveau, localité, justificatif…).
+        Où se connecte une personne qui a ce profil, et ce qu'on lui demande à la création du compte (niveau, localité,
+        justificatif…). Plusieurs profils peuvent avoir le même type : par exemple « Administrateur » et « Consultant »
+        pour le dashboard, avec des droits différents.
       </p>
-      @if (toutPris) {
-        <div class="tout-pris" role="status">
-          <ng-icon name="lucideInfo" size="1.25rem" aria-hidden="true" />
-          <p>
-            Chaque type de compte (dashboard, cuisinier, chef, producteur) a déjà son profil. Pour
-            changer des droits, modifiez plutôt le profil existant.
-          </p>
-        </div>
-      }
-      <div class="gw-choix-grille" [hidden]="toutPris">
+      <div class="gw-choix-grille" role="radiogroup">
         @for (role of ordreAcces; track role) {
-          @let dejaPris = pris(role);
-          <label
-            class="gw-choix"
-            [class.gw-choix-actif]="accesChoisi() === role"
-            [class.gw-choix-desactive]="!!dejaPris"
-          >
-            <input
-              type="radio"
-              class="sr-only"
-              formControlName="role"
-              [value]="role"
-              [attr.disabled]="dejaPris ? '' : null"
-            />
+          <label class="gw-choix" [class.gw-choix-actif]="accesChoisi() === role">
+            <input type="radio" class="sr-only" formControlName="role" [value]="role" />
             <span class="gw-choix-icone" aria-hidden="true">
               <ng-icon [name]="acces[role].icone" size="1.125rem" />
             </span>
             <span class="gw-choix-textes">
               <span class="gw-choix-titre">{{ acces[role].libelle }}</span>
-              <span class="gw-choix-aide">
-                {{ dejaPris ? 'Déjà donné par « ' + dejaPris.nom + ' »' : acces[role].aide }}
-              </span>
+              <span class="gw-choix-aide">{{ acces[role].aide }}</span>
             </span>
           </label>
         }
       </div>
     </fieldset>
+
+    @if (accesChoisi(); as role) {
+      @if (role !== 'ADMIN') {
+        @let actuel = profilDesInscriptions(role);
+        <mat-checkbox formControlName="parDefaut" class="par-defaut">
+          Profil donné aux personnes qui s'inscrivent elles-mêmes dans l'application
+        </mat-checkbox>
+        <p class="explication explication-case">
+          @if (actuel) {
+            Aujourd'hui, c'est « {{ actuel.nom }} ». En cochant, ce profil le remplace.
+          } @else {
+            Aucun profil de ce type n'a encore ce rôle : celui-ci le prendra automatiquement.
+          }
+        </p>
+      }
+    }
 
     <mat-form-field class="champ">
       <mat-label>Description</mat-label>
@@ -70,7 +65,7 @@
 
   <mat-dialog-actions align="end">
     <button matButton="outlined" type="button" mat-dialog-close>Annuler</button>
-    <button matButton="filled" type="submit" [disabled]="enCours() || toutPris">
+    <button matButton="filled" type="submit" [disabled]="enCours()">
       @if (enCours()) {
         <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
       }

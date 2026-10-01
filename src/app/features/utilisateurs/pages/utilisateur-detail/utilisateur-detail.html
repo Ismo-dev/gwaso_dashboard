@@ -98,13 +98,12 @@
             }
           }
 
-          @if (f.preuveUrl | fichier; as preuve) {
-            <a class="justificatif" [href]="preuve" target="_blank" rel="noopener">
+          @if (f.preuveUrl; as preuve) {
+            <button type="button" class="justificatif" (click)="voirJustificatif(preuve, f.prenom + ' ' + f.nom)">
               <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
               <strong>Voir le justificatif</strong>
-              <span class="sr-only"> (nouvel onglet)</span>
               <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
-            </a>
+            </button>
           } @else {
             <p class="justificatif justificatif-absent">
               <ng-icon name="lucideTriangleAlert" size="1.125rem" aria-hidden="true" />
@@ -186,12 +185,18 @@
           </p>
         </div>
       </div>
+      @if (profilsPossibles().length > 1) {
+        <mat-form-field class="profil-choix" subscriptSizing="dynamic">
+          <mat-label>Changer de profil</mat-label>
+          <mat-select [value]="f.profilId" [disabled]="changementProfil()" (selectionChange)="changerProfil($event.value)">
+            @for (p of profilsPossibles(); track p.id) {
+              <mat-option [value]="p.id">{{ p.nom }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
       @if (droitsProfil().length > 0) {
-        <ul class="profil-droits">
-          @for (droit of droitsProfil(); track droit.id) {
-            <li [title]="droit.droitDescription ?? ''">{{ droit.droitAction }}</li>
-          }
-        </ul>
+        <app-droits-lecture class="profil-droits" [droits]="droitsAffiches()" [compact]="true" />
       }
       <a matButton routerLink="/profils" class="profil-lien">
         Gérer les profils

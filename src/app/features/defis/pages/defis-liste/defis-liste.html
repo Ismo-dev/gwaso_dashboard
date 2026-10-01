@@ -3,6 +3,10 @@
   titre="Défis culinaires"
   description="Examinez les défis proposés par les chefs, suivez les défis en cours et publiez les classements."
 >
+  <button matButton="outlined" type="button" (click)="gererTypes()">
+    <ng-icon name="lucideTag" size="1.125rem" aria-hidden="true" />
+    Types de défi
+  </button>
   <a matButton="filled" routerLink="nouveau">
     <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
     Nouveau défi
@@ -92,9 +96,18 @@
       @for (defi of defis(); track defi.id) {
         <li>
           <a class="carte-defi" [routerLink]="[defi.id]">
-            <span class="icone-defi" aria-hidden="true"><ng-icon name="lucideTrophy" size="1.25rem" /></span>
+            <span class="icone-defi" aria-hidden="true">
+              @if (defi.photoCouvertureUrl | fichier; as couverture) {
+                <img [src]="couverture" alt="" loading="lazy" />
+              } @else {
+                <ng-icon name="lucideTrophy" size="1.25rem" />
+              }
+            </span>
             <span class="carte-textes">
               <span class="defi-nom">{{ defi.nom }}</span>
+              @if (defi.typeDefiNom) {
+                <span class="defi-type">{{ defi.typeDefiNom }}</span>
+              }
               <span class="defi-meta">{{ defi.dateDebut | date: 'd MMM' }} → {{ defi.dateFin | date: 'd MMM y' }}</span>
               <span class="defi-meta">{{ defi.chefCuisinierNom ? 'Chef ' + defi.chefCuisinierNom : 'Administration' }}</span>
             </span>
@@ -110,9 +123,18 @@
           <th mat-header-cell *matHeaderCellDef scope="col">Défi</th>
           <td mat-cell *matCellDef="let defi">
             <div class="cellule-defi">
-              <span class="icone-defi" aria-hidden="true"><ng-icon name="lucideTrophy" size="1.25rem" /></span>
+              <span class="icone-defi" aria-hidden="true">
+              @if (defi.photoCouvertureUrl | fichier; as couverture) {
+                <img [src]="couverture" alt="" loading="lazy" />
+              } @else {
+                <ng-icon name="lucideTrophy" size="1.25rem" />
+              }
+            </span>
               <span class="cellule-textes">
                 <a class="defi-nom" [routerLink]="[defi.id]">{{ defi.nom }}</a>
+                @if (defi.typeDefiNom) {
+                  <span class="defi-type">{{ defi.typeDefiNom }}</span>
+                }
                 @if (defi.recetteNom) {
                   <span class="defi-meta">
                     <ng-icon name="lucideBookOpen" size="0.875rem" aria-hidden="true" />

@@ -73,6 +73,21 @@ export interface CommentaireResponse {
   dateModification: string | null;
 }
 
+/**
+ * VideoRequestDTO côté backend. Avec une recette, le type devient RECETTE ;
+ * sans recette, on choisit ASTUCE, TECHNIQUE ou GENERAL.
+ */
+export interface VideoRequest {
+  titre: string;
+  description?: string | null;
+  type?: TypeVideo | null;
+  recetteId?: string | null;
+  dureeSecondes?: number | null;
+}
+
+/** Avancement d'un envoi de fichier : pourcentage, puis la vidéo mise à jour à la fin. */
+export type EnvoiVideo = { etape: 'progression'; pourcentage: number } | { etape: 'termine'; video: VideoResponse };
+
 /** ModerationVideoRequestDTO côté backend (rejet ou désactivation). */
 export interface ModerationVideoRequest {
   motif: string;
@@ -94,6 +109,13 @@ export const LIBELLES_TYPE_VIDEO: Record<TypeVideo, string> = {
   TECHNIQUE: 'Technique',
   GENERAL: 'Général',
 };
+
+/** ReactionResponseDTO côté backend : mes réactions sur une vidéo et le total de « j'aime ». */
+export interface ReactionResponse {
+  videoId: string;
+  reactions: ('AIME' | 'EPINGLE' | 'ENREGISTRE')[];
+  nbJaime: number;
+}
 
 /** Durée lisible : 75 → « 1:15 ». */
 export function formaterDuree(secondes: number | null): string {

@@ -12,7 +12,7 @@
     [titre]="estNouveau() ? 'Nouveau défi' : 'Modifier le défi'"
     [description]="
       estNouveau()
-        ? 'Un défi créé par l’administration est validé directement : les cuisiniers peuvent y participer dès la date de début.'
+        ? 'Un défi créé par l’administration est validé directement. Il démarre et se termine tout seul selon ses dates.'
         : 'Les participants voient les changements immédiatement.'
     "
   />
@@ -23,86 +23,204 @@
         <p class="erreur" role="alert">{{ erreur() }}</p>
       }
 
+      <!-- ===================== Type de défi ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-type">
+        <h2 id="titre-type" class="bloc-titre">
+          <span class="numero" aria-hidden="true">1</span>
+          Type de défi
+        </h2>
+
+        @if (types(); as types) {
+          <div class="gw-choix-grille" role="radiogroup" aria-labelledby="titre-type">
+            @for (type of types; track type.id) {
+              <label class="gw-choix" [class.gw-choix-actif]="formulaire.controls.typeDefiId.value === type.id">
+                <input
+                  type="radio"
+                  class="sr-only"
+                  name="typeDefi"
+                  [value]="type.id"
+                  [checked]="formulaire.controls.typeDefiId.value === type.id"
+                  (change)="choisirType(type)"
+                />
+                <span class="gw-choix-icone" aria-hidden="true">
+                  <ng-icon [name]="iconeType(type)" size="1.125rem" />
+                </span>
+                <span class="gw-choix-textes">
+                  <span class="gw-choix-titre">{{ type.nom }}</span>
+                  @if (type.description) {
+                    <span class="gw-choix-aide">{{ type.description }}</span>
+                  }
+                </span>
+              </label>
+            } @empty {
+              <p class="sans-type">Aucun type de défi. Créez-en un depuis la liste des défis (onglet « Types »).</p>
+            }
+          </div>
+        } @else {
+          <div class="gw-choix-grille" aria-busy="true">
+            <span class="gw-squelette sq-choix"></span><span class="gw-squelette sq-choix"></span>
+          </div>
+        }
+      </section>
+
       <!-- ===================== L'essentiel ===================== -->
       <section class="gw-carte bloc" aria-labelledby="titre-essentiel">
         <h2 id="titre-essentiel" class="bloc-titre">
-          <span class="numero" aria-hidden="true">1</span>
+          <span class="numero" aria-hidden="true">2</span>
           L'essentiel
         </h2>
 
         <mat-form-field class="large">
           <mat-label>Nom du défi</mat-label>
-          <input matInput formControlName="nom" maxlength="120" placeholder="Ex. Le meilleur tô de la saison" />
+          <input matInput formControlName="nom" maxlength="150" placeholder="Ex. Le meilleur tô de la saison" />
           <mat-error>Le nom est obligatoire.</mat-error>
         </mat-form-field>
 
-        <mat-form-field class="large">
-          <mat-label>Recette du défi</mat-label>
-          <ng-icon matPrefix class="icone-champ" name="lucideBookOpen" size="1.125rem" aria-hidden="true" />
-          <input
-            matInput
-            [formControl]="champRecette"
-            [matAutocomplete]="listeRecettes"
-            placeholder="Tapez pour chercher une recette publiée"
-          />
-          <mat-autocomplete #listeRecettes="matAutocomplete" [displayWith]="nomRecette">
-            @for (recette of suggestionsRecettes(); track recette.id) {
-              <mat-option [value]="recette">{{ recette.nom }}</mat-option>
-            } @empty {
-              <mat-option disabled>Aucune recette publiée ne correspond</mat-option>
-            }
-          </mat-autocomplete>
-          <mat-hint>Les participants réalisent cette recette</mat-hint>
-          <mat-error>Choisissez une recette dans la liste.</mat-error>
-        </mat-form-field>
-
-        <div class="dates">
-          <mat-form-field>
-            <mat-label>Début</mat-label>
-            <input matInput type="date" formControlName="dateDebut" [min]="estNouveau() ? minDate : null" />
-            <mat-error>La date de début est obligatoire.</mat-error>
-          </mat-form-field>
-          <ng-icon name="lucideArrowRight" size="1.25rem" class="fleche" aria-hidden="true" />
-          <mat-form-field>
-            <mat-label>Fin</mat-label>
-            <input matInput type="date" formControlName="dateFin" [min]="formulaire.controls.dateDebut.value" />
-            <mat-error>La date de fin est obligatoire.</mat-error>
-          </mat-form-field>
-        </div>
-        @if (formulaire.hasError('periode')) {
-          <p class="erreur-champ" role="alert">La fin doit être le même jour ou après le début.</p>
+        @if (typeChoisi(); as type) {
+          @if (type.modeParticipation === 'REALISATION') {
+            <mat-form-field class="large">
+              <mat-label>{{ recetteObligatoire() ? 'Recette du défi' : 'Recette du défi (facultatif)' }}</mat-label>
+              <ng-icon matPrefix class="icone-champ" name="lucideBookOpen" size="1.125rem" aria-hidden="true" />
+              <input
+                matInput
+                [formControl]="champRecette"
+                [matAutocomplete]="listeRecettes"
+                [required]="recetteObligatoire()"
+                placeholder="Tapez pour chercher une recette publiée"
+              />
+              <mat-autocomplete #listeRecettes="matAutocomplete" [displayWith]="nomRecette">
+                @for (recette of suggestionsRecettes(); track recette.id) {
+                  <mat-option [value]="recette">{{ recette.nom }}</mat-option>
+                } @empty {
+                  <mat-option disabled>Aucune recette publiée ne correspond</mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+          } @else {
+            <mat-form-field class="large">
+              <mat-label>Bonne réponse</mat-label>
+              <ng-icon matPrefix class="icone-champ" name="lucideKeyRound" size="1.125rem" aria-hidden="true" />
+              <input
+                matInput
+                formControlName="reponseAttendue"
+                maxlength="1000"
+                required
+                [placeholder]="elements() === 'INGREDIENTS' ? 'Ex. Le mafé' : elements() === 'USTENSILES' ? 'Ex. Le mortier et son pilon' : 'Ex. Le fourneau malgache'"
+              />
+              <mat-error>Indiquez la bonne réponse.</mat-error>
+            </mat-form-field>
+          }
         }
+
+        <!-- Devinette : ce que les participants regardent pour répondre -->
+        @if (elements() === 'INGREDIENTS') {
+          <div class="elements">
+            <p class="elements-titre">Ingrédients montrés aux participants</p>
+            @if (catalogueIngredients(); as catalogue) {
+              <app-choix-elements libelle="Ingrédients à montrer" [elements]="catalogue" [max]="12" [(selection)]="ingredientsChoisis" />
+            } @else {
+              <div class="gw-squelette sq-elements"></div>
+            }
+          </div>
+        } @else if (elements() === 'USTENSILES') {
+          <div class="elements">
+            <p class="elements-titre">Ustensile à faire deviner <span class="facultatif">les participants ne verront que sa photo</span></p>
+            @if (catalogueUstensiles(); as catalogue) {
+              <app-choix-elements libelle="Ustensile à faire deviner" [elements]="catalogue" [max]="6" [(selection)]="ustensilesChoisis" />
+            } @else {
+              <div class="gw-squelette sq-elements"></div>
+            }
+          </div>
+        }
+
+        <mat-form-field class="large">
+          <mat-label>Période du défi</mat-label>
+          <mat-date-range-input [rangePicker]="periode" [min]="dateMin()">
+            <input matStartDate formControlName="dateDebut" placeholder="Début" />
+            <input matEndDate formControlName="dateFin" placeholder="Fin" />
+          </mat-date-range-input>
+          <mat-datepicker-toggle matIconSuffix [for]="periode">
+            <ng-icon matDatepickerToggleIcon name="lucideCalendar" size="1.25rem" />
+          </mat-datepicker-toggle>
+          <mat-date-range-picker #periode />
+          @if (formulaire.controls.dateDebut.hasError('matDatepickerMin')) {
+            <mat-error>La date de début ne peut pas être déjà passée.</mat-error>
+          } @else if (formulaire.controls.dateFin.hasError('matEndDateInvalid')) {
+            <mat-error>La fin doit être le même jour ou après le début.</mat-error>
+          } @else {
+            <mat-error>Choisissez les dates de début et de fin.</mat-error>
+          }
+        </mat-form-field>
 
         <app-editeur-riche
           class="riche"
           formControlName="description"
           libelle="Présentation du défi"
-          aide="Donnez envie de participer : le thème, l'esprit, ce qu'on peut gagner."
           [obligatoire]="true"
           [longueurMax]="3000"
         />
       </section>
 
+      <!-- ===================== Photos ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-photos">
+        <h2 id="titre-photos" class="bloc-titre">
+          <span class="numero" aria-hidden="true">3</span>
+          Photos <span class="facultatif">{{ nbPhotos() }} / {{ photosMax }}</span>
+        </h2>
+
+        <div class="photos">
+          @for (photo of photosEnregistrees(); track photo.id) {
+            <figure class="photo">
+              <img [src]="photo.url | fichier" alt="" />
+              <button matIconButton type="button" class="retirer" aria-label="Retirer cette photo" (click)="retirerEnregistree(photo)">
+                <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+              </button>
+            </figure>
+          }
+          @for (photo of photosEnAttente(); track photo.apercu) {
+            <figure class="photo">
+              <img [src]="photo.apercu" alt="" />
+              <span class="nouvelle">Nouvelle</span>
+              <button matIconButton type="button" class="retirer" aria-label="Retirer cette photo" (click)="retirerEnAttente(photo)">
+                <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+              </button>
+            </figure>
+          }
+          @if (nbPhotos() < photosMax) {
+            <label
+              class="depot"
+              [class.depot-survol]="survol()"
+              (dragover)="$event.preventDefault(); survol.set(true)"
+              (dragleave)="survol.set(false)"
+              (drop)="deposer($event)"
+            >
+              <input
+                #champPhotos
+                type="file"
+                class="sr-only"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                (change)="ajouterPhotos(champPhotos.files); champPhotos.value = ''"
+              />
+              <ng-icon name="lucideImagePlus" size="1.5rem" aria-hidden="true" />
+              <span>Ajouter des photos</span>
+            </label>
+          }
+        </div>
+      </section>
+
       <!-- ===================== Règles du jeu ===================== -->
       <section class="gw-carte bloc" aria-labelledby="titre-regles">
         <h2 id="titre-regles" class="bloc-titre">
-          <span class="numero" aria-hidden="true">2</span>
+          <span class="numero" aria-hidden="true">4</span>
           Règles du jeu <span class="facultatif">facultatif</span>
         </h2>
 
-        <app-editeur-riche
-          class="riche"
-          formControlName="regles"
-          libelle="Règles"
-          aide="Ce qui est permis ou interdit. Une liste à puces se lit mieux."
-          [longueurMax]="3000"
-          hauteurMin="120px"
-        />
+        <app-editeur-riche class="riche" formControlName="regles" libelle="Règles" [longueurMax]="3000" hauteurMin="120px" />
         <app-editeur-riche
           class="riche"
           formControlName="conditionsParticipation"
           libelle="Conditions de participation"
-          aide="Qui peut participer, et quoi envoyer (photo du plat, vidéo...)."
           [longueurMax]="3000"
           hauteurMin="120px"
         />
@@ -110,7 +228,6 @@
           class="riche"
           formControlName="criteresClassement"
           libelle="Critères de classement"
-          aide="Sur quoi les participants sont notés : présentation, respect de la recette, originalité..."
           [longueurMax]="3000"
           hauteurMin="120px"
         />
@@ -126,8 +243,8 @@
         </p>
         <p class="resume-texte">
           @if (estNouveau()) {
-            Le défi sera validé tout de suite et visible par les cuisiniers. Vous pourrez le démarrer, le terminer, puis
-            publier son classement.
+            Le défi est validé tout de suite. Il s'ouvre le jour du début et se ferme après le jour de fin ; vous publiez
+            ensuite le classement.
           } @else {
             Les changements sont visibles tout de suite par les participants.
           }

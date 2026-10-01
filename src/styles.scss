@@ -11,6 +11,7 @@
 @use 'theme-material';
 @use 'listes';
 @use 'choix';
+@use 'visionneuse';
 
 :root {
   // ----- Charte graphique (ne pas modifier sans validation) -----
@@ -411,4 +412,30 @@ ng-icon {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+// Menu des notifications de l'en-tête : plus large qu'un menu ordinaire
+.gw-menu-notifications.mat-mdc-menu-panel {
+  width: 360px;
+  max-width: calc(100vw - 32px);
+}
+
+// Petite étiquette à côté d'un nom : « Désactivé », « Inscriptions »...
+.gw-etiquette {
+  display: inline-block;
+  margin-left: var(--gw-espace-1);
+  padding: 0 8px;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.6;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.gw-etiquette-neutre {
+  background: var(--gw-fond);
+  color: var(--gw-texte-doux);
 }

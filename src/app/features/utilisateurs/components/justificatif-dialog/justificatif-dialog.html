@@ -1,0 +1,26 @@
+<h2 mat-dialog-title>Justificatif de {{ donnees.nom }}</h2>
+
+<mat-dialog-content class="contenu">
+  @if (chargement()) {
+    <div class="etat"><mat-progress-spinner mode="indeterminate" diameter="36" aria-label="Chargement du justificatif" /></div>
+  } @else if (erreur()) {
+    <div class="etat etat-erreur" role="alert">
+      <ng-icon name="lucideCircleAlert" size="1.5rem" aria-hidden="true" />
+      <p>Le justificatif n'a pas pu être ouvert. Il a peut-être été supprimé.</p>
+    </div>
+  } @else if (type() === 'pdf') {
+    <iframe class="pdf" [src]="adressePdf()" [title]="'Justificatif de ' + donnees.nom"></iframe>
+  } @else {
+    <img class="image" [src]="adresse()" [alt]="'Justificatif de ' + donnees.nom" />
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  @if (adresse(); as adresse) {
+    <a matButton [href]="adresse" [attr.download]="'justificatif-' + donnees.nom">
+      <ng-icon name="lucideDownload" size="1rem" aria-hidden="true" />
+      Télécharger
+    </a>
+  }
+  <button matButton="filled" type="button" mat-dialog-close>Fermer</button>
+</mat-dialog-actions>

@@ -2,6 +2,9 @@ import { DatePipe, LowerCasePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { MatButton } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatOption, MatSelect } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { map, Observable } from 'rxjs';
@@ -11,19 +14,21 @@ import { ConfirmationService } from '../../../../core/services/confirmation.serv
 import { FilArianeService } from '../../../../core/services/fil-ariane.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SessionService } from '../../../../core/services/session.service';
+import { messageErreur } from '../../../../core/utils/erreurs';
 import { Avatar } from '../../../../shared/components/avatar/avatar';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
-import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import {
   FicheUtilisateur,
   ICONES_ROLE,
   LIBELLES_NIVEAU,
   LIBELLES_ROLE,
 } from '../../models/utilisateur.model';
-import { ProfilDroitsResponse } from '../../../profils/models/profil.model';
+import { DroitsLecture } from '../../../profils/components/droits-lecture/droits-lecture';
+import { DroitAffiche, ProfilDroitsResponse, ProfilResponse } from '../../../profils/models/profil.model';
 import { ProfilService } from '../../../profils/services/profil.service';
 import { UtilisateurService } from '../../services/utilisateur.service';
+import { ouvrirJustificatif } from '../../components/justificatif-dialog/ouvrir-justificatif';
 
 const ROLES: Role[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
 
@@ -41,7 +46,11 @@ const ROLES: Role[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
     Avatar,
     StatusBadge,
     EmptyState,
-    FichierPipe,
+    DroitsLecture,
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    MatOption,
   ],
   selector: 'app-utilisateur-detail',
   styleUrl: './utilisateur-detail.scss',
@@ -55,6 +64,7 @@ export class UtilisateurDetail {
   private filAriane = inject(FilArianeService);
   private session = inject(SessionService);
   private profilService = inject(ProfilService);
+  private dialog = inject(MatDialog);
 
   readonly id = input.required<string>();
   readonly role = input<string>();
@@ -66,6 +76,12 @@ export class UtilisateurDetail {
   protected fiche = signal<FicheUtilisateur | null>(null);
   /** Droits du profil de la personne (affichés dans la carte « Profil »). */
   protected droitsProfil = signal<ProfilDroitsResponse[]>([]);
+  protected droitsAffiches = computed<DroitAffiche[]>(() =>
+    this.droitsProfil().map((a) => ({ id: a.droitId, action: a.droitAction, description: a.droitDescription, actif: a.droitActif })),
+  );
+  /** Profils qu'on peut donner à ce compte : actifs et du même type de compte. */
+  protected profilsPossibles = signal<ProfilResponse[]>([]);
+  protected changementProfil = signal(false);
   protected chargement = signal(true);
   protected introuvable = signal(false);
   protected erreur = signal(false);
@@ -101,6 +117,12 @@ export class UtilisateurDetail {
       next: (fiche) => {
         this.fiche.set(fiche);
         this.chargerDroits(fiche.profilId);
+        this.profilService.getAll().subscribe({
+          next: (profils) =>
+            this.profilsPossibles.set(
+              profils.filter((p) => p.actif && p.role === fiche.role).sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+            ),
+        });
         this.filAriane.definirPageCourante(`${fiche.prenom} ${fiche.nom}`);
         this.chargement.set(false);
       },
@@ -257,5 +279,31 @@ export class UtilisateurDetail {
       next: (droits) => this.droitsProfil.set(droits),
       error: () => this.droitsProfil.set([]),
     });
+  }
+
+  /** Un compte garde son type (cuisinier, admin...) : seuls les profils de ce type sont proposés. */
+  changerProfil(profilId: string): void {
+    const fiche = this.fiche();
+    if (!fiche || profilId === fiche.profilId) {
+      return;
+    }
+    this.changementProfil.set(true);
+    this.utilisateurService.changerProfil(fiche.id, profilId).subscribe({
+      next: (resume) => {
+        this.fiche.set({ ...fiche, profilId: resume.profilId, profilNom: resume.profilNom });
+        this.chargerDroits(resume.profilId);
+        this.changementProfil.set(false);
+        this.notification.succes(`${fiche.prenom} ${fiche.nom} a maintenant le profil « ${resume.profilNom} ».`);
+      },
+      error: (erreur: unknown) => {
+        this.changementProfil.set(false);
+        this.notification.erreur(messageErreur(erreur, "Le profil n'a pas pu être changé."));
+      },
+    });
+  }
+
+  /** Le justificatif ne s'affiche qu'à la demande, dans une fenêtre. */
+  voirJustificatif(url: string, nom: string): void {
+    ouvrirJustificatif(this.dialog, url, nom);
   }
 }

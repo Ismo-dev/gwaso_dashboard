@@ -18,11 +18,13 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
 import { TexteRiche } from '../../../../shared/components/texte-riche/texte-riche';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
+import { LIBELLES_ROLE } from '../../../utilisateurs/models/utilisateur.model';
 import {
   DefiResponse,
   estVideo,
+  iconeType,
   ParticipationDefiResponse,
-  StatutDefi,
+  PhotoDefiResponse,
 } from '../../models/defi.model';
 import { DefiService } from '../../services/defi.service';
 
@@ -36,8 +38,11 @@ interface LigneClassement {
 }
 
 /**
- * Fiche d'un défi : décision sur une proposition de chef, démarrage / fin / annulation,
- * contenu du défi, participants, notes et publication du classement.
+ * Fiche d'un défi : décision sur une proposition de chef, annulation, contenu du défi,
+ * participants, notes et publication du classement.
+ * Le statut suit les dates tout seul (ouvert le jour du début, terminé après le jour de fin).
+ * Les notes : par les admins pour un défi de l'administration, par le chef auteur sinon ;
+ * seulement une fois le défi commencé. Le classement se publie quand le défi est terminé.
  */
 @Component({
   imports: [
@@ -56,6 +61,8 @@ interface LigneClassement {
     FichierPipe,
   ],
   selector: 'app-defi-detail',
+  // Échap ferme la photo agrandie
+  host: { '(document:keydown.escape)': 'photoOuverte.set(null)' },
   styleUrl: './defi-detail.scss',
   templateUrl: './defi-detail.html',
 })
@@ -72,9 +79,14 @@ export class DefiDetail {
 
   protected readonly noteMax = NOTE_MAX;
   protected readonly estVideo = estVideo;
+  protected readonly iconeType = iconeType;
+  protected readonly libellesRole = LIBELLES_ROLE;
 
   protected defi = signal<DefiResponse | null>(null);
   protected participants = signal<ParticipationDefiResponse[]>([]);
+  protected photos = signal<PhotoDefiResponse[]>([]);
+  /** Photo affichée en grand (null : galerie fermée). */
+  protected photoOuverte = signal<PhotoDefiResponse | null>(null);
   protected chargement = signal(true);
   protected introuvable = signal(false);
   protected erreur = signal(false);
@@ -82,11 +94,14 @@ export class DefiDetail {
   /** Participation dont la note est en cours d'enregistrement. */
   protected noteEnCours = signal<string | null>(null);
 
-  /** Le classement peut être préparé et publié tant que le défi a été validé. */
+  /** On note une fois le défi commencé, et seulement si c'est à l'administration de noter. */
   protected peutNoter = computed(() => {
-    const statut = this.defi()?.statut;
-    return statut === 'VALIDE' || statut === 'EN_COURS' || statut === 'TERMINE';
+    const defi = this.defi();
+    return !!defi && defi.noteParAdmin && (defi.statut === 'EN_COURS' || defi.statut === 'TERMINE');
   });
+  /** Le classement se publie quand le défi est terminé. */
+  protected peutPublier = computed(() => this.peutNoter() && this.defi()?.statut === 'TERMINE');
+  protected devinette = computed(() => this.defi()?.modeParticipation === 'REPONSE');
   protected nbNotes = computed(() => this.participants().filter((p) => p.score !== null).length);
   protected modifiable = computed(() => {
     const statut = this.defi()?.statut;
@@ -137,10 +152,12 @@ export class DefiDetail {
     forkJoin({
       defi: this.defiService.getById(id),
       participants: this.defiService.getParticipants(id),
+      photos: this.defiService.getPhotos(id),
     }).subscribe({
-      next: ({ defi, participants }) => {
+      next: ({ defi, participants, photos }) => {
         this.defi.set(defi);
         this.participants.set(participants);
+        this.photos.set(photos);
         this.filAriane.definirPageCourante(defi.nom);
         this.chargement.set(false);
       },
@@ -203,41 +220,17 @@ export class DefiDetail {
 
   // ===================== Vie du défi =====================
 
-  async changerStatut(defi: DefiResponse, statut: StatutDefi): Promise<void> {
-    const textes: Partial<Record<StatutDefi, { titre: string; message: string; bouton: string; danger?: boolean }>> = {
-      EN_COURS: {
-        titre: `Démarrer « ${defi.nom} » maintenant ?`,
-        message: 'Le défi sera affiché comme en cours dans l’application.',
-        bouton: 'Démarrer',
-      },
-      TERMINE: {
-        titre: `Terminer « ${defi.nom} » ?`,
-        message: 'Plus personne ne pourra participer. Vous pourrez ensuite publier le classement.',
-        bouton: 'Terminer le défi',
-      },
-      ANNULE: {
-        titre: `Annuler « ${defi.nom} » ?`,
-        message: 'Le défi ne sera plus proposé. Cette action ne peut pas être défaite.',
-        bouton: 'Annuler le défi',
-        danger: true,
-      },
-    };
-    const texte = textes[statut];
-    if (!texte) {
-      return;
-    }
+  /** Seule action manuelle sur le statut : le reste suit les dates. */
+  async annuler(defi: DefiResponse): Promise<void> {
     const confirme = await this.confirmation.demander({
-      titre: texte.titre,
-      message: texte.message,
-      texteConfirmer: texte.bouton,
+      titre: `Annuler « ${defi.nom} » ?`,
+      message: 'Le défi ne sera plus proposé. Cette action ne peut pas être défaite.',
+      texteConfirmer: 'Annuler le défi',
       texteAnnuler: 'Retour',
-      danger: texte.danger,
+      danger: true,
     });
     if (confirme) {
-      await this.executer(
-        () => firstValueFrom(this.defiService.changerStatut(defi.id, statut)),
-        'Le statut du défi est mis à jour.',
-      );
+      await this.executer(() => firstValueFrom(this.defiService.annuler(defi.id)), `« ${defi.nom} » est annulé.`);
     }
   }
 
@@ -304,7 +297,7 @@ export class DefiDetail {
     const confirme = await this.confirmation.demander({
       titre: defi.classementPublie ? 'Mettre à jour le classement publié ?' : 'Publier le classement ?',
       message:
-        'Les rangs sont calculés à partir des notes (ex æquo = même rang). Le défi passe à « Terminé » et tous les membres voient le classement.' +
+        'Les rangs sont calculés à partir des notes (ex æquo = même rang). Tous les membres voient ensuite le classement.' +
         (sansNote > 0 ? ` ${sansNote} participant${sansNote > 1 ? 's' : ''} sans note ne sera pas classé.` : ''),
       texteConfirmer: defi.classementPublie ? 'Mettre à jour' : 'Publier le classement',
     });

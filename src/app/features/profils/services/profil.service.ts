@@ -41,6 +41,20 @@ export class ProfilService {
     return this.http.delete<ApiResponse<null>>(`${this.url}/${id}`).pipe(map(() => undefined));
   }
 
+  /** Désactivé : plus proposé pour les nouveaux comptes, ses droits ne sont plus donnés. */
+  changerActivation(id: string, actif: boolean): Observable<ProfilResponse> {
+    return this.http
+      .put<ApiResponse<ProfilResponse>>(`${this.url}/${id}/activation`, { actif })
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  /** Désactivé : le droit reste dans le catalogue et les profils, mais n'est donné à personne. */
+  changerActivationDroit(id: string, actif: boolean): Observable<DroitResponse> {
+    return this.http
+      .put<ApiResponse<DroitResponse>>(`${this.url}/droits/${id}/activation`, { actif })
+      .pipe(map((reponse) => reponse.data));
+  }
+
   // ----- Droits -----
 
   getDroits(): Observable<DroitResponse[]> {

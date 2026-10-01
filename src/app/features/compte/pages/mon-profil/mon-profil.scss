@@ -97,22 +97,8 @@
 }
 
 .droits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--gw-espace-1);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-
-  li {
-    padding: 2px var(--gw-espace-2);
-    border-radius: var(--gw-rayon-sm);
-    background: var(--gw-karite-pale);
-    color: var(--gw-karite);
-    font-family: ui-monospace, monospace;
-    font-size: 0.75rem;
-    overflow-wrap: anywhere;
-  }
+  align-self: stretch;
+  text-align: left;
 }
 
 // ----- Blocs -----

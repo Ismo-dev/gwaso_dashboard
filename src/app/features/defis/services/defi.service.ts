@@ -10,7 +10,9 @@ import {
   DefiResponse,
   FiltresDefis,
   ParticipationDefiResponse,
-  StatutDefi,
+  PhotoDefiResponse,
+  TypeDefiRequest,
+  TypeDefiResponse,
 } from '../models/defi.model';
 
 /** Appels à /defis utiles à l'administration. */
@@ -55,11 +57,55 @@ export class DefiService {
       .pipe(map((reponse) => reponse.data));
   }
 
-  /** Démarrer (EN_COURS), terminer (TERMINE) ou annuler (ANNULE). */
-  changerStatut(id: string, statut: StatutDefi): Observable<DefiResponse> {
+  /** Seule action manuelle sur le statut : les autres changements suivent les dates. */
+  annuler(id: string): Observable<DefiResponse> {
     return this.http
-      .put<ApiResponse<DefiResponse>>(`${this.url}/${id}/statut`, { statut })
+      .put<ApiResponse<DefiResponse>>(`${this.url}/${id}/annuler`, {})
       .pipe(map((reponse) => reponse.data));
+  }
+
+  // ----- Photos -----
+
+  getPhotos(id: string): Observable<PhotoDefiResponse[]> {
+    return this.http
+      .get<ApiResponse<PhotoDefiResponse[]>>(`${this.url}/${id}/photos`)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  ajouterPhoto(id: string, fichier: File): Observable<PhotoDefiResponse> {
+    const donnees = new FormData();
+    donnees.append('file', fichier);
+    return this.http
+      .post<ApiResponse<PhotoDefiResponse>>(`${this.url}/${id}/photos`, donnees)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  supprimerPhoto(photoId: string): Observable<void> {
+    return this.http.delete<ApiResponse<null>>(`${this.url}/photos/${photoId}`).pipe(map(() => undefined));
+  }
+
+  // ----- Types de défi -----
+
+  getTypes(): Observable<TypeDefiResponse[]> {
+    return this.http
+      .get<ApiResponse<TypeDefiResponse[]>>(`${this.url}/types`)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  creerType(requete: TypeDefiRequest): Observable<TypeDefiResponse> {
+    return this.http
+      .post<ApiResponse<TypeDefiResponse>>(`${this.url}/types`, requete)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  modifierType(id: string, requete: TypeDefiRequest): Observable<TypeDefiResponse> {
+    return this.http
+      .put<ApiResponse<TypeDefiResponse>>(`${this.url}/types/${id}`, requete)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  supprimerType(id: string): Observable<void> {
+    return this.http.delete<ApiResponse<null>>(`${this.url}/types/${id}`).pipe(map(() => undefined));
   }
 
   // ----- Participants et classement -----
@@ -80,7 +126,7 @@ export class DefiService {
       .pipe(map((reponse) => reponse.data));
   }
 
-  /** Calcule les rangs à partir des scores, rend le classement public et termine le défi. */
+  /** Calcule les rangs à partir des scores et rend le classement public (défi terminé). */
   publierClassement(id: string): Observable<DefiResponse> {
     return this.http
       .put<ApiResponse<DefiResponse>>(`${this.url}/${id}/classement/publier`, {})

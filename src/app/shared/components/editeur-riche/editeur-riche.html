@@ -154,7 +154,7 @@
       <p class="erreur" role="alert">
         Le texte est trop long : raccourcissez-le ou retirez de la mise en forme.
       </p>
-    } @else {
+    } @else if (aide()) {
       <p class="aide" [id]="id + '-aide'">{{ aide() }}</p>
     }
     <p class="compteur gw-chiffres" aria-live="polite">

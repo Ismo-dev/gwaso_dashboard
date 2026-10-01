@@ -144,3 +144,48 @@
   max-width: 100%;
   overflow-x: hidden;
 }
+
+// ----- Justificatif (chef, producteur) -----
+.justificatif {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border: 1px dashed var(--gw-contour-champ);
+  border-radius: var(--gw-rayon);
+  color: var(--gw-karite);
+}
+
+.justificatif-erreur {
+  border-color: var(--gw-danger);
+  color: var(--gw-danger);
+
+  .aide {
+    color: var(--gw-danger);
+  }
+}
+
+.justificatif-textes {
+  flex: 1;
+  min-width: 0;
+
+  .aide {
+    margin: 0;
+  }
+}
+
+.justificatif-titre {
+  overflow: hidden;
+  color: var(--gw-cacao);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obligatoire {
+  margin-left: 4px;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  font-weight: 400;
+}

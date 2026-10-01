@@ -2,13 +2,13 @@ import { Component, computed, inject, input, OnInit, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
-import { MatCheckbox } from '@angular/material/checkbox';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatLabel, MatPrefix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatOption, MatSelect } from '@angular/material/select';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 import {
   MatCell,
   MatCellDef,
@@ -33,15 +33,23 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { DonneesDroitDialog, DroitDialog } from '../../components/droit-dialog/droit-dialog';
 import { DonneesProfilDialog, ProfilDialog } from '../../components/profil-dialog/profil-dialog';
-import { ACCES_PROFIL, DroitResponse, ProfilResponse } from '../../models/profil.model';
+import {
+  ACCES_PROFIL,
+  DroitResponse,
+  GroupeDroits,
+  grouperDroits,
+  libelleDroit,
+  ProfilResponse,
+} from '../../models/profil.model';
 import { ProfilService } from '../../services/profil.service';
 
 type Onglet = 'profils' | 'droits';
 
 /**
  * Profils et droits.
- * - Onglet « Profils » : à gauche la liste des profils, à droite les droits du profil choisi (cases à cocher).
- * - Onglet « Catalogue des droits » : créer, renommer ou supprimer les droits eux-mêmes.
+ * - Onglet « Profils » : à gauche la liste des profils, à droite les droits du profil choisi,
+ *   regroupés par domaine (Recettes, Vidéos...) avec un interrupteur par droit.
+ * - Onglet « Catalogue des droits » : créer, renommer, activer / désactiver ou supprimer les droits eux-mêmes.
  */
 @Component({
   imports: [
@@ -50,7 +58,7 @@ type Onglet = 'profils' | 'droits';
     MatIconButton,
     MatButtonToggleGroup,
     MatButtonToggle,
-    MatCheckbox,
+    MatSlideToggle,
     MatFormField,
     MatLabel,
     MatPrefix,
@@ -96,6 +104,7 @@ export class ProfilsListe implements OnInit {
   );
 
   protected readonly acces = ACCES_PROFIL;
+  protected readonly libelleDroit = libelleDroit;
   protected profils = signal<ProfilResponse[]>([]);
   protected droits = signal<DroitResponse[]>([]);
   protected chargement = signal(true);
@@ -132,7 +141,7 @@ export class ProfilsListe implements OnInit {
   );
   /** Sur téléphone, la description passe sous le code : une colonne de moins. */
   protected colonnesDroits = computed(() =>
-    this.ecran.mobile() ? ['code', 'actions'] : ['code', 'description', 'actions'],
+    this.ecran.mobile() ? ['code', 'statut', 'actions'] : ['code', 'description', 'statut', 'actions'],
   );
 
   changerPageDroits(evenement: PageEvent): void {
@@ -151,6 +160,12 @@ export class ProfilsListe implements OnInit {
         )
       : this.droits();
   });
+  /** Droits regroupés par domaine (préfixe du code : RECETTE_, VIDEO_...). */
+  protected groupesDroits = computed<GroupeDroits[]>(() => grouperDroits(this.droitsFiltres()));
+  protected nbCochesGroupe(groupe: GroupeDroits): number {
+    const coches = this.droitsCoches();
+    return groupe.droits.filter((d) => coches.has(d.id)).length;
+  }
 
   ngOnInit(): void {
     this.charger();
@@ -242,11 +257,11 @@ export class ProfilsListe implements OnInit {
     });
   }
 
-  /** Coche ou décoche tous les droits visibles (tient compte de la recherche). */
-  toutCocher(coche: boolean): void {
+  /** Tout le domaine d'un coup (ex. tous les droits « Recettes »). */
+  basculerGroupe(groupe: GroupeDroits, coche: boolean): void {
     this.droitsCoches.update((ids) => {
       const copie = new Set(ids);
-      for (const droit of this.droitsFiltres()) {
+      for (const droit of groupe.droits) {
         if (coche) {
           copie.add(droit.id);
         } else {
@@ -284,12 +299,17 @@ export class ProfilsListe implements OnInit {
 
   // ----- Profils -----
 
+  /** Relit la liste (un changement de profil des inscriptions touche aussi les autres profils du type). */
+  private rafraichirProfils(): void {
+    this.profilService.getAll().subscribe({
+      next: (profils) => this.profils.set([...profils].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))),
+    });
+  }
+
   async nouveauProfil(): Promise<void> {
     const profil = await this.ouvrirDialogueProfil({ profils: this.profils() });
     if (profil) {
-      this.profils.update((profils) =>
-        [...profils, profil].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
-      );
+      this.rafraichirProfils();
       this.notification.succes(
         `Le profil « ${profil.nom} » est créé. Cochez maintenant ses droits.`,
       );
@@ -300,13 +320,46 @@ export class ProfilsListe implements OnInit {
   async modifierProfil(profil: ProfilResponse): Promise<void> {
     const resultat = await this.ouvrirDialogueProfil({ profil, profils: this.profils() });
     if (resultat) {
-      this.profils.update((profils) => profils.map((p) => (p.id === resultat.id ? resultat : p)));
-      this.notification.succes(
-        resultat.role
-          ? `Le profil est modifié. ${resultat.nbUtilisateurs} compte(s) l'ont désormais.`
-          : 'Le profil est modifié.',
-      );
+      this.rafraichirProfils();
+      this.notification.succes('Le profil est modifié.');
     }
+  }
+
+  /** Désactivé : plus proposé pour les nouveaux comptes, et ses droits ne sont plus donnés. */
+  async changerActivationProfil(profil: ProfilResponse): Promise<void> {
+    if (profil.actif) {
+      const confirme = await this.confirmation.demander({
+        titre: `Désactiver le profil « ${profil.nom} » ?`,
+        message:
+          `Il ne sera plus proposé pour les nouveaux comptes, et ses ${profil.nbUtilisateurs} compte(s) n'auront plus ses droits ` +
+          `(ils gardent le profil : il suffira de le réactiver).`,
+        texteConfirmer: 'Désactiver',
+        danger: true,
+      });
+      if (!confirme) {
+        return;
+      }
+    }
+    this.profilService.changerActivation(profil.id, !profil.actif).subscribe({
+      next: (resultat) => {
+        this.rafraichirProfils();
+        this.notification.succes(
+          resultat.actif ? `Le profil « ${resultat.nom} » est réactivé.` : `Le profil « ${resultat.nom} » est désactivé.`,
+        );
+      },
+    });
+  }
+
+  /** Désactivé : le droit reste dans le catalogue et les profils, mais n'est donné à personne. */
+  changerActivationDroit(droit: DroitResponse): void {
+    this.profilService.changerActivationDroit(droit.id, !droit.actif).subscribe({
+      next: (resultat) => {
+        this.droits.update((droits) => droits.map((d) => (d.id === resultat.id ? resultat : d)));
+        this.notification.succes(
+          resultat.actif ? `Le droit ${resultat.action} est réactivé.` : `Le droit ${resultat.action} est désactivé : il n'est plus donné.`,
+        );
+      },
+    });
   }
 
   async supprimerProfil(profil: ProfilResponse): Promise<void> {

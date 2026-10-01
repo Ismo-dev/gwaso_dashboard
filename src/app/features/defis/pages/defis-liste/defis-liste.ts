@@ -4,6 +4,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -28,9 +29,11 @@ import { EcranService } from '../../../../core/services/ecran.service';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
+import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import { Statistiques } from '../../../tableau-de-bord/models/statistiques.model';
 import { StatistiquesService } from '../../../tableau-de-bord/services/statistiques.service';
 import { DefiResponse, FiltresDefis, StatutDefi } from '../../models/defi.model';
+import { TypesDefiDialog } from '../../components/types-defi-dialog/types-defi-dialog';
 import { DefiService } from '../../services/defi.service';
 
 type FiltreStatut = StatutDefi | 'TOUS';
@@ -93,6 +96,7 @@ interface EtatListe {
     PageHeader,
     EmptyState,
     StatusBadge,
+    FichierPipe,
   ],
   selector: 'app-defis-liste',
   styleUrl: './defis-liste.scss',
@@ -103,6 +107,7 @@ export class DefisListe implements OnInit {
   private statistiquesService = inject(StatistiquesService);
   private aValider = inject(AValiderService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
   private route = inject(ActivatedRoute);
   protected ecran = inject(EcranService);
 
@@ -204,6 +209,11 @@ export class DefisListe implements OnInit {
       page: evenement.pageIndex || null,
       taille: evenement.pageSize === TAILLES[0] ? null : evenement.pageSize,
     });
+  }
+
+  /** Types de défi : « Recette imposée », « Plat libre », « Devinette »... */
+  gererTypes(): void {
+    this.dialog.open(TypesDefiDialog, { width: '640px', maxWidth: 'calc(100vw - 32px)', autoFocus: false });
   }
 
   recharger(): void {

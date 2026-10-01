@@ -40,16 +40,10 @@
   font-size: var(--gw-taille-petit);
 }
 
-.tout-pris {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--gw-espace-3);
-  padding: var(--gw-espace-4);
-  border-radius: var(--gw-rayon);
-  background: var(--gw-karite-pale);
-  color: var(--gw-karite);
+.par-defaut {
+  margin-left: -8px;
+}
 
-  p {
-    color: var(--gw-cacao);
-  }
+.explication-case {
+  margin: 0 0 var(--gw-espace-4) 32px;
 }

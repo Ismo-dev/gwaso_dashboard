@@ -1,0 +1,59 @@
+<header class="entete">
+  <h2>Commentaires <span class="gw-chiffres">{{ commentaires().length }}</span></h2>
+  <button matIconButton type="button" aria-label="Fermer les commentaires" (click)="fermer.emit()">
+    <ng-icon name="lucideX" size="1.25rem" aria-hidden="true" />
+  </button>
+</header>
+
+<div class="liste">
+  @if (chargement()) {
+    <div class="etat"><mat-progress-spinner mode="indeterminate" diameter="28" aria-label="Chargement" /></div>
+  } @else {
+    @for (c of commentaires(); track c.id) {
+      <article class="commentaire">
+        <app-avatar [prenom]="c.utilisateurPrenom" [nom]="c.utilisateurNom" [photo]="c.utilisateurPhotoProfil" taille="sm" />
+        <div class="textes">
+          <p class="auteur">
+            {{ c.utilisateurPrenom }} {{ c.utilisateurNom }}
+            <span class="date">· {{ c.dateCreation | depuis }}</span>
+          </p>
+          <p class="contenu">{{ c.contenu }}</p>
+        </div>
+        <button
+          matIconButton
+          type="button"
+          class="supprimer"
+          matTooltip="Supprimer"
+          [attr.aria-label]="'Supprimer le commentaire de ' + c.utilisateurPrenom"
+          (click)="supprimer(c)"
+        >
+          <ng-icon name="lucideTrash2" size="1rem" aria-hidden="true" />
+        </button>
+      </article>
+    } @empty {
+      <p class="etat vide">Pas encore de commentaire. Soyez le premier !</p>
+    }
+  }
+</div>
+
+@if (video().statut === 'PUBLIEE') {
+  <form class="saisie" (ngSubmit)="envoyer()">
+    @if (session.utilisateur(); as moi) {
+      <app-avatar [prenom]="moi.prenom" [nom]="moi.nom" [photo]="moi.photoProfil" taille="sm" />
+    }
+    <label class="sr-only" for="nouveau-commentaire">Votre commentaire</label>
+    <textarea
+      id="nouveau-commentaire"
+      rows="1"
+      maxlength="1000"
+      placeholder="Ajouter un commentaire…"
+      [formControl]="champ"
+      (keydown)="touche($event)"
+    ></textarea>
+    <button matIconButton type="submit" class="envoyer" aria-label="Envoyer" [disabled]="champ.invalid || envoi()">
+      <ng-icon name="lucideSend" size="1.125rem" aria-hidden="true" />
+    </button>
+  </form>
+} @else {
+  <p class="ferme">On ne peut commenter qu'une vidéo publiée.</p>
+}

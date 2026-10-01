@@ -1,0 +1,174 @@
+<app-page-header
+  surtitre="Activité"
+  titre="Notifications"
+  description="Inscriptions, contenus à valider, défis : tout ce qui s'est passé sur Gwaso."
+>
+  <button matButton="outlined" type="button" [disabled]="service.nombreNonLues() === 0" (click)="toutMarquerLu()">
+    <ng-icon name="lucideCheck" size="1.125rem" aria-hidden="true" />
+    Tout marquer comme lu
+  </button>
+</app-page-header>
+
+<div class="disposition" [class.detail-ouvert]="!!choisie()">
+  <!-- ===================== Liste ===================== -->
+  <section class="gw-carte liste" aria-label="Liste des notifications">
+    <div class="liste-entete">
+      <mat-button-toggle-group
+        class="gw-onglets"
+        aria-label="Filtrer les notifications"
+        [value]="filtre()"
+        (change)="changerFiltre($event.value)"
+        hideSingleSelectionIndicator
+      >
+        <mat-button-toggle value="toutes">Toutes</mat-button-toggle>
+        <mat-button-toggle value="nonLues">
+          Non lues
+          @if (service.nombreNonLues() > 0) {
+            <span class="gw-onglet-compteur gw-chiffres">{{ service.nombreNonLues() }}</span>
+          }
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    @if (chargement() && notifications().length === 0) {
+      <div class="squelette" aria-busy="true" aria-label="Chargement">
+        @for (i of [1, 2, 3, 4, 5]; track i) {
+          <div class="sq-ligne"><span class="gw-squelette sq-rond"></span><span class="gw-squelette sq-texte"></span></div>
+        }
+      </div>
+    } @else if (erreur()) {
+      <app-empty-state titre="Impossible de charger les notifications" icone="lucideCircleAlert" ton="erreur">
+        <button matButton="filled" type="button" (click)="charger(true)">Réessayer</button>
+      </app-empty-state>
+    } @else if (notifications().length === 0) {
+      <app-empty-state
+        [titre]="filtre() === 'nonLues' ? 'Tout est lu' : 'Aucune notification'"
+        message="Les inscriptions et les contenus à valider apparaîtront ici."
+        icone="lucideBell"
+        [ton]="filtre() === 'nonLues' ? 'succes' : 'neutre'"
+      />
+    } @else {
+      @for (journee of journees(); track journee.libelle) {
+        <h2 class="jour">{{ journee.libelle }}</h2>
+        <ul class="notifications">
+          @for (n of journee.notifications; track n.id) {
+            <li>
+              <button
+                type="button"
+                class="notification"
+                [class.non-lue]="!n.lue"
+                [class.active]="choisie()?.id === n.id"
+                [attr.aria-current]="choisie()?.id === n.id ? 'true' : null"
+                (click)="choisir(n)"
+              >
+                <span [class]="'icone ton-' + infos[n.type].ton" aria-hidden="true">
+                  <ng-icon [name]="infos[n.type].icone" size="1.125rem" />
+                </span>
+                <span class="textes">
+                  <span class="categorie">
+                    {{ infos[n.type].categorie }}
+                    @if (infos[n.type].aDecider) {
+                      <span class="a-decider">à décider</span>
+                    }
+                  </span>
+                  <span class="titre">{{ n.titre }}</span>
+                  <span class="date">{{ n.dateCreation | depuis }}</span>
+                </span>
+                @if (!n.lue) {
+                  <span class="point" aria-label="Non lue"></span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      @if (!toutCharge()) {
+        <div class="plus">
+          <button matButton type="button" [disabled]="chargement()" (click)="charger(false)">Voir plus</button>
+        </div>
+      }
+    }
+  </section>
+
+  <!-- ===================== Détail ===================== -->
+  <section class="gw-carte detail" aria-live="polite" aria-label="Détail de la notification">
+    @if (choisie(); as n) {
+      @if (ecran.mobile()) {
+        <button matButton type="button" class="retour" (click)="fermer()">
+          <ng-icon name="lucideArrowLeft" size="1rem" aria-hidden="true" />
+          Toutes les notifications
+        </button>
+      }
+      <header class="detail-entete">
+        <span [class]="'grande-icone ton-' + infos[n.type].ton" aria-hidden="true">
+          <ng-icon [name]="infos[n.type].icone" size="1.5rem" />
+        </span>
+        <div>
+          <p class="detail-categorie">{{ infos[n.type].categorie }}</p>
+          <h2>{{ n.titre }}</h2>
+          <p class="detail-date">{{ n.dateCreation | date: "EEEE d MMMM y 'à' HH:mm" }}</p>
+        </div>
+      </header>
+
+      @if (n.message) {
+        <p class="message">{{ n.message }}</p>
+      }
+
+      <!-- Qui ? -->
+      @if (n.acteurId) {
+        <div class="acteur">
+          <app-avatar [prenom]="n.acteurPrenom ?? ''" [nom]="n.acteurNom ?? ''" [photo]="n.acteurPhotoProfil" taille="md" />
+          <div>
+            <p class="acteur-nom">{{ n.acteurPrenom }} {{ n.acteurNom }}</p>
+            @if (n.acteurRole) {
+              <p class="acteur-role">{{ libellesRole[n.acteurRole] }}</p>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Quoi ? -->
+      @if (chargementApercu()) {
+        <div class="gw-squelette sq-apercu"></div>
+      } @else if (apercu(); as a) {
+        <div class="apercu">
+          <div class="apercu-media">
+            @if (a.image | fichier; as image) {
+              <img [src]="image" alt="" />
+            } @else if (a.video | fichier; as video) {
+              <video [src]="video + '#t=0.5'" preload="metadata" muted playsinline></video>
+            } @else {
+              <ng-icon [name]="infos[n.type].icone" size="1.75rem" aria-hidden="true" />
+            }
+          </div>
+          <div class="apercu-textes">
+            <p class="apercu-titre">{{ a.titre }}</p>
+            @if (a.sousTitre) {
+              <p class="apercu-sous-titre">{{ a.sousTitre }}</p>
+            }
+            @if (a.details.length > 0) {
+              <p class="apercu-details">{{ a.details.join(' · ') }}</p>
+            }
+            @if (a.statut) {
+              <app-status-badge [statut]="a.statut" />
+            }
+          </div>
+        </div>
+      } @else if (n.cibleId) {
+        <p class="introuvable">L'élément concerné n'existe plus (il a peut-être été supprimé).</p>
+      }
+
+      @if (lien(); as cible) {
+        <a matButton="filled" class="action" [routerLink]="cible.lien" [queryParams]="cible.parametres">
+          {{ infos[n.type].action }}
+          <ng-icon name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
+        </a>
+      }
+    } @else {
+      <div class="vide">
+        <span class="vide-icone" aria-hidden="true"><ng-icon name="lucideBell" size="2rem" /></span>
+        <p>Choisissez une notification pour voir son détail.</p>
+      </div>
+    }
+  </section>
+</div>

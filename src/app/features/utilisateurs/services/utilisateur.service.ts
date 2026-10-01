@@ -41,6 +41,13 @@ export class UtilisateurService {
       .pipe(map((reponse) => reponse.data));
   }
 
+  /** Donne un autre profil (actif, du même type de compte) à un utilisateur. */
+  changerProfil(id: string, profilId: string): Observable<UtilisateurResume> {
+    return this.http
+      .put<ApiResponse<UtilisateurResume>>(`${this.url}/${id}/profil`, { profilId })
+      .pipe(map((reponse) => reponse.data));
+  }
+
   getCuisinier(id: string): Observable<CuisinierResponse> {
     return this.http
       .get<ApiResponse<CuisinierResponse>>(`${this.url}/cuisiniers/${id}`)
@@ -118,6 +125,15 @@ export class UtilisateurService {
     return this.http
       .post<ApiResponse<ChefCuisinierResponse>>(`${this.url}/chefs`, requete)
       .pipe(map((reponse) => reponse.data));
+  }
+
+  /** Justificatif d'un chef ou d'un producteur (photo ou PDF) : renvoie l'adresse à mettre dans preuveUrl. */
+  envoyerJustificatif(fichier: File): Observable<string> {
+    const formulaire = new FormData();
+    formulaire.append('file', fichier);
+    return this.http
+      .post<ApiResponse<{ url: string }>>(`${environment.apiUrl}/fichiers/justificatifs`, formulaire)
+      .pipe(map((reponse) => reponse.data.url));
   }
 
   /** Le producteur est créé « en attente » : on peut le valider juste après. */

@@ -31,6 +31,12 @@
       </div>
       <h1>{{ defi.nom }}</h1>
       <ul class="faits">
+        @if (defi.typeDefiNom) {
+          <li>
+            <ng-icon [name]="iconeType({ recetteObligatoire: !!defi.recetteId, modeParticipation: defi.modeParticipation ?? 'REALISATION', elements: defi.elements })" size="1rem" aria-hidden="true" />
+            {{ defi.typeDefiNom }}
+          </li>
+        }
         <li>
           <ng-icon name="lucideCalendar" size="1rem" aria-hidden="true" />
           Du {{ defi.dateDebut | date: 'd MMMM' }} au {{ defi.dateFin | date: 'd MMMM y' }}
@@ -95,12 +101,8 @@
         <ng-icon name="lucideFlag" size="1.25rem" aria-hidden="true" />
         <div>
           <p class="bandeau-titre">Validé · {{ echeance(defi) }}</p>
-          <p>Les cuisiniers peuvent déjà s'inscrire. Démarrez-le quand vous voulez.</p>
+          <p>Le défi s'ouvrira tout seul le {{ defi.dateDebut | date: 'd MMMM' }}. Les notes ne sont possibles qu'à partir de ce jour.</p>
         </div>
-        <button matButton="filled" type="button" [disabled]="actionEnCours()" (click)="changerStatut(defi, 'EN_COURS')">
-          <ng-icon name="lucideCirclePlay" size="1.125rem" aria-hidden="true" />
-          Démarrer
-        </button>
       </section>
     }
     @case ('EN_COURS') {
@@ -108,12 +110,33 @@
         <ng-icon name="lucideCirclePlay" size="1.25rem" aria-hidden="true" />
         <div>
           <p class="bandeau-titre">En cours · {{ echeance(defi) }}</p>
-          <p>Notez les participants au fil de l'eau, puis terminez le défi et publiez le classement.</p>
+          <p>
+            Il se fermera tout seul après le {{ defi.dateFin | date: 'd MMMM' }}.
+            @if (defi.noteParAdmin) {
+              Notez les participants au fil de l'eau ; le classement se publie une fois le défi terminé.
+            } @else {
+              Le chef {{ defi.chefCuisinierNom }} note les participants.
+            }
+          </p>
         </div>
-        <button matButton="outlined" type="button" [disabled]="actionEnCours()" (click)="changerStatut(defi, 'TERMINE')">
-          Terminer le défi
-        </button>
       </section>
+    }
+    @case ('TERMINE') {
+      @if (!defi.classementPublie) {
+        <section class="bandeau">
+          <ng-icon name="lucideMedal" size="1.25rem" aria-hidden="true" />
+          <div>
+            <p class="bandeau-titre">Défi terminé · classement à publier</p>
+            <p>
+              @if (defi.noteParAdmin) {
+                Vérifiez les notes, puis publiez le classement.
+              } @else {
+                C'est le chef {{ defi.chefCuisinierNom }}, auteur du défi, qui note et publie le classement.
+              }
+            </p>
+          </div>
+        </section>
+      }
     }
     @case ('ANNULE') {
       <section class="bandeau">
@@ -133,6 +156,61 @@
         <h2 id="titre-presentation" class="bloc-titre">Présentation</h2>
         <app-texte-riche [html]="defi.description" />
       </section>
+
+      @if (photos().length > 0) {
+        <section class="gw-carte bloc" aria-labelledby="titre-photos">
+          <h2 id="titre-photos" class="bloc-titre">
+            <ng-icon name="lucideImage" size="1.125rem" aria-hidden="true" /> Photos
+          </h2>
+          <ul class="gw-galerie">
+            @for (photo of photos(); track photo.id; let i = $index) {
+              <li>
+                <button type="button" class="gw-vignette" [attr.aria-label]="'Agrandir la photo ' + (i + 1)" (click)="photoOuverte.set(photo)">
+                  <img [src]="photo.url | fichier" alt="" loading="lazy" />
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (defi.ingredients.length > 0 || defi.ustensiles.length > 0) {
+        <section class="gw-carte bloc" aria-labelledby="titre-elements">
+          <h2 id="titre-elements" class="bloc-titre">
+            <ng-icon [name]="defi.ingredients.length > 0 ? 'lucideCarrot' : 'lucideUtensilsCrossed'" size="1.125rem" aria-hidden="true" />
+            Ce que voient les participants
+          </h2>
+          <ul class="gw-galerie">
+            @for (element of defi.ingredients.length > 0 ? defi.ingredients : defi.ustensiles; track $index) {
+              <li>
+                <figure class="gw-vignette-figure">
+                  @if (element.photoUrl | fichier; as photo) {
+                    <img class="gw-vignette" [src]="photo" alt="" loading="lazy" />
+                  }
+                  <figcaption>
+                    @if (defi.ingredients.length > 0) {
+                      {{ element.nom }}
+                    } @else {
+                      <span class="gw-etiquette gw-etiquette-neutre">Nom caché aux participants</span>
+                      <span class="sr-only">Réponse : </span>{{ element.nom }}
+                    }
+                  </figcaption>
+                </figure>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (defi.reponseAttendue) {
+        <section class="gw-carte bloc reponse-attendue" aria-labelledby="titre-reponse">
+          <h2 id="titre-reponse" class="bloc-titre">
+            <ng-icon name="lucideKeyRound" size="1.125rem" aria-hidden="true" /> Bonne réponse
+          </h2>
+          <p>{{ defi.reponseAttendue }}</p>
+          <p class="discret">Visible seulement par l'auteur du défi et les administrateurs.</p>
+        </section>
+      }
 
       @if (defi.regles) {
         <section class="gw-carte bloc" aria-labelledby="titre-regles">
@@ -162,7 +240,7 @@
       <!-- Actions secondaires, à l'écart -->
       <section class="zone-secondaire">
         @if (defi.statut === 'VALIDE' || defi.statut === 'EN_COURS' || defi.statut === 'PROPOSE') {
-          <button matButton type="button" [disabled]="actionEnCours()" (click)="changerStatut(defi, 'ANNULE')">
+          <button matButton type="button" [disabled]="actionEnCours()" (click)="annuler(defi)">
             <ng-icon name="lucideBan" size="1rem" aria-hidden="true" />
             Annuler le défi
           </button>
@@ -185,6 +263,10 @@
           <p class="classement-info">Publié {{ defi.datePublicationClassement | depuis }}</p>
         } @else if (peutNoter() && participants().length > 0) {
           <p class="classement-info">Notez sur {{ noteMax }} · rang provisoire</p>
+        } @else if (!defi.noteParAdmin && participants().length > 0) {
+          <p class="classement-info">Noté par le chef {{ defi.chefCuisinierNom }}</p>
+        } @else if (defi.statut === 'VALIDE' && participants().length > 0) {
+          <p class="classement-info">Notes à partir du {{ defi.dateDebut | date: 'd MMMM' }}</p>
         }
       </header>
 
@@ -195,12 +277,12 @@
             <!-- place : position sur le podium (1er au centre) ; rang : hauteur et couleur (ex æquo possibles) -->
             <li [class]="'marche place-' + place + ' rang-' + ligne.rang">
               <app-avatar
-                [prenom]="ligne.participation.cuisinierPrenom ?? ''"
-                [nom]="ligne.participation.cuisinierNom"
-                [photo]="ligne.participation.cuisinierPhotoProfil"
+                [prenom]="ligne.participation.participantPrenom ?? ''"
+                [nom]="ligne.participation.participantNom"
+                [photo]="ligne.participation.participantPhotoProfil"
                 taille="md"
               />
-              <span class="marche-nom">{{ ligne.participation.cuisinierPrenom }}</span>
+              <span class="marche-nom">{{ ligne.participation.participantPrenom }}</span>
               <span class="marche-rang gw-chiffres">{{ ligne.rang }}</span>
             </li>
           }
@@ -223,27 +305,42 @@
                 {{ ligne.rang ?? '–' }}
               </span>
               <app-avatar
-                [prenom]="ligne.participation.cuisinierPrenom ?? ''"
-                [nom]="ligne.participation.cuisinierNom"
-                [photo]="ligne.participation.cuisinierPhotoProfil"
+                [prenom]="ligne.participation.participantPrenom ?? ''"
+                [nom]="ligne.participation.participantNom"
+                [photo]="ligne.participation.participantPhotoProfil"
                 taille="sm"
               />
               <div class="participant-textes">
                 <span class="participant-nom">
-                  {{ ligne.participation.cuisinierPrenom }} {{ ligne.participation.cuisinierNom }}
+                  {{ ligne.participation.participantPrenom }} {{ ligne.participation.participantNom }}
                 </span>
-                <span class="participant-meta">Inscrit {{ ligne.participation.dateParticipation | depuis }}</span>
+                <span class="participant-meta">
+                  @if (ligne.participation.participantRole && ligne.participation.participantRole !== 'CUISINIER') {
+                    {{ libellesRole[ligne.participation.participantRole] }} ·
+                  }
+                  Inscrit {{ ligne.participation.dateParticipation | depuis }}
+                </span>
+                @if (devinette()) {
+                  <span class="participant-reponse">
+                    @if (ligne.participation.reponse) {
+                      « {{ ligne.participation.reponse }} »
+                    } @else {
+                      <em>Réponse masquée</em>
+                    }
+                  </span>
+                }
               </div>
 
-              @if (ligne.participation.preuveUrl | fichier; as preuve) {
-                <a class="preuve" [href]="preuve" target="_blank" rel="noopener" matTooltip="Voir la preuve envoyée" [attr.aria-label]="'Voir la preuve de ' + ligne.participation.cuisinierNom">
+              <!-- Preuve (photo ou vidéo) : seulement pour un défi « réalisation » -->
+              @if (!devinette() && (ligne.participation.preuveUrl | fichier); as preuve) {
+                <a class="preuve" [href]="preuve" target="_blank" rel="noopener" matTooltip="Voir la preuve envoyée" [attr.aria-label]="'Voir la preuve de ' + ligne.participation.participantNom">
                   @if (estVideo(ligne.participation.preuveUrl)) {
                     <ng-icon name="lucidePlay" size="1rem" aria-hidden="true" />
                   } @else {
                     <img [src]="preuve" alt="" loading="lazy" />
                   }
                 </a>
-              } @else {
+              } @else if (!devinette()) {
                 <span class="preuve preuve-vide" matTooltip="Pas de preuve envoyée">
                   <ng-icon name="lucideImageOff" size="1rem" aria-hidden="true" />
                 </span>
@@ -251,7 +348,7 @@
 
               @if (peutNoter()) {
                 <label class="note">
-                  <span class="sr-only">Note de {{ ligne.participation.cuisinierNom }} sur {{ noteMax }}</span>
+                  <span class="sr-only">Note de {{ ligne.participation.participantNom }} sur {{ noteMax }}</span>
                   <input
                     #champNote
                     type="number"
@@ -278,7 +375,7 @@
           }
         </ol>
 
-        @if (peutNoter()) {
+        @if (peutPublier()) {
           <div class="publier">
             <p>
               <strong class="gw-chiffres">{{ nbNotes() }}</strong> / {{ participants().length }} participants notés
@@ -297,4 +394,15 @@
       }
     </section>
   </div>
+
+  <!-- Photo agrandie -->
+  @if (photoOuverte(); as photo) {
+    <div class="gw-visionneuse" role="dialog" aria-modal="true" aria-label="Photo du défi" (click)="photoOuverte.set(null)">
+      <img [src]="photo.url | fichier" alt="" (click)="$event.stopPropagation()" />
+      <button matButton="filled" type="button" class="fermer-visionneuse" (click)="photoOuverte.set(null)">
+        <ng-icon name="lucideX" size="1.125rem" aria-hidden="true" />
+        Fermer
+      </button>
+    </div>
+  }
 }

@@ -522,3 +522,23 @@
   height: 320px;
   border-radius: var(--gw-rayon-lg);
 }
+
+// ----- Devinette -----
+.reponse-attendue p:first-of-type {
+  color: var(--gw-cacao);
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.discret {
+  margin-top: var(--gw-espace-1);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.participant-reponse {
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}

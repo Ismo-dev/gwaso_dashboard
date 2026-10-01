@@ -53,6 +53,8 @@ export interface RecetteRequest {
   telechargeable?: boolean;
   difficulte?: Difficulte;
   categorieId: string;
+  /** À la création : les autres noms du même plat (ex. « Tigadèguèna » pour le mafé). */
+  autresNoms?: string[];
 }
 
 /** RecetteIngredientRequestDTO côté backend : ajout d'un ingrédient à une recette. */

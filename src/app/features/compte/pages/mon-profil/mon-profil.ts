@@ -20,6 +20,9 @@ import { Avatar } from '../../../../shared/components/avatar/avatar';
 import { ImageUpload } from '../../../../shared/components/image-upload/image-upload';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { AuthService } from '../../../auth/services/auth.service';
+import { DroitsLecture } from '../../../profils/components/droits-lecture/droits-lecture';
+import { DroitAffiche } from '../../../profils/models/profil.model';
+import { ProfilService } from '../../../profils/services/profil.service';
 import { UtilisateurService } from '../../../utilisateurs/services/utilisateur.service';
 
 /** Les deux saisies du nouveau mot de passe doivent être identiques. */
@@ -49,6 +52,7 @@ function motsDePasseIdentiques(groupe: AbstractControl): ValidationErrors | null
     PageHeader,
     Avatar,
     ImageUpload,
+    DroitsLecture,
   ],
   selector: 'app-mon-profil',
   styleUrl: './mon-profil.scss',
@@ -58,6 +62,10 @@ export class MonProfil implements OnInit {
   protected session = inject(SessionService);
   private authService = inject(AuthService);
   private utilisateurService = inject(UtilisateurService);
+  private profilService = inject(ProfilService);
+
+  /** Droits de mon profil, écrits en clair (chargés depuis le profil). */
+  protected droits = signal<DroitAffiche[]>([]);
   private notification = inject(NotificationService);
   private fb = inject(FormBuilder).nonNullable;
 
@@ -95,6 +103,14 @@ export class MonProfil implements OnInit {
       next: (utilisateur) => {
         this.session.mettreAJourUtilisateur(utilisateur);
         this.remplir();
+        if (utilisateur.profilId) {
+          this.profilService.getDroitsDuProfil(utilisateur.profilId).subscribe({
+            next: (attributions) =>
+              this.droits.set(
+                attributions.map((a) => ({ id: a.droitId, action: a.droitAction, description: a.droitDescription, actif: a.droitActif })),
+              ),
+          });
+        }
       },
     });
   }

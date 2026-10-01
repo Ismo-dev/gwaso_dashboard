@@ -155,10 +155,8 @@
   font-size: var(--gw-taille-petit);
 }
 
-.profil-a-completer {
-  color: var(--gw-danger);
-  font-size: var(--gw-taille-petit);
-  font-weight: 600;
+.profil-inactif .profil-nom {
+  color: var(--gw-texte-doux);
 }
 
 // ----- Détail -----
@@ -211,41 +209,111 @@
   color: var(--gw-texte-doux);
 }
 
-.tout {
-  display: flex;
-  gap: var(--gw-espace-1);
-}
-
-.droits {
+// ----- Droits du profil, par domaine -----
+.groupes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--gw-espace-2);
-  margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--gw-espace-3);
   padding: 0 var(--gw-espace-6) var(--gw-espace-6);
-  border: 0;
+  transition: opacity var(--gw-duree) var(--gw-courbe);
 
   @include ecran.mobile {
+    grid-template-columns: minmax(0, 1fr);
     padding: 0 var(--gw-espace-4) var(--gw-espace-5);
   }
 }
 
-// Chaque droit est une « tuile » cliquable en entier (loi de Fitts)
-.droit {
-  padding: var(--gw-espace-2) var(--gw-espace-3) var(--gw-espace-2) 0;
-  border: 1px solid var(--gw-bordure);
-  border-radius: var(--gw-rayon);
-  transition:
-    border-color var(--gw-duree) var(--gw-courbe),
-    background-color var(--gw-duree) var(--gw-courbe);
-
-  &:hover {
-    border-color: var(--gw-contour-champ);
-  }
+.groupes-chargement {
+  opacity: 0.5;
 }
 
-.droit-coche {
-  border-color: var(--gw-terre-cuite-pale-2);
+.groupe {
+  overflow: hidden;
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-lg);
+}
+
+.groupe-entete {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-2) var(--gw-espace-2) var(--gw-espace-2) var(--gw-espace-3);
+  background: var(--gw-surface-2);
+}
+
+.groupe-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+}
+
+.groupe-titre {
+  flex: 1;
+  color: var(--gw-cacao);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.groupe-compte {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}
+
+.groupe-tout {
+  --mat-button-text-container-height: 32px;
+  font-size: var(--gw-taille-petit);
+}
+
+.groupe-droits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.droit {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-top: 1px solid var(--gw-bordure);
+  transition: background-color var(--gw-duree) var(--gw-courbe);
+}
+
+.droit-donne {
   background: var(--gw-terre-cuite-pale);
+}
+
+.droit-inactif .droit-textes {
+  opacity: 0.6;
+}
+
+.droit-textes {
+  flex: 1;
+  min-width: 0;
+}
+
+.droit-libelle {
+  display: block;
+  color: var(--gw-cacao);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.droit .droit-code {
+  color: var(--gw-texte-doux);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.ligne-inactive .droit-code,
+.ligne-inactive .droit-description {
+  opacity: 0.6;
 }
 
 .droit-code {

@@ -1,0 +1,112 @@
+// display: contents : le formulaire ne casse pas la mise en page du dialogue
+.formulaire {
+  display: contents;
+}
+
+.erreur {
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.champ {
+  width: 100%;
+}
+
+.groupe {
+  min-width: 0;
+  margin: 0 0 var(--gw-espace-3);
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: var(--gw-espace-2);
+    color: var(--gw-cacao);
+    font-weight: 600;
+  }
+}
+
+.types {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.type {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-3) 0;
+  border-bottom: 1px solid var(--gw-bordure);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.type-icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+}
+
+.type-textes {
+  flex: 1;
+  min-width: 0;
+}
+
+.type-nom {
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.type-description {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.type-etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-1);
+  margin-top: var(--gw-espace-1);
+}
+
+.etiquette {
+  padding: 0 8px;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond);
+  color: var(--gw-texte-doux);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.type-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.vide {
+  padding: var(--gw-espace-4) 0;
+  color: var(--gw-texte-doux);
+}
+
+.sq-liste {
+  height: 200px;
+  border-radius: var(--gw-rayon);
+}
+
+// Trois choix : une colonne suffit dans la fenêtre
+.elements {
+  grid-template-columns: minmax(0, 1fr);
+}

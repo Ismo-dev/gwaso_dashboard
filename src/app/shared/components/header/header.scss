@@ -173,3 +173,123 @@
     color: var(--gw-texte-doux);
   }
 }
+
+// ----- Menu des notifications -----
+.a-valider {
+  padding: 0 var(--gw-espace-4) var(--gw-espace-3);
+}
+
+.a-valider-titre {
+  margin-bottom: var(--gw-espace-2);
+  color: var(--gw-texte-doux);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.a-valider-liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+}
+
+.a-valider-puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--gw-terre-cuite);
+    color: var(--gw-cacao-profond);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gw-action);
+    outline-offset: 2px;
+  }
+}
+
+.notif {
+  height: auto;
+  min-height: 60px;
+  padding-top: var(--gw-espace-2);
+  padding-bottom: var(--gw-espace-2);
+}
+
+.notif-icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.ton-terre {
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-action);
+}
+
+.ton-karite {
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+}
+
+.ton-cacao {
+  background: var(--gw-cacao);
+  color: var(--gw-terre-cuite);
+}
+
+.ton-vert {
+  background: var(--gw-succes-fond);
+  color: var(--gw-succes);
+}
+
+.notif-textes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.notif-titre {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-petit);
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.notif-non-lue .notif-titre {
+  font-weight: 700;
+}
+
+.notif-date {
+  color: var(--gw-texte-doux);
+  font-size: 0.75rem;
+}
+
+.notif-point {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gw-terre-cuite);
+}
+
+.voir-tout {
+  color: var(--gw-action);
+  font-weight: 600;
+}

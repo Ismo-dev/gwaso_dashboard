@@ -23,7 +23,8 @@ import { Avatar } from '../../../../shared/components/avatar/avatar';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
-import { LIBELLES_TYPE_VIDEO, StatutVideo, VideoResponse } from '../../models/video.model';
+import { CommentairesVideo } from '../../components/commentaires-video/commentaires-video';
+import { formaterDuree, LIBELLES_TYPE_VIDEO, StatutVideo, VideoResponse } from '../../models/video.model';
 import { ModerationVideo } from '../../services/moderation-video';
 import { VideoService } from '../../services/video.service';
 
@@ -33,6 +34,7 @@ const TAILLE_PAGE = 8;
  * Fil de vidéos, comme dans l'application : une vidéo par écran, on fait défiler de haut en bas.
  * La vidéo visible se lance toute seule (sans le son, comme sur les réseaux sociaux), les autres sont en pause.
  * L'admin garde ses actions sur le côté : publier ou refuser (à valider), retirer (publiée), supprimer.
+ * Il aime et commente une vidéo publiée comme n'importe quel membre.
  * Les vues ne sont pas comptées : on passe par les routes d'administration.
  */
 @Component({
@@ -50,6 +52,7 @@ const TAILLE_PAGE = 8;
     EmptyState,
     DepuisPipe,
     FichierPipe,
+    CommentairesVideo,
   ],
   selector: 'app-videos-fil',
   styleUrl: './videos-fil.scss',
@@ -82,6 +85,18 @@ export class VideosFil {
   /** Son coupé par défaut : le navigateur n'autorise la lecture automatique que sans le son. */
   protected son = signal(false);
   protected actionEnCours = signal<string | null>(null);
+
+  // ----- Lecture de la vidéo visible -----
+  protected readonly formaterDuree = formaterDuree;
+  /** Position et durée de la vidéo à l'écran (en secondes), pour la barre de progression. */
+  protected temps = signal({ courant: 0, total: 0 });
+  /** Description affichée en entier (« voir plus »), par vidéo. */
+  protected descriptionsOuvertes = signal<ReadonlySet<string>>(new Set());
+
+  // ----- J'aime et commentaires -----
+  /** true : l'admin connecté aime la vidéo (chargé quand la vidéo arrive à l'écran). */
+  protected jaime = signal<Record<string, boolean>>({});
+  protected commentairesDe = signal<VideoResponse | null>(null);
 
   private conteneur = viewChild<ElementRef<HTMLElement>>('conteneur');
   private diapos = viewChildren<ElementRef<HTMLElement>>('diapo');
@@ -130,6 +145,24 @@ export class VideosFil {
           video.pause();
         }
       }
+    });
+
+    // Nouvelle vidéo à l'écran : barre remise à zéro, et on regarde si l'admin l'aime déjà
+    effect(() => {
+      const video = this.videos()[this.actif()];
+      untracked(() => {
+        this.temps.set({ courant: 0, total: video?.dureeSecondes ?? 0 });
+        if (video && video.statut === 'PUBLIEE' && !(video.id in this.jaime())) {
+          this.videoService.getMesReactions(video.id).subscribe({
+            next: (r) => this.jaime.update((etat) => ({ ...etat, [video.id]: r.reactions.includes('AIME') })),
+            error: () => undefined,
+          });
+        }
+        // Le panneau des commentaires suit la vidéo à l'écran
+        if (this.commentairesDe() && video) {
+          this.commentairesDe.set(video);
+        }
+      });
     });
 
     // Presque au bout du fil : on charge la suite
@@ -195,7 +228,7 @@ export class VideosFil {
   /** Flèches haut / bas pour passer d'une vidéo à l'autre, M pour le son. */
   clavier(evenement: KeyboardEvent): void {
     const cible = evenement.target as HTMLElement | null;
-    if (cible?.closest('input, textarea, mat-dialog-container, .cdk-overlay-container')) {
+    if (cible?.closest('input, textarea, app-commentaires-video, mat-dialog-container, .cdk-overlay-container')) {
       return;
     }
     if (evenement.key === 'ArrowDown') {
@@ -219,6 +252,65 @@ export class VideosFil {
         video.pause();
       }
     }
+  }
+
+  // ----- Barre de progression -----
+
+  suivreTemps(index: number, video: HTMLVideoElement): void {
+    if (index === this.actif()) {
+      this.temps.set({ courant: video.currentTime, total: Number.isFinite(video.duration) ? video.duration : 0 });
+    }
+  }
+
+  avancer(index: number, champ: HTMLInputElement): void {
+    const lecteur = this.lecteurs().find((l) => Number(l.nativeElement.dataset['index']) === index);
+    if (lecteur) {
+      lecteur.nativeElement.currentTime = Number(champ.value);
+    }
+  }
+
+  basculerDescription(id: string): void {
+    this.descriptionsOuvertes.update((ouvertes) => {
+      const copie = new Set(ouvertes);
+      if (!copie.delete(id)) {
+        copie.add(id);
+      }
+      return copie;
+    });
+  }
+
+  // ----- J'aime et commentaires -----
+
+  basculerJaime(video: VideoResponse): void {
+    const aime = !!this.jaime()[video.id];
+    // Réponse immédiate à l'écran, corrigée par le serveur ensuite
+    this.jaime.update((etat) => ({ ...etat, [video.id]: !aime }));
+    this.majVideo(video.id, { nbJaime: video.nbJaime + (aime ? -1 : 1) });
+    (aime ? this.videoService.nePlusAimer(video.id) : this.videoService.aimer(video.id)).subscribe({
+      next: (r) => {
+        this.jaime.update((etat) => ({ ...etat, [video.id]: r.reactions.includes('AIME') }));
+        this.majVideo(video.id, { nbJaime: r.nbJaime });
+      },
+      error: () => {
+        this.jaime.update((etat) => ({ ...etat, [video.id]: aime }));
+        this.majVideo(video.id, { nbJaime: video.nbJaime });
+      },
+    });
+  }
+
+  basculerCommentaires(video: VideoResponse): void {
+    this.commentairesDe.update((ouverte) => (ouverte?.id === video.id ? null : video));
+  }
+
+  compterCommentaire(id: string, ecart: number): void {
+    const video = this.videos().find((v) => v.id === id);
+    if (video) {
+      this.majVideo(id, { nbCommentaires: Math.max(0, video.nbCommentaires + ecart) });
+    }
+  }
+
+  private majVideo(id: string, changements: Partial<VideoResponse>): void {
+    this.videos.update((liste) => liste.map((v) => (v.id === id ? { ...v, ...changements } : v)));
   }
 
   // ----- Modération -----
