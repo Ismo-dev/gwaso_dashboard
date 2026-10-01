@@ -1,0 +1,145 @@
+<app-page-header
+  surtitre="Modération"
+  titre="Vidéos"
+  description="Les vidéos postées par la communauté. Vérifiez qu'il s'agit bien de cuisine avant de publier."
+>
+  <a matButton="filled" routerLink="fil" [queryParams]="{ statut: statutActif() === 'EN_ATTENTE_VALIDATION' ? 'EN_ATTENTE_VALIDATION' : null }">
+    <ng-icon name="lucideSmartphone" size="1.125rem" aria-hidden="true" />
+    Parcourir comme un membre
+  </a>
+</app-page-header>
+
+<!-- Statuts : « À valider » est le point de départ -->
+<div class="gw-onglets-conteneur">
+  <mat-button-toggle-group
+    class="gw-onglets"
+    name="statut"
+    aria-label="Filtrer les vidéos par statut"
+    [value]="statutActif()"
+    (change)="changerStatut($event.value)"
+    hideSingleSelectionIndicator
+  >
+    @for (onglet of onglets; track onglet.valeur) {
+      <mat-button-toggle [value]="onglet.valeur">
+        {{ onglet.libelle }}
+        @if (compteur(onglet) !== null) {
+          <span class="gw-onglet-compteur gw-chiffres">{{ compteur(onglet) }}</span>
+        }
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+</div>
+
+<section class="gw-carte liste" aria-labelledby="titre-liste">
+  <h2 id="titre-liste" class="sr-only">Vidéos {{ libelleStatut() }}</h2>
+
+  <div class="gw-outils">
+    <mat-form-field class="gw-champ-recherche" subscriptSizing="dynamic">
+      <mat-label>Rechercher une vidéo</mat-label>
+      <ng-icon matPrefix class="gw-icone-champ" name="lucideSearch" size="1.125rem" aria-hidden="true" />
+      <input
+        matInput
+        type="search"
+        [formControl]="champRecherche"
+        placeholder="Titre, description, auteur ou recette"
+      />
+      @if (champRecherche.value) {
+        <button
+          matIconButton
+          matSuffix
+          type="button"
+          aria-label="Effacer la recherche"
+          (click)="champRecherche.setValue('')"
+        >
+          <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+        </button>
+      }
+    </mat-form-field>
+
+    <mat-form-field class="gw-champ-filtre" subscriptSizing="dynamic">
+      <mat-label>Type</mat-label>
+      <mat-select [value]="typeActif()" (selectionChange)="changerType($event.value)">
+        <mat-option [value]="null">Tous les types</mat-option>
+        @for (type of types; track type[0]) {
+          <mat-option [value]="type[0]">{{ type[1] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <p class="gw-resume" aria-live="polite">
+    @if (!etat().chargement && etat().page; as page) {
+      <strong class="gw-chiffres">{{ page.totalElements }}</strong>
+      {{ page.totalElements > 1 ? 'vidéos' : 'vidéo' }}
+      @if (filtresActifs()) {
+        <button matButton type="button" (click)="effacerFiltres()">Effacer les filtres</button>
+      }
+    }
+  </p>
+
+  @if (etat().chargement && !etat().page) {
+    <div class="grille" aria-busy="true" aria-label="Chargement des vidéos">
+      @for (carte of cartesSquelette; track carte) {
+        <div class="squelette-carte">
+          <span class="gw-squelette sq-vignette"></span>
+          <span class="gw-squelette sq-ligne"></span>
+          <span class="gw-squelette sq-ligne courte"></span>
+        </div>
+      }
+    </div>
+  } @else if (etat().erreur) {
+    <app-empty-state
+      titre="Impossible de charger les vidéos"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="recharger()">
+        <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+        Réessayer
+      </button>
+    </app-empty-state>
+  } @else if (videos().length === 0) {
+    @if (filtresActifs()) {
+      <app-empty-state
+        titre="Aucune vidéo ne correspond"
+        message="Essayez un autre mot ou retirez les filtres."
+        icone="lucideSearch"
+      >
+        <button matButton="outlined" type="button" (click)="effacerFiltres()">Effacer les filtres</button>
+      </app-empty-state>
+    } @else if (statutActif() === 'EN_ATTENTE_VALIDATION') {
+      <app-empty-state
+        titre="Tout est à jour"
+        message="Aucune vidéo n'attend votre décision."
+        icone="lucideCircleCheck"
+        ton="succes"
+      />
+    } @else {
+      <app-empty-state titre="Aucune vidéo ici" message="Rien dans cette catégorie pour le moment." icone="lucideClapperboard" />
+    }
+  } @else {
+    <ul class="grille" [class.rechargement]="etat().chargement">
+      @for (video of videos(); track video.id) {
+        <li>
+          <app-carte-video
+            [video]="video"
+            [enCours]="actionEnCours() === video.id"
+            (publier)="publier($event)"
+            (refuser)="refuser($event)"
+          />
+        </li>
+      }
+    </ul>
+
+    <mat-paginator
+      class="gw-pagination"
+      [length]="etat().page?.totalElements ?? 0"
+      [pageIndex]="pageActive()"
+      [pageSize]="tailleActive()"
+      [pageSizeOptions]="tailles"
+      (page)="changerPage($event)"
+      aria-label="Pages de vidéos"
+    />
+  }
+</section>

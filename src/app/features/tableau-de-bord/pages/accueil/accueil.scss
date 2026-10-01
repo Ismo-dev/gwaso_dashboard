@@ -1,0 +1,501 @@
+@use 'points-de-rupture' as ecran;
+
+.squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-6);
+
+  .gw-squelette {
+    border-radius: var(--gw-rayon-lg);
+  }
+
+  .sq-bandeau {
+    height: 148px;
+  }
+
+  .sq-file {
+    height: 132px;
+  }
+
+  .sq-chiffre {
+    height: 128px;
+  }
+}
+
+// ----- Bandeau d'accueil -----
+.bienvenue {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--gw-espace-6);
+  padding: var(--gw-espace-8);
+  overflow: hidden;
+  border-radius: var(--gw-rayon-lg);
+  background: var(--gw-cacao);
+  color: var(--gw-sidebar-texte);
+
+  // Motif bogolan discret, estompé vers la gauche
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--gw-motif-bogolan);
+    background-size: 48px 48px;
+    opacity: 0.1;
+    mask-image: linear-gradient(to left, #000 0%, transparent 70%);
+  }
+
+  // (l'emblème est exclu : il reste positionné en absolu, hors du flux)
+  > *:not(.bienvenue-embleme) {
+    position: relative;
+  }
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-6) var(--gw-espace-5);
+  }
+}
+
+.bienvenue-texte {
+  max-width: 60ch;
+}
+
+.date {
+  color: var(--gw-sidebar-texte-doux);
+  font-size: var(--gw-taille-label);
+  text-transform: capitalize;
+}
+
+.bienvenue h1 {
+  margin-top: var(--gw-espace-1);
+  color: var(--gw-blanc);
+  font-size: var(--gw-taille-titre-page);
+  font-weight: 700;
+}
+
+.resume {
+  margin-top: var(--gw-espace-2);
+  font-size: 0.9375rem;
+
+  strong {
+    color: var(--gw-terre-cuite);
+    font-size: 1.125rem;
+  }
+}
+
+// Bouton clair sur fond cacao : contraste élevé et action évidente
+.bouton-revue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 44px;
+  padding: 0 var(--gw-espace-5);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-blanc);
+  color: var(--gw-cacao);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--gw-duree) var(--gw-courbe);
+
+  ng-icon {
+    color: var(--gw-action);
+    transition: transform var(--gw-duree) var(--gw-courbe);
+  }
+
+  &:hover {
+    background: var(--gw-terre-cuite-pale);
+
+    ng-icon {
+      transform: translateX(3px);
+    }
+  }
+
+  &:focus-visible {
+    outline-color: var(--gw-terre-cuite);
+  }
+}
+
+.bienvenue-embleme {
+  position: absolute;
+  right: var(--gw-espace-8);
+  top: 50%;
+  width: 112px;
+  height: auto;
+  opacity: 0.12;
+  transform: translateY(-50%) rotate(-8deg);
+  pointer-events: none;
+
+  @include ecran.tablette-et-moins {
+    display: none;
+  }
+}
+
+// ----- Sections -----
+.section {
+  margin-top: var(--gw-espace-10);
+
+  @include ecran.mobile {
+    margin-top: var(--gw-espace-8);
+  }
+}
+
+.section-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--gw-espace-1) var(--gw-espace-3);
+  margin-bottom: var(--gw-espace-4);
+
+  h2 {
+    font-size: var(--gw-taille-titre-section);
+    font-weight: 700;
+  }
+
+  p {
+    color: var(--gw-texte-doux);
+  }
+}
+
+// ----- Files « à traiter » -----
+.grille-files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--gw-espace-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-1);
+  height: 100%;
+  padding: var(--gw-espace-5);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--gw-duree) var(--gw-courbe),
+    box-shadow var(--gw-duree) var(--gw-courbe),
+    transform var(--gw-duree) var(--gw-courbe);
+
+  &:hover {
+    border-color: var(--gw-terre-cuite-pale-2);
+    box-shadow: var(--gw-ombre-2);
+    transform: translateY(-2px);
+  }
+}
+
+.file-haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gw-espace-2);
+  margin-bottom: var(--gw-espace-2);
+}
+
+// Nombre en attente : c'est l'information qui compte, il se voit de loin
+.file-nombre {
+  color: var(--gw-action);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.file-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond);
+  color: var(--gw-texte-doux);
+}
+
+// File non vide : l'accent terre cuite attire l'œil là où il y a du travail
+.file-active {
+  border-top: 3px solid var(--gw-terre-cuite);
+
+  .file-icone {
+    background: var(--gw-terre-cuite-pale);
+    color: var(--gw-action);
+  }
+}
+
+.file-libelle {
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-titre-carte);
+  font-weight: 600;
+}
+
+.file-description {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.file-statut {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  margin-top: auto;
+  padding-top: var(--gw-espace-3);
+  font-size: var(--gw-taille-label);
+  font-weight: 500;
+}
+
+.file-statut-attente {
+  color: var(--gw-action);
+
+  strong {
+    font-size: 1rem;
+  }
+}
+
+.file-statut-ok {
+  color: var(--gw-succes);
+}
+
+// Téléphone : files en lignes compactes (icône, libellé, statut) pour éviter un long défilement
+@include ecran.mobile {
+  .grille-files {
+    grid-template-columns: 1fr;
+    gap: var(--gw-espace-2);
+  }
+
+  .file {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    column-gap: var(--gw-espace-3);
+    padding: var(--gw-espace-3) var(--gw-espace-4);
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .file-active {
+    border-top-width: 1px;
+    border-left: 3px solid var(--gw-terre-cuite);
+  }
+
+  .file-icone {
+    margin-bottom: 0;
+  }
+
+  .file-haut {
+    margin-bottom: 0;
+  }
+
+  .file-nombre {
+    display: none;
+  }
+
+  .file-description {
+    display: none;
+  }
+
+  .file-statut {
+    margin-top: 0;
+    padding-top: 0;
+  }
+}
+
+// ----- Chiffres clés -----
+.grille-chiffres {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gw-espace-4);
+
+  @include ecran.tablette {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  // Téléphone : deux chiffres par ligne, lecture d'un coup d'œil
+  @include ecran.mobile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gw-espace-3);
+  }
+}
+
+// ----- Panneaux du bas -----
+.colonnes {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: var(--gw-espace-4);
+  margin-top: var(--gw-espace-10);
+
+  @include ecran.tablette-et-moins {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panneau {
+  padding: var(--gw-espace-6);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-5) var(--gw-espace-4);
+  }
+}
+
+.panneau-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gw-espace-4);
+  margin-bottom: var(--gw-espace-5);
+
+  h2 {
+    font-size: var(--gw-taille-titre-carte);
+    font-weight: 600;
+  }
+
+  p {
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+  }
+}
+
+.liste-recettes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recette {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-3) 0;
+  border-top: 1px solid var(--gw-bordure);
+
+  &:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+.recette-photo {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--gw-rayon);
+  object-fit: cover;
+}
+
+.recette-photo-vide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+}
+
+.recette-infos {
+  flex: 1;
+  min-width: 0;
+}
+
+.recette-nom {
+  color: var(--gw-cacao);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--gw-action);
+    text-decoration: underline;
+  }
+}
+
+.recette-meta {
+  overflow: hidden;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recette-date {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+// ----- Répartition -----
+.barre {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+  overflow: hidden;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond);
+}
+
+.segment {
+  flex-basis: 0;
+  min-width: 6px;
+}
+
+.part-publiees {
+  background: var(--gw-karite);
+}
+
+.part-attente {
+  background: var(--gw-terre-cuite);
+}
+
+.part-brouillons {
+  background: var(--gw-terre-cuite-pale-2);
+}
+
+.part-rejetees {
+  background: var(--gw-danger);
+}
+
+.part-archivees {
+  background: var(--gw-desactive);
+}
+
+.legende {
+  margin: var(--gw-espace-5) 0 0;
+}
+
+.legende-ligne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-espace-2) 0;
+  border-top: 1px solid var(--gw-bordure);
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  dt {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--gw-cacao);
+    font-weight: 600;
+  }
+}
+
+.legende-pastille {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.pourcentage {
+  color: var(--gw-texte-doux);
+  font-weight: 400;
+}

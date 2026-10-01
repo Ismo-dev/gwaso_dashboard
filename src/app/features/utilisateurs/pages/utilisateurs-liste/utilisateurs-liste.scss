@@ -1,0 +1,323 @@
+@use 'points-de-rupture' as ecran;
+
+// ----- Onglets -----
+.onglets {
+  --mat-button-toggle-selected-state-background-color: var(--gw-cacao);
+  --mat-button-toggle-selected-state-text-color: var(--gw-blanc);
+  --mat-button-toggle-text-color: var(--gw-texte-doux);
+  --mat-button-toggle-height: 40px;
+  --mat-button-toggle-divider-color: var(--gw-bordure);
+  margin-bottom: var(--gw-espace-5);
+  border-color: var(--gw-bordure);
+  background: var(--gw-surface);
+}
+
+.onglet-compteur {
+  margin-left: var(--gw-espace-2);
+  padding: 0 0.4375rem;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}
+
+// Des demandes attendent : le compteur passe en terre cuite
+.onglet-compteur-actif {
+  background: var(--gw-terre-cuite);
+  color: var(--gw-cacao-profond);
+}
+
+// ----- Demandes -----
+.consigne {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin-bottom: var(--gw-espace-4);
+  color: var(--gw-texte-doux);
+}
+
+.grille-demandes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--gw-espace-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include ecran.mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sq-demande {
+  height: 280px;
+  border-radius: var(--gw-rayon-lg);
+}
+
+// ----- Membres -----
+.liste {
+  overflow: hidden;
+}
+
+.profils-filtre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-5) var(--gw-espace-5) 0;
+
+  @include ecran.mobile {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: var(--gw-espace-4) var(--gw-espace-4) 0;
+    scrollbar-width: none;
+  }
+}
+
+.pastille-profil {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 38px;
+  padding: 0 var(--gw-espace-4);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-surface);
+  color: var(--gw-cacao);
+  font: inherit;
+  font-size: var(--gw-taille-label);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--gw-duree) var(--gw-courbe),
+    border-color var(--gw-duree) var(--gw-courbe);
+
+  ng-icon {
+    color: var(--gw-karite);
+  }
+
+  &:hover {
+    border-color: var(--gw-contour-champ);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gw-action);
+    outline-offset: 2px;
+  }
+}
+
+.pastille-nombre {
+  padding: 0 0.4375rem;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}
+
+.pastille-active {
+  border-color: var(--gw-cacao);
+  background: var(--gw-cacao);
+  color: var(--gw-blanc);
+
+  ng-icon {
+    color: var(--gw-terre-cuite);
+  }
+
+  .pastille-nombre {
+    background: rgb(255 255 255 / 0.18);
+  }
+}
+
+.outils {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-5) var(--gw-espace-5) 0;
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4) var(--gw-espace-4) 0;
+  }
+}
+
+.champ-recherche {
+  flex: 1 1 280px;
+}
+
+.champ-filtre {
+  flex: 0 1 200px;
+
+  @include ecran.mobile {
+    flex: 1 1 100%;
+  }
+}
+
+.icone-champ {
+  margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+}
+
+.resume {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 44px;
+  padding: var(--gw-espace-2) var(--gw-espace-5);
+  color: var(--gw-texte-doux);
+
+  strong {
+    color: var(--gw-cacao);
+  }
+}
+
+.squelette {
+  padding: 0 var(--gw-espace-5) var(--gw-espace-5);
+}
+
+.squelette-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-4) 0;
+  border-top: 1px solid var(--gw-bordure);
+}
+
+.sq-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.sq-textes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+}
+
+.sq-titre {
+  width: 30%;
+}
+
+.sq-sous-titre {
+  width: 20%;
+  height: 0.75rem;
+}
+
+.resultats {
+  transition: opacity var(--gw-duree) var(--gw-courbe);
+}
+
+.rechargement {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+// ----- Tableau (ordinateur) : présentation commune .gw-tableau (styles.scss) -----
+.cellule-membre {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  min-width: 240px;
+}
+
+// ----- Cartes (téléphone) -----
+.membres {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.membre {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'avatar identite actions'
+    'avatar role statut';
+  align-items: center;
+  gap: var(--gw-espace-1) var(--gw-espace-3);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-top: 1px solid var(--gw-bordure);
+
+  app-avatar {
+    grid-area: avatar;
+    align-self: start;
+  }
+
+  .membre-identite {
+    grid-area: identite;
+  }
+
+  .membre-role {
+    grid-area: role;
+  }
+
+  .membre-statut {
+    grid-area: statut;
+    justify-self: end;
+  }
+
+  .membre-actions {
+    grid-area: actions;
+  }
+}
+
+// ----- Contenu commun -----
+.membre-identite {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.membre-nom {
+  color: var(--gw-cacao);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--gw-action);
+    text-decoration: underline;
+  }
+}
+
+.moi {
+  color: var(--gw-texte-doux);
+  font-weight: 400;
+}
+
+.membre-contact {
+  overflow: hidden;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.membre-role {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  color: var(--gw-cacao);
+  white-space: nowrap;
+
+  ng-icon {
+    color: var(--gw-karite);
+  }
+}
+
+.membre-date {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  white-space: nowrap;
+}
+
+.membre-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--gw-espace-1);
+}
+
+.item-danger {
+  color: var(--gw-danger);
+}

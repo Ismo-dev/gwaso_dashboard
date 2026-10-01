@@ -1,0 +1,109 @@
+<app-page-header
+  surtitre="Catalogue"
+  titre="Ustensiles"
+  description="Les ustensiles cités dans les étapes des recettes, du canari au mortier. Indiquez comment les remplacer si besoin."
+>
+  <button matButton="filled" type="button" (click)="nouveau()">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+    Nouvel ustensile
+  </button>
+</app-page-header>
+
+@if (chargement()) {
+  <div class="grille" aria-busy="true" aria-label="Chargement des ustensiles">
+    @for (i of cartesSquelette; track i) {
+      <div class="gw-squelette sq-carte"></div>
+    }
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger les ustensiles"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (ustensiles().length === 0) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Aucun ustensile pour le moment"
+      message="Ajoutez les ustensiles utilisés dans les recettes : canari, mortier et pilon, couscoussier…"
+      icone="lucideCookingPot"
+    >
+      <button matButton="filled" type="button" (click)="nouveau()">Ajouter un ustensile</button>
+    </app-empty-state>
+  </div>
+} @else {
+  <div class="barre-outils">
+    <mat-form-field class="recherche" subscriptSizing="dynamic">
+      <mat-label>Rechercher un ustensile</mat-label>
+      <ng-icon
+        matPrefix
+        class="icone-champ"
+        name="lucideSearch"
+        size="1.125rem"
+        aria-hidden="true"
+      />
+      <input matInput type="search" [ngModel]="recherche()" (ngModelChange)="rechercher($event)" />
+      @if (recherche()) {
+        <button
+          matIconButton
+          matSuffix
+          type="button"
+          aria-label="Effacer la recherche"
+          (click)="rechercher('')"
+        >
+          <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+        </button>
+      }
+    </mat-form-field>
+    <p class="compte" aria-live="polite">
+      <strong class="gw-chiffres">{{ ustensilesFiltres().length }}</strong>
+      {{ ustensilesFiltres().length > 1 ? 'ustensiles' : 'ustensile' }}
+    </p>
+  </div>
+
+  @if (ustensilesFiltres().length === 0) {
+    <div class="gw-carte">
+      <app-empty-state
+        titre="Aucun ustensile ne correspond"
+        [message]="'Aucun résultat pour « ' + recherche() + ' ».'"
+        icone="lucideSearch"
+      >
+        <button matButton="outlined" type="button" (click)="rechercher('')">
+          Effacer la recherche
+        </button>
+      </app-empty-state>
+    </div>
+  } @else {
+    <ul class="grille">
+      @for (ustensile of elementsPage(); track ustensile.id) {
+        <li>
+          <app-carte-catalogue
+            [titre]="ustensile.nom"
+            [description]="ustensile.description"
+            [image]="ustensile.photoUrl"
+            iconeVide="lucideCookingPot"
+            format="carre"
+            (modifier)="modifier(ustensile)"
+            (supprimer)="supprimer(ustensile)"
+          />
+        </li>
+      }
+    </ul>
+
+    <mat-paginator
+      class="gw-pagination pagination-grille"
+      [length]="ustensilesFiltres().length"
+      [pageIndex]="page()"
+      [pageSize]="taille()"
+      [pageSizeOptions]="taillesPage"
+      [hidePageSize]="ecran.mobile()"
+      aria-label="Pagination des ustensiles"
+      (page)="changerPage($event)"
+    />
+  }
+}

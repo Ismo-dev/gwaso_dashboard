@@ -1,0 +1,145 @@
+@if (chargement()) {
+  <div class="gw-squelette sq-bloc" aria-busy="true" aria-label="Chargement du défi"></div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state titre="Défi introuvable" message="Il a peut-être été supprimé." icone="lucideFileQuestion">
+      <a matButton="filled" routerLink="/defis">Voir tous les défis</a>
+    </app-empty-state>
+  </div>
+} @else {
+  <app-page-header
+    surtitre="Défis culinaires"
+    [titre]="estNouveau() ? 'Nouveau défi' : 'Modifier le défi'"
+    [description]="
+      estNouveau()
+        ? 'Un défi créé par l’administration est validé directement : les cuisiniers peuvent y participer dès la date de début.'
+        : 'Les participants voient les changements immédiatement.'
+    "
+  />
+
+  <form class="disposition" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+    <div class="colonne">
+      @if (erreur()) {
+        <p class="erreur" role="alert">{{ erreur() }}</p>
+      }
+
+      <!-- ===================== L'essentiel ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-essentiel">
+        <h2 id="titre-essentiel" class="bloc-titre">
+          <span class="numero" aria-hidden="true">1</span>
+          L'essentiel
+        </h2>
+
+        <mat-form-field class="large">
+          <mat-label>Nom du défi</mat-label>
+          <input matInput formControlName="nom" maxlength="120" placeholder="Ex. Le meilleur tô de la saison" />
+          <mat-error>Le nom est obligatoire.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="large">
+          <mat-label>Recette du défi</mat-label>
+          <ng-icon matPrefix class="icone-champ" name="lucideBookOpen" size="1.125rem" aria-hidden="true" />
+          <input
+            matInput
+            [formControl]="champRecette"
+            [matAutocomplete]="listeRecettes"
+            placeholder="Tapez pour chercher une recette publiée"
+          />
+          <mat-autocomplete #listeRecettes="matAutocomplete" [displayWith]="nomRecette">
+            @for (recette of suggestionsRecettes(); track recette.id) {
+              <mat-option [value]="recette">{{ recette.nom }}</mat-option>
+            } @empty {
+              <mat-option disabled>Aucune recette publiée ne correspond</mat-option>
+            }
+          </mat-autocomplete>
+          <mat-hint>Les participants réalisent cette recette</mat-hint>
+          <mat-error>Choisissez une recette dans la liste.</mat-error>
+        </mat-form-field>
+
+        <div class="dates">
+          <mat-form-field>
+            <mat-label>Début</mat-label>
+            <input matInput type="date" formControlName="dateDebut" [min]="estNouveau() ? minDate : null" />
+            <mat-error>La date de début est obligatoire.</mat-error>
+          </mat-form-field>
+          <ng-icon name="lucideArrowRight" size="1.25rem" class="fleche" aria-hidden="true" />
+          <mat-form-field>
+            <mat-label>Fin</mat-label>
+            <input matInput type="date" formControlName="dateFin" [min]="formulaire.controls.dateDebut.value" />
+            <mat-error>La date de fin est obligatoire.</mat-error>
+          </mat-form-field>
+        </div>
+        @if (formulaire.hasError('periode')) {
+          <p class="erreur-champ" role="alert">La fin doit être le même jour ou après le début.</p>
+        }
+
+        <app-editeur-riche
+          class="riche"
+          formControlName="description"
+          libelle="Présentation du défi"
+          aide="Donnez envie de participer : le thème, l'esprit, ce qu'on peut gagner."
+          [obligatoire]="true"
+          [longueurMax]="3000"
+        />
+      </section>
+
+      <!-- ===================== Règles du jeu ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-regles">
+        <h2 id="titre-regles" class="bloc-titre">
+          <span class="numero" aria-hidden="true">2</span>
+          Règles du jeu <span class="facultatif">facultatif</span>
+        </h2>
+
+        <app-editeur-riche
+          class="riche"
+          formControlName="regles"
+          libelle="Règles"
+          aide="Ce qui est permis ou interdit. Une liste à puces se lit mieux."
+          [longueurMax]="3000"
+          hauteurMin="120px"
+        />
+        <app-editeur-riche
+          class="riche"
+          formControlName="conditionsParticipation"
+          libelle="Conditions de participation"
+          aide="Qui peut participer, et quoi envoyer (photo du plat, vidéo...)."
+          [longueurMax]="3000"
+          hauteurMin="120px"
+        />
+        <app-editeur-riche
+          class="riche"
+          formControlName="criteresClassement"
+          libelle="Critères de classement"
+          aide="Sur quoi les participants sont notés : présentation, respect de la recette, originalité..."
+          [longueurMax]="3000"
+          hauteurMin="120px"
+        />
+      </section>
+    </div>
+
+    <!-- ===================== Colonne d'action ===================== -->
+    <aside class="cote">
+      <div class="gw-carte resume">
+        <p class="resume-titre">
+          <ng-icon name="lucideTrophy" size="1.25rem" aria-hidden="true" />
+          {{ estNouveau() ? 'Publication immédiate' : 'Enregistrement' }}
+        </p>
+        <p class="resume-texte">
+          @if (estNouveau()) {
+            Le défi sera validé tout de suite et visible par les cuisiniers. Vous pourrez le démarrer, le terminer, puis
+            publier son classement.
+          } @else {
+            Les changements sont visibles tout de suite par les participants.
+          }
+        </p>
+        <button matButton="filled" type="submit" class="bouton-enregistrer" [disabled]="enregistrement()">
+          @if (enregistrement()) {
+            <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+          }
+          {{ estNouveau() ? 'Créer le défi' : 'Enregistrer' }}
+        </button>
+        <a matButton [routerLink]="defi() ? ['/defis', defi()!.id] : ['/defis']">Annuler</a>
+      </div>
+    </aside>
+  </form>
+}

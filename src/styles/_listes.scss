@@ -1,0 +1,89 @@
+// =============================================================================
+// Pages de liste : onglets de statut, barre de recherche et filtres, résumé.
+// Partagées par les vidéos et les défis (même disposition que les recettes).
+// Utilisation : class="gw-onglets-conteneur", "gw-onglets", "gw-outils"...
+// =============================================================================
+@use 'points-de-rupture' as ecran;
+
+.gw-onglets-conteneur {
+  margin-bottom: var(--gw-espace-5);
+
+  // Téléphone : les onglets défilent horizontalement au lieu de se tasser
+  @include ecran.mobile {
+    margin-inline: calc(var(--gw-espace-4) * -1);
+    padding-inline: var(--gw-espace-4);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
+
+.gw-onglets {
+  --mat-button-toggle-selected-state-background-color: var(--gw-cacao);
+  --mat-button-toggle-selected-state-text-color: var(--gw-blanc);
+  --mat-button-toggle-text-color: var(--gw-texte-doux);
+  --mat-button-toggle-label-text-weight: 500;
+  --mat-button-toggle-height: 40px;
+  --mat-button-toggle-divider-color: var(--gw-bordure);
+  border-color: var(--gw-bordure);
+  background: var(--gw-surface);
+}
+
+.gw-onglet-compteur {
+  margin-left: var(--gw-espace-2);
+  padding: 0 0.4375rem;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+
+  .mat-button-toggle-checked & {
+    background: rgb(255 255 255 / 0.18);
+    color: var(--gw-blanc);
+  }
+}
+
+.gw-outils {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-5) var(--gw-espace-5) 0;
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4) var(--gw-espace-4) 0;
+  }
+
+  .gw-champ-recherche {
+    flex: 1 1 280px;
+  }
+
+  .gw-champ-filtre {
+    flex: 0 1 220px;
+
+    @include ecran.mobile {
+      flex: 1 1 100%;
+    }
+  }
+
+  .gw-icone-champ {
+    margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
+    color: var(--gw-texte-doux);
+  }
+}
+
+.gw-resume {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 44px;
+  padding: var(--gw-espace-2) var(--gw-espace-5);
+  color: var(--gw-texte-doux);
+
+  strong {
+    color: var(--gw-cacao);
+  }
+
+  @include ecran.mobile {
+    padding-inline: var(--gw-espace-4);
+  }
+}

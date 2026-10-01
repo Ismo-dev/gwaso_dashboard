@@ -1,0 +1,112 @@
+<main class="page-connexion">
+  <!-- ===================== Panneau de marque (masqué sur téléphone) ===================== -->
+  <section class="panneau-marque" aria-hidden="true">
+    <!-- Lueurs qui respirent doucement derrière le logo -->
+    <span class="lueur lueur-1"></span>
+    <span class="lueur lueur-2"></span>
+    <span class="lueur lueur-3"></span>
+
+    <!-- Ustensiles et ingrédients qui flottent -->
+    <span class="flottant f-1"><ng-icon name="lucideChefHat" size="2rem" /></span>
+    <span class="flottant f-2"><ng-icon name="lucideCarrot" size="1.75rem" /></span>
+    <span class="flottant f-3"><ng-icon name="lucideCookingPot" size="2.25rem" /></span>
+    <span class="flottant f-4"><ng-icon name="lucideUtensilsCrossed" size="1.5rem" /></span>
+    <span class="flottant f-5"><ng-icon name="lucideShoppingBasket" size="1.75rem" /></span>
+    <span class="flottant f-6"><ng-icon name="lucideTrophy" size="1.5rem" /></span>
+
+    <div class="marque-contenu">
+      <img class="logo-marque" src="images/logo-gwaso-clair.png" alt="" width="300" height="320" />
+
+      <p class="accroche">
+        <span class="accroche-fixe">Ensemble, on</span>
+        <span class="mots">
+          <span class="mot">apprend</span>
+          <span class="mot">cuisine</span>
+          <span class="mot">transmet</span>
+        </span>
+      </p>
+      <p class="citation-texte">
+        Veillez à la qualité des recettes, des vidéos et des défis partagés par la communauté Gwaso.
+      </p>
+
+      <ul class="points">
+        <li><ng-icon name="lucideBookOpen" size="1rem" /> Recettes</li>
+        <li><ng-icon name="lucideClapperboard" size="1rem" /> Vidéos</li>
+        <li><ng-icon name="lucideTrophy" size="1rem" /> Défis</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== Formulaire ===================== -->
+  <section class="zone-formulaire">
+    <div class="formulaire-conteneur">
+      <img class="logo-mobile apparition" src="images/logo-gwaso.png" alt="Gwaso" width="120" height="128" />
+
+      <p class="surtitre apparition">Administration</p>
+      <h1 class="apparition">Bon retour parmi nous</h1>
+      <p class="sous-titre apparition">Connectez-vous pour gérer la communauté Gwaso.</p>
+
+      @if (erreur()) {
+        <div class="message-erreur" role="alert">
+          <ng-icon name="lucideCircleAlert" size="1.25rem" aria-hidden="true" />
+          <p>{{ erreur() }}</p>
+        </div>
+      }
+
+      <form [formGroup]="formulaire" (ngSubmit)="connecter()" novalidate>
+        <mat-form-field class="champ apparition">
+          <mat-label>Email ou téléphone</mat-label>
+          <ng-icon matPrefix class="icone-champ" name="lucideUser" size="1.125rem" aria-hidden="true" />
+          <input matInput formControlName="identifiant" autocomplete="username" />
+          <mat-error>Saisissez votre email ou votre numéro de téléphone.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="champ apparition">
+          <mat-label>Mot de passe</mat-label>
+          <ng-icon matPrefix class="icone-champ" name="lucideKeyRound" size="1.125rem" aria-hidden="true" />
+          <input
+            matInput
+            formControlName="motDePasse"
+            autocomplete="current-password"
+            [type]="motDePasseVisible() ? 'text' : 'password'"
+          />
+          <button
+            matIconButton
+            matSuffix
+            type="button"
+            [attr.aria-label]="
+              motDePasseVisible() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+            "
+            [attr.aria-pressed]="motDePasseVisible()"
+            (click)="basculerMotDePasse()"
+          >
+            <ng-icon
+              [name]="motDePasseVisible() ? 'lucideEyeOff' : 'lucideEye'"
+              size="1.25rem"
+              aria-hidden="true"
+            />
+          </button>
+          <mat-error>Saisissez votre mot de passe.</mat-error>
+        </mat-form-field>
+
+        <button
+          matButton="filled"
+          type="submit"
+          class="bouton-connexion apparition"
+          [class.en-cours]="enCours()"
+          [disabled]="enCours()"
+        >
+          @if (enCours()) {
+            <mat-progress-spinner mode="indeterminate" diameter="20" aria-hidden="true" />
+            Connexion en cours…
+          } @else {
+            Se connecter
+            <ng-icon class="fleche" name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
+          }
+        </button>
+      </form>
+
+      <p class="devise apparition" aria-hidden="true">Apprendre · Cuisiner · Transmettre</p>
+    </div>
+  </section>
+</main>

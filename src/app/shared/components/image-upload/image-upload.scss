@@ -1,0 +1,93 @@
+@use 'points-de-rupture' as ecran;
+
+.libelle {
+  margin-bottom: var(--gw-espace-2);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-label);
+  font-weight: 500;
+}
+
+.zone {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-5);
+
+  @include ecran.mobile {
+    flex-direction: column;
+  }
+}
+
+.apercu {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-espace-1);
+  width: 200px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .carre & {
+    width: 120px;
+    aspect-ratio: 1;
+  }
+
+  @include ecran.mobile {
+    width: 100%;
+  }
+}
+
+.apercu-vide {
+  border: 2px dashed var(--gw-bordure);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.commandes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gw-espace-2);
+}
+
+.aide {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.nom-fichier {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  color: var(--gw-succes);
+  font-size: var(--gw-taille-petit);
+  word-break: break-all;
+}
+
+.erreur {
+  color: var(--gw-danger);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+}
+
+// Disposition verticale : aperçu pleine largeur (16/9, comme la vidéo) et commandes dessous
+.verticale {
+  .zone {
+    flex-direction: column;
+    gap: var(--gw-espace-3);
+  }
+
+  .apercu {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+}

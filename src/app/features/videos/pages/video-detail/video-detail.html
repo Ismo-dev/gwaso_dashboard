@@ -1,0 +1,319 @@
+@if (chargement()) {
+  <div class="squelette" aria-busy="true" aria-label="Chargement de la vidéo">
+    <div class="gw-squelette sq-lecteur"></div>
+    <div class="sq-colonne">
+      <div class="gw-squelette sq-bloc"></div>
+      <div class="gw-squelette sq-bloc"></div>
+    </div>
+  </div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Vidéo introuvable"
+      message="Elle a peut-être été supprimée, ou l'adresse est incorrecte."
+      icone="lucideFileQuestion"
+    >
+      <a matButton="filled" routerLink="/videos">Voir toutes les vidéos</a>
+    </app-empty-state>
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger la vidéo"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger(id())">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (video(); as video) {
+  <div class="disposition">
+    <!-- ===================== Lecteur ===================== -->
+    <div class="colonne-lecteur">
+      <div class="lecteur">
+        @if (video.videoUrl | fichier; as source) {
+          <video
+            [src]="source"
+            [poster]="(video.miniatureUrl | fichier) ?? ''"
+            controls
+            playsinline
+            preload="metadata"
+            [attr.aria-label]="'Vidéo : ' + video.titre"
+          ></video>
+        } @else {
+          <div class="lecteur-vide">
+            <ng-icon name="lucideVideoOff" size="2.5rem" aria-hidden="true" />
+            <p>L'auteur n'a pas encore envoyé le fichier.</p>
+          </div>
+        }
+      </div>
+      @if (video.videoUrl | fichier; as source) {
+        <a matButton class="ouvrir" [href]="source" target="_blank" rel="noopener">
+          <ng-icon name="lucideExternalLink" size="1rem" aria-hidden="true" />
+          Ouvrir le fichier dans un nouvel onglet
+        </a>
+      }
+    </div>
+
+    <div class="colonne-infos">
+      <!-- ===================== En-tête et décision ===================== -->
+      <header class="entete">
+        <div class="entete-haut">
+          <app-status-badge [statut]="video.statut" />
+          <span class="type">{{ type() }}</span>
+        </div>
+        <h1>{{ video.titre }}</h1>
+        @if (video.recetteId) {
+          <a class="recette" [routerLink]="['/recettes', video.recetteId]">
+            <ng-icon name="lucideBookOpen" size="1rem" aria-hidden="true" />
+            {{ video.recetteNom }}
+          </a>
+        }
+      </header>
+
+      @switch (video.statut) {
+        @case ('EN_ATTENTE_VALIDATION') {
+          <section class="decision" aria-labelledby="titre-decision">
+            <h2 id="titre-decision">Est-ce bien une vidéo de cuisine ?</h2>
+            <p>Regardez-la, puis décidez. L'auteur est prévenu de votre choix.</p>
+            <div class="decision-boutons">
+              <button
+                matButton="outlined"
+                type="button"
+                class="bouton-refuser"
+                [disabled]="actionEnCours()"
+                (click)="refuser(video)"
+              >
+                <ng-icon name="lucideCircleX" size="1.125rem" aria-hidden="true" />
+                Refuser…
+              </button>
+              <button matButton="filled" type="button" [disabled]="actionEnCours()" (click)="publier(video)">
+                <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+                Publier la vidéo
+              </button>
+            </div>
+          </section>
+        }
+        @case ('PUBLIEE') {
+          <section class="bandeau bandeau-succes">
+            <ng-icon name="lucideCircleCheck" size="1.25rem" aria-hidden="true" />
+            <div>
+              <p class="bandeau-titre">En ligne</p>
+              <p>
+                Publiée {{ video.datePublication | depuis }}
+                @if (video.modereParNom) {
+                  par {{ video.modereParNom }}
+                }
+              </p>
+            </div>
+            <button
+              matButton="outlined"
+              type="button"
+              class="bouton-refuser"
+              [disabled]="actionEnCours()"
+              (click)="desactiver(video)"
+            >
+              Retirer…
+            </button>
+          </section>
+        }
+        @case ('DESACTIVEE') {
+          <section class="bandeau bandeau-danger">
+            <ng-icon name="lucideEyeOff" size="1.25rem" aria-hidden="true" />
+            <div>
+              <p class="bandeau-titre">Retirée de la communauté</p>
+              @if (video.motifModeration) {
+                <p>Motif : « {{ video.motifModeration }} »</p>
+              }
+            </div>
+            <button matButton="filled" type="button" [disabled]="actionEnCours()" (click)="reactiver(video)">
+              Remettre en ligne
+            </button>
+          </section>
+        }
+        @case ('REJETEE') {
+          <section class="bandeau bandeau-danger">
+            <ng-icon name="lucideCircleX" size="1.25rem" aria-hidden="true" />
+            <div>
+              <p class="bandeau-titre">Refusée</p>
+              @if (video.motifModeration) {
+                <p>Motif : « {{ video.motifModeration }} »</p>
+              }
+            </div>
+          </section>
+        }
+        @case ('BROUILLON') {
+          <section class="bandeau">
+            <ng-icon name="lucidePencil" size="1.25rem" aria-hidden="true" />
+            <div>
+              <p class="bandeau-titre">Brouillon</p>
+              <p>L'auteur ne l'a pas encore proposée à la publication.</p>
+            </div>
+          </section>
+        }
+      }
+
+      <!-- ===================== Description ===================== -->
+      @if (video.description) {
+        <section class="gw-carte bloc">
+          <h2 class="bloc-titre">Description</h2>
+          <p class="description">{{ video.description }}</p>
+        </section>
+      }
+
+      <!-- ===================== Chiffres ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-chiffres">
+        <h2 id="titre-chiffres" class="bloc-titre">Audience</h2>
+        <ul class="chiffres">
+          <li>
+            <ng-icon name="lucideEye" size="1.125rem" aria-hidden="true" />
+            <strong class="gw-chiffres">{{ video.nbVues | number: '1.0-0' : 'fr' }}</strong> vues
+          </li>
+          <li>
+            <ng-icon name="lucideHeart" size="1.125rem" aria-hidden="true" />
+            <strong class="gw-chiffres">{{ video.nbJaime | number: '1.0-0' : 'fr' }}</strong> j'aime
+          </li>
+          <li>
+            <ng-icon name="lucideMessageCircle" size="1.125rem" aria-hidden="true" />
+            <strong class="gw-chiffres">{{ video.nbCommentaires | number: '1.0-0' : 'fr' }}</strong>
+            commentaires
+          </li>
+          <li>
+            <ng-icon name="lucideShare2" size="1.125rem" aria-hidden="true" />
+            <strong class="gw-chiffres">{{ video.nbPartages | number: '1.0-0' : 'fr' }}</strong> partages
+          </li>
+          <li>
+            <ng-icon name="lucideDownload" size="1.125rem" aria-hidden="true" />
+            <strong class="gw-chiffres">{{ video.nbTelechargements | number: '1.0-0' : 'fr' }}</strong>
+            téléchargements
+          </li>
+        </ul>
+      </section>
+
+      <!-- ===================== Informations ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-infos">
+        <h2 id="titre-infos" class="bloc-titre">Informations</h2>
+        <dl class="infos">
+          <div>
+            <dt>Durée</dt>
+            <dd class="gw-chiffres">{{ duree() || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Taille du fichier</dt>
+            <dd class="gw-chiffres">{{ taille() || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Créée</dt>
+            <dd>{{ video.dateCreation | date: 'd MMM y à HH:mm' }}</dd>
+          </div>
+          <div>
+            <dt>Proposée</dt>
+            <dd>{{ video.dateSoumission ? (video.dateSoumission | date: 'd MMM y à HH:mm') : '—' }}</dd>
+          </div>
+          <div>
+            <dt>Publiée</dt>
+            <dd>{{ video.datePublication ? (video.datePublication | date: 'd MMM y à HH:mm') : '—' }}</dd>
+          </div>
+          <div>
+            <dt>Dernière décision</dt>
+            <dd>
+              @if (video.dateModeration) {
+                {{ video.dateModeration | date: 'd MMM y' }}
+                @if (video.modereParNom) {
+                  · {{ video.modereParNom }}
+                }
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ===================== Auteur ===================== -->
+      @if (auteur(); as auteur) {
+        <section class="gw-carte bloc" aria-labelledby="titre-auteur">
+          <h2 id="titre-auteur" class="bloc-titre">Auteur</h2>
+          <div class="auteur">
+            <app-avatar [prenom]="auteur.prenom" [nom]="auteur.nom" [photo]="auteur.photoProfil" taille="md" />
+            <div class="auteur-textes">
+              <p class="auteur-nom">{{ auteur.prenom }} {{ auteur.nom }}</p>
+              <p class="auteur-meta">
+                {{ libellesRole[auteur.role] }} · inscrit {{ auteur.dateInscription | depuis }}
+              </p>
+              <p class="auteur-meta">{{ auteur.email ?? auteur.telephone }}</p>
+            </div>
+            <app-status-badge [statut]="auteur.statutCompte" />
+          </div>
+          <ul class="auteur-chiffres" aria-label="Vidéos de cet auteur">
+            <li><strong class="gw-chiffres">{{ auteur.nbVideosTotal }}</strong> vidéos</li>
+            <li><strong class="gw-chiffres">{{ auteur.nbVideosPubliees }}</strong> publiées</li>
+            <li [class.alerte]="auteur.nbVideosRejetees > 0">
+              <strong class="gw-chiffres">{{ auteur.nbVideosRejetees }}</strong> refusées
+            </li>
+            <li [class.alerte]="auteur.nbVideosDesactivees > 0">
+              <strong class="gw-chiffres">{{ auteur.nbVideosDesactivees }}</strong> retirées
+            </li>
+          </ul>
+          <a matButton [routerLink]="['/utilisateurs', auteur.id]" [queryParams]="{ role: auteur.role }">
+            <ng-icon name="lucideEye" size="1rem" aria-hidden="true" />
+            Voir la fiche de l'auteur
+          </a>
+        </section>
+      }
+
+      <!-- ===================== Commentaires ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-commentaires">
+        <h2 id="titre-commentaires" class="bloc-titre">
+          Commentaires <span class="compte gw-chiffres">{{ totalCommentaires() }}</span>
+        </h2>
+        @if (commentaires().length === 0) {
+          <p class="vide">Aucun commentaire.</p>
+        } @else {
+          <ul class="commentaires">
+            @for (commentaire of commentaires(); track commentaire.id) {
+              <li class="commentaire">
+                <app-avatar
+                  [prenom]="commentaire.utilisateurPrenom"
+                  [nom]="commentaire.utilisateurNom"
+                  [photo]="commentaire.utilisateurPhotoProfil"
+                  taille="sm"
+                />
+                <div class="commentaire-corps">
+                  <p class="commentaire-auteur">
+                    {{ commentaire.utilisateurPrenom }} {{ commentaire.utilisateurNom }}
+                    <span>{{ commentaire.dateCreation | depuis }}</span>
+                  </p>
+                  <p class="commentaire-texte">{{ commentaire.contenu }}</p>
+                </div>
+                <button
+                  matIconButton
+                  type="button"
+                  class="bouton-supprimer"
+                  matTooltip="Supprimer ce commentaire"
+                  [attr.aria-label]="'Supprimer le commentaire de ' + commentaire.utilisateurPrenom"
+                  (click)="supprimerCommentaire(commentaire)"
+                >
+                  <ng-icon name="lucideTrash2" size="1rem" aria-hidden="true" />
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- Suppression : action grave, séparée du reste -->
+      <section class="zone-danger">
+        <div>
+          <p class="zone-titre">Supprimer la vidéo</p>
+          <p>Elle disparaît pour tout le monde. Pour la cacher seulement, utilisez « Retirer ».</p>
+        </div>
+        <button matButton="outlined" type="button" class="gw-bouton-danger" [disabled]="actionEnCours()" (click)="supprimer(video)">
+          <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+          Supprimer
+        </button>
+      </section>
+    </div>
+  </div>
+}

@@ -1,0 +1,300 @@
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--gw-sidebar-texte);
+  background: var(--gw-sidebar-fond);
+  overflow: hidden;
+
+  // Motif bogolan très discret en bas du menu : rappel de l'artisanat malien
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 160px;
+    background-image: var(--gw-motif-bogolan);
+    background-size: 48px 48px;
+    opacity: 0.12;
+    mask-image: linear-gradient(to top, #000 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  // Focus clavier : terre cuite claire, bien visible sur le cacao (4:1)
+  :focus-visible {
+    outline-color: var(--gw-terre-cuite);
+  }
+}
+
+.marque {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--gw-hauteur-topbar);
+  padding: var(--gw-espace-3) var(--gw-espace-4) var(--gw-espace-3) var(--gw-espace-5);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--gw-rayon);
+}
+
+.embleme {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+
+.nom-marque {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.nom {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.sous-nom {
+  font-size: var(--gw-taille-petit);
+  color: var(--gw-sidebar-texte-doux);
+}
+
+.bouton-fermer {
+  color: inherit;
+}
+
+.navigation {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--gw-espace-2) var(--gw-espace-3) var(--gw-espace-6);
+}
+
+.titre-section {
+  margin: var(--gw-espace-5) 0 var(--gw-espace-2);
+  padding: 0 var(--gw-espace-3);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gw-sidebar-texte-doux);
+}
+
+.separateur {
+  margin: var(--gw-espace-3) var(--gw-espace-3);
+  border: 0;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lien {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  min-height: 44px; // zone de clic confortable (loi de Fitts)
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-radius: var(--gw-rayon);
+  color: var(--gw-sidebar-texte);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color var(--gw-duree) var(--gw-courbe),
+    color var(--gw-duree) var(--gw-courbe);
+
+  .icone {
+    color: var(--gw-sidebar-texte-doux);
+    transition: color var(--gw-duree) var(--gw-courbe);
+  }
+
+  &:hover {
+    background: var(--gw-sidebar-survol);
+
+    .icone {
+      color: var(--gw-sidebar-texte);
+    }
+  }
+
+  // Page active : fond karité + barre terre cuite + texte en gras (pas seulement la couleur)
+  &.actif {
+    background: var(--gw-sidebar-actif);
+    color: var(--gw-blanc);
+    font-weight: 600;
+
+    .icone {
+      color: var(--gw-terre-cuite);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: var(--gw-terre-cuite);
+    }
+  }
+}
+
+.libelle {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.compteur {
+  min-width: 1.5rem;
+  padding: 0 var(--gw-espace-2);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-terre-cuite);
+  color: var(--gw-cacao-profond);
+  font-size: var(--gw-taille-petit);
+  font-weight: 700;
+  line-height: 1.5rem;
+  text-align: center;
+}
+
+// Menu réduit : un simple point sur l'icône
+.compteur-point {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  min-width: 0;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 2px solid var(--gw-sidebar-fond);
+}
+
+.compact {
+  .marque {
+    justify-content: center;
+    padding: var(--gw-espace-3) 0;
+  }
+
+  .navigation {
+    padding: var(--gw-espace-2) var(--gw-espace-3);
+  }
+
+  .lien {
+    justify-content: center;
+    padding: var(--gw-espace-2);
+  }
+}
+
+.pied {
+  position: relative;
+  z-index: 1;
+  padding: var(--gw-espace-3);
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.bouton-reduire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-espace-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border: 0;
+  border-radius: var(--gw-rayon);
+  background: transparent;
+  color: var(--gw-sidebar-texte-doux);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--gw-duree) var(--gw-courbe),
+    color var(--gw-duree) var(--gw-courbe);
+
+  &:hover {
+    background: var(--gw-sidebar-survol);
+    color: var(--gw-sidebar-texte);
+  }
+
+  .sidebar:not(.compact) & {
+    justify-content: flex-start;
+  }
+}
+
+// ----- Compte de l'administrateur (bas du menu) -----
+.compte-zone {
+  position: relative;
+  z-index: 1;
+  padding: var(--gw-espace-3) var(--gw-espace-3) 0;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.compte {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  min-height: 52px;
+  padding: var(--gw-espace-2);
+  border-radius: var(--gw-rayon);
+  color: var(--gw-sidebar-texte);
+  text-decoration: none;
+  transition: background-color var(--gw-duree) var(--gw-courbe);
+
+  &:hover,
+  &.actif {
+    background: var(--gw-sidebar-survol);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gw-terre-cuite);
+    outline-offset: 2px;
+  }
+
+  .sidebar.compact & {
+    justify-content: center;
+  }
+}
+
+// Liseré clair : l'avatar reste visible même s'il est de teinte cacao
+.compte app-avatar {
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.22);
+}
+
+.compte-textes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.compte-nom {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compte-lien {
+  color: var(--gw-sidebar-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.compte-fleche {
+  flex-shrink: 0;
+  color: var(--gw-sidebar-texte-doux);
+}

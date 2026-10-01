@@ -1,0 +1,129 @@
+.toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-3);
+  width: min(400px, calc(100vw - 2rem));
+  padding: var(--gw-espace-4) var(--gw-espace-2) var(--gw-espace-4) var(--gw-espace-4);
+  overflow: hidden;
+  border-radius: var(--gw-rayon);
+  box-shadow: 0 12px 32px rgb(31 22 18 / 0.28);
+  font-family: var(--gw-police);
+}
+
+// Succès : couleur de la sidebar (cacao), pastille verte pour le sens
+.toast-succes {
+  background: var(--gw-cacao);
+  color: var(--gw-sidebar-texte);
+
+  .pastille {
+    background: var(--gw-succes-fond);
+    color: var(--gw-succes);
+  }
+
+  .minuteur {
+    background: var(--gw-terre-cuite);
+  }
+}
+
+.toast-info {
+  background: var(--gw-cacao);
+  color: var(--gw-sidebar-texte);
+
+  .pastille {
+    background: rgb(255 255 255 / 0.12);
+    color: var(--gw-sidebar-texte);
+  }
+
+  .minuteur {
+    background: var(--gw-sidebar-texte-doux);
+  }
+}
+
+// Avertissement et erreur : fond clair, liseré de couleur (lecture confortable d'un message plus long)
+.toast-avertissement,
+.toast-erreur {
+  background: var(--gw-surface);
+  color: var(--gw-cacao);
+  border-left: 4px solid currentColor;
+}
+
+.toast-avertissement {
+  border-left-color: var(--gw-attention);
+
+  .pastille {
+    background: var(--gw-attention-fond);
+    color: var(--gw-attention);
+  }
+
+  .minuteur {
+    background: var(--gw-attention);
+  }
+}
+
+.toast-erreur {
+  border-left-color: var(--gw-danger);
+
+  .pastille {
+    background: var(--gw-danger-fond);
+    color: var(--gw-danger);
+  }
+
+  .minuteur {
+    background: var(--gw-danger);
+  }
+}
+
+.pastille {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+}
+
+.textes {
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.titre {
+  font-size: var(--gw-taille-texte);
+  font-weight: 600;
+}
+
+.message {
+  margin-top: 2px;
+  font-size: var(--gw-taille-label);
+  line-height: 1.45;
+  opacity: 0.92;
+}
+
+.fermer {
+  --mat-icon-button-state-layer-size: 36px;
+  flex-shrink: 0;
+  margin-top: -6px;
+  color: inherit;
+}
+
+.minuteur {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation: gw-minuteur var(--gw-duree-toast, 5s) linear forwards;
+}
+
+@keyframes gw-minuteur {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

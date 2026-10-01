@@ -1,0 +1,327 @@
+<app-page-header
+  surtitre="Catalogue et modération"
+  titre="Recettes"
+  description="Examinez les recettes proposées par la communauté, ou rédigez vos propres recettes."
+>
+  <a matButton="filled" routerLink="nouvelle">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+    Nouvelle recette
+  </a>
+</app-page-header>
+
+<!-- Statuts : l'onglet « À valider » est le point de départ du travail -->
+<div class="onglets-conteneur">
+  <mat-button-toggle-group
+    class="onglets"
+    name="statut"
+    aria-label="Filtrer les recettes par statut"
+    [value]="statutActif()"
+    (change)="changerStatut($event.value)"
+    hideSingleSelectionIndicator
+  >
+    @for (onglet of onglets; track onglet.valeur) {
+      <mat-button-toggle [value]="onglet.valeur">
+        {{ onglet.libelle }}
+        @if (compteur(onglet) !== null) {
+          <span class="onglet-compteur gw-chiffres">{{ compteur(onglet) }}</span>
+        }
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+</div>
+
+<section class="gw-carte liste" aria-labelledby="titre-liste">
+  <h2 id="titre-liste" class="sr-only">Liste des recettes {{ libelleStatut() }}</h2>
+
+  <!-- Barre d'outils : recherche, catégorie, tri -->
+  <div class="outils">
+    <mat-form-field class="champ-recherche" subscriptSizing="dynamic">
+      <mat-label>Rechercher</mat-label>
+      <ng-icon
+        matPrefix
+        class="icone-champ"
+        name="lucideSearch"
+        size="1.125rem"
+        aria-hidden="true"
+      />
+      <input
+        matInput
+        type="search"
+        [formControl]="champRecherche"
+        placeholder="Nom de recette ou auteur"
+      />
+      @if (champRecherche.value) {
+        <button
+          matIconButton
+          matSuffix
+          type="button"
+          aria-label="Effacer la recherche"
+          (click)="champRecherche.setValue('')"
+        >
+          <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+        </button>
+      }
+    </mat-form-field>
+
+    <mat-form-field class="champ-filtre" subscriptSizing="dynamic">
+      <mat-label>Catégorie</mat-label>
+      <mat-select [value]="categorie() ?? null" (selectionChange)="changerCategorie($event.value)">
+        <mat-option [value]="null">Toutes les catégories</mat-option>
+        @for (categorie of categories(); track categorie.id) {
+          <mat-option [value]="categorie.id">{{ categorie.nom }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="champ-filtre" subscriptSizing="dynamic">
+      <mat-label>Trier par</mat-label>
+      <mat-select [value]="triActif()" (selectionChange)="changerTri($event.value)">
+        @for (tri of tris; track tri.valeur) {
+          <mat-option [value]="tri.valeur">{{ tri.libelle }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Nombre de résultats, annoncé aux lecteurs d'écran quand il change -->
+  <p class="resume" aria-live="polite">
+    @if (!etat().chargement && etat().page; as page) {
+      <strong class="gw-chiffres">{{ page.totalElements }}</strong>
+      {{ page.totalElements > 1 ? 'recettes' : 'recette' }}
+      @if (filtresActifs()) {
+        <button matButton type="button" class="effacer" (click)="effacerFiltres()">
+          Effacer les filtres
+        </button>
+      }
+    }
+  </p>
+
+  @if (etat().chargement && !etat().page) {
+    <!-- Premier chargement : squelette de lignes -->
+    <div class="squelette" aria-busy="true" aria-label="Chargement des recettes">
+      @for (ligne of lignesSquelette; track ligne) {
+        <div class="squelette-ligne">
+          <span class="gw-squelette sq-photo"></span>
+          <span class="sq-textes">
+            <span class="gw-squelette sq-titre"></span>
+            <span class="gw-squelette sq-sous-titre"></span>
+          </span>
+          <span class="gw-squelette sq-badge"></span>
+        </div>
+      }
+    </div>
+  } @else if (etat().erreur) {
+    <app-empty-state
+      titre="Impossible de charger les recettes"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="recharger()">
+        <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+        Réessayer
+      </button>
+    </app-empty-state>
+  } @else if (recettes().length === 0) {
+    @if (filtresActifs()) {
+      <app-empty-state
+        titre="Aucune recette ne correspond"
+        message="Essayez un autre mot-clé ou une autre catégorie."
+        icone="lucideSearch"
+      >
+        <button matButton="outlined" type="button" (click)="effacerFiltres()">
+          Effacer les filtres
+        </button>
+      </app-empty-state>
+    } @else if (statutActif() === 'EN_ATTENTE_VALIDATION') {
+      <app-empty-state
+        titre="Tout est à jour"
+        message="Aucune recette n'attend votre validation. Les nouvelles propositions apparaîtront ici."
+        icone="lucideCircleCheck"
+        ton="succes"
+      />
+    } @else {
+      <app-empty-state titre="Aucune recette dans cette liste" icone="lucideBookOpen" />
+    }
+  } @else {
+    <div class="resultats" [class.rechargement]="etat().chargement">
+      @if (ecran.mobile()) {
+        <!-- Téléphone : une carte par recette -->
+        <ul class="cartes">
+          @for (recette of recettes(); track recette.id) {
+            <li class="carte">
+              <div class="carte-haut">
+                <ng-container *ngTemplateOutlet="photo; context: { $implicit: recette }" />
+                <div class="carte-infos">
+                  <a class="nom" [routerLink]="[recette.id]">{{ recette.nom }}</a>
+                  <p class="meta">
+                    {{ recette.auteurNom ?? 'Auteur inconnu' }} ·
+                    {{ recette.dateCreation | depuis }}
+                  </p>
+                  <app-status-badge [statut]="recette.statut" />
+                </div>
+              </div>
+              <div class="carte-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: recette }" />
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <!-- Ordinateur et tablette : tableau -->
+        <div class="gw-tableau-conteneur">
+          <table mat-table [dataSource]="recettes()" class="gw-tableau tableau">
+            <caption class="sr-only">
+              Recettes
+              {{
+                libelleStatut()
+              }}, page
+              {{
+                pageActive() + 1
+              }}
+            </caption>
+
+            <ng-container matColumnDef="recette">
+              <th mat-header-cell *matHeaderCellDef scope="col">Recette</th>
+              <td mat-cell *matCellDef="let recette">
+                <div class="cellule-recette">
+                  <ng-container *ngTemplateOutlet="photo; context: { $implicit: recette }" />
+                  <div class="cellule-textes">
+                    <a class="nom" [routerLink]="[recette.id]">{{ recette.nom }}</a>
+                    <span class="sous-texte">{{ recette.categorieNom ?? 'Sans catégorie' }}</span>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="auteur">
+              <th mat-header-cell *matHeaderCellDef scope="col">Auteur</th>
+              <td mat-cell *matCellDef="let recette">{{ recette.auteurNom ?? '—' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="details">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">
+                Préparation
+              </th>
+              <td mat-cell *matCellDef="let recette" class="gw-col-centre">
+                <span class="details">
+                  @if (recette.dureeMin) {
+                    <span class="detail">
+                      <ng-icon name="lucideClock" size="0.875rem" aria-hidden="true" />
+                      <span class="gw-chiffres">{{ recette.dureeMin }} min</span>
+                    </span>
+                  }
+                  <span class="detail">
+                    <ng-icon name="lucideGauge" size="0.875rem" aria-hidden="true" />
+                    <span>{{ difficultes[recette.difficulte] }}</span>
+                  </span>
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Créée</th>
+              <td mat-cell *matCellDef="let recette" class="gw-col-centre cellule-date">
+                <span [title]="recette.dateCreation | date: 'd MMMM y à HH:mm'">{{
+                  recette.dateCreation | depuis
+                }}</span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="statut">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Statut</th>
+              <td mat-cell *matCellDef="let recette" class="gw-col-centre">
+                <app-status-badge [statut]="recette.statut" />
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-actions">
+                <span class="sr-only">Actions</span>
+              </th>
+              <td mat-cell *matCellDef="let recette" class="gw-col-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: recette }" />
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="colonnes()"></tr>
+            <tr mat-row *matRowDef="let recette; columns: colonnes()"></tr>
+          </table>
+        </div>
+      }
+
+      <mat-paginator
+        class="gw-pagination"
+        [length]="etat().page?.totalElements ?? 0"
+        [pageIndex]="pageActive()"
+        [pageSize]="tailleActive()"
+        [pageSizeOptions]="[10, 20, 50]"
+        [hidePageSize]="ecran.mobile()"
+        aria-label="Pagination des recettes"
+        (page)="changerPage($event)"
+      />
+    </div>
+  }
+</section>
+
+<!-- Vignette de la recette (réutilisée par le tableau et les cartes) -->
+<ng-template #photo let-recette>
+  @if (recette.photoUrl | fichier; as url) {
+    <img class="photo" [src]="url" alt="" loading="lazy" width="48" height="48" />
+  } @else {
+    <span class="photo photo-vide" aria-hidden="true"
+      ><ng-icon name="lucideCookingPot" size="1.25rem"
+    /></span>
+  }
+</ng-template>
+
+<!-- Actions d'une recette : action principale visible, les autres dans un menu (loi de Hick) -->
+<ng-template #actions let-recette>
+  <div class="actions">
+    @if (recette.statut === 'EN_ATTENTE_VALIDATION') {
+      <a matButton="outlined" [routerLink]="[recette.id]" class="bouton-principal">
+        <ng-icon name="lucideEye" size="1rem" aria-hidden="true" />
+        Examiner
+      </a>
+    } @else {
+      <a matButton [routerLink]="[recette.id]" class="bouton-principal">
+        <ng-icon name="lucideEye" size="1rem" aria-hidden="true" />
+        Voir
+      </a>
+    }
+
+    <button
+      matIconButton
+      type="button"
+      [matMenuTriggerFor]="menuActions"
+      [disabled]="actionEnCours() === recette.id"
+      [attr.aria-label]="'Autres actions pour ' + recette.nom"
+      matTooltip="Autres actions"
+    >
+      <ng-icon name="lucideEllipsis" size="1.25rem" aria-hidden="true" />
+    </button>
+
+    <mat-menu #menuActions="matMenu" xPosition="before">
+      @if (recette.statut === 'EN_ATTENTE_VALIDATION') {
+        <button mat-menu-item type="button" (click)="valider(recette)">
+          <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+          <span>Publier</span>
+        </button>
+        <button mat-menu-item type="button" (click)="rejeter(recette)">
+          <ng-icon name="lucideCircleX" size="1.125rem" aria-hidden="true" />
+          <span>Rejeter…</span>
+        </button>
+        <mat-divider />
+      }
+      <a mat-menu-item [routerLink]="[recette.id, 'modifier']">
+        <ng-icon name="lucidePencil" size="1.125rem" aria-hidden="true" />
+        <span>Modifier</span>
+      </a>
+      <mat-divider />
+      <button mat-menu-item type="button" class="item-danger" (click)="supprimer(recette)">
+        <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+        <span>Supprimer…</span>
+      </button>
+    </mat-menu>
+  </div>
+</ng-template>

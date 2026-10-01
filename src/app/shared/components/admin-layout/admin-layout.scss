@@ -1,0 +1,65 @@
+@use 'points-de-rupture' as ecran;
+
+.conteneur {
+  height: 100vh;
+  height: 100dvh; // hauteur réelle sur mobile (barre d'adresse comprise)
+  background: var(--gw-fond);
+}
+
+.menu {
+  width: var(--gw-largeur-sidebar);
+  border: 0;
+  background: var(--gw-sidebar-fond);
+  transition: width var(--gw-duree-lente) var(--gw-courbe);
+}
+
+.menu-compact {
+  width: var(--gw-largeur-sidebar-compacte);
+}
+
+.zone-principale {
+  display: flex;
+  flex-direction: column;
+}
+
+.contenu {
+  flex: 1;
+  width: 100%;
+  max-width: var(--gw-largeur-contenu);
+  margin: 0 auto;
+  padding: var(--gw-espace-8) var(--gw-espace-8) var(--gw-espace-12);
+
+  &:focus {
+    outline: none;
+  }
+
+  @include ecran.tablette {
+    padding: var(--gw-espace-6);
+  }
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-5) var(--gw-espace-4) var(--gw-espace-10);
+  }
+}
+
+@include ecran.mobile {
+  .menu {
+    width: min(var(--gw-largeur-sidebar), 86vw);
+  }
+}
+
+.lien-evitement {
+  position: fixed;
+  left: var(--gw-espace-4);
+  top: -100px;
+  z-index: 2000;
+  padding: var(--gw-espace-2) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-action);
+  color: var(--gw-blanc);
+  font-weight: 600;
+
+  &:focus {
+    top: var(--gw-espace-4);
+  }
+}

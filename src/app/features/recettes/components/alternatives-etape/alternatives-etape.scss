@@ -1,0 +1,104 @@
+.alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-2);
+}
+
+.intro {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.puces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Puce d'alternative : fond pâle karité, suppression facile
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px var(--gw-espace-3);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+}
+
+.retirer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(112 61 30 / 0.12);
+  }
+}
+
+.aucune {
+  color: var(--gw-texte-discret);
+  font-size: var(--gw-taille-petit);
+  font-style: italic;
+}
+
+.ajouter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0 var(--gw-espace-3);
+  border: 1px dashed var(--gw-contour-champ);
+  border-radius: var(--gw-rayon-pilule);
+  background: transparent;
+  color: var(--gw-action);
+  font: inherit;
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-style: solid;
+    background: var(--gw-terre-cuite-pale);
+  }
+}
+
+.ajout {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin-top: var(--gw-espace-2);
+}
+
+.champ {
+  flex: 1;
+}
+
+.note {
+  flex-basis: 100%;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.option-creer {
+  color: var(--gw-action);
+  font-weight: 600;
+}

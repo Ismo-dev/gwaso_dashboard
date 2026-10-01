@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>{{ demande.titre }}</h2>
+
+<!-- display: contents : le formulaire ne casse pas la mise en page du dialogue.
+     Pas de [formGroup] ici : « ngSubmit » ne serait jamais émis. On écoute donc l'envoi natif. -->
+<form class="formulaire" (submit)="$event.preventDefault(); confirmer()" novalidate>
+  <mat-dialog-content>
+    <p class="message">{{ demande.message }}</p>
+    @if (demande.aide) {
+      <p class="aide" id="motif-aide">{{ demande.aide }}</p>
+    }
+
+    <mat-form-field class="champ">
+      <mat-label>{{ demande.libelle }}</mat-label>
+      <textarea
+        matInput
+        [formControl]="motif"
+        rows="4"
+        [attr.maxlength]="longueurMax"
+        cdkFocusInitial
+        [attr.aria-describedby]="demande.aide ? 'motif-aide' : null"
+      ></textarea>
+      <mat-hint align="end">{{ motif.value.length }} / {{ longueurMax }}</mat-hint>
+      @if (motif.hasError('required')) {
+        <mat-error>Le motif est obligatoire.</mat-error>
+      } @else if (motif.hasError('minlength')) {
+        <mat-error>Précisez le motif ({{ longueurMin }} caractères minimum).</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" [mat-dialog-close]="null">Annuler</button>
+    <button matButton="filled" type="submit" class="gw-bouton-danger">
+      {{ demande.texteConfirmer ?? 'Confirmer' }}
+    </button>
+  </mat-dialog-actions>
+</form>

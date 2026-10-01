@@ -1,0 +1,55 @@
+@use 'points-de-rupture' as ecran;
+
+.barre-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-espace-3) var(--gw-espace-6);
+  margin-bottom: var(--gw-espace-5);
+}
+
+.recherche {
+  flex: 0 1 380px;
+
+  @include ecran.mobile {
+    flex: 1 1 100%;
+  }
+}
+
+.icone-champ {
+  margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+}
+
+.compte {
+  color: var(--gw-texte-doux);
+
+  strong {
+    color: var(--gw-cacao);
+  }
+}
+
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--gw-espace-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include ecran.mobile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gw-espace-3);
+  }
+}
+
+.sq-carte {
+  height: 280px;
+  border-radius: var(--gw-rayon-lg);
+}
+
+// Pagination sous la grille : même filet que les tableaux, sans fond
+.pagination-grille {
+  margin-top: var(--gw-espace-4);
+}

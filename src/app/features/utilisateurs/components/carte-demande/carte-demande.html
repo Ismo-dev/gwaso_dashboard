@@ -1,0 +1,79 @@
+@let d = demande();
+
+<article class="carte gw-carte" [attr.aria-labelledby]="'demande-' + d.id">
+  <header class="entete">
+    <app-avatar [prenom]="d.prenom" [nom]="d.nom" [photo]="d.photoProfil" />
+    <div class="identite">
+      <h3 [id]="'demande-' + d.id">
+        <a [routerLink]="['/utilisateurs', d.id]" [queryParams]="{ role: d.type }"
+          >{{ d.prenom }} {{ d.nom }}</a
+        >
+      </h3>
+      <p class="role">
+        <ng-icon [name]="icone()" size="0.875rem" aria-hidden="true" />
+        <span class="sr-only">Demande de statut : </span>{{ libelleRole() }}
+      </p>
+    </div>
+    <span class="date" [title]="d.dateInscription | date: 'd MMMM y à HH:mm'">{{
+      d.dateInscription | depuis
+    }}</span>
+  </header>
+
+  <dl class="infos">
+    @if (d.email) {
+      <div>
+        <dt>Email</dt>
+        <dd>
+          <a [href]="'mailto:' + d.email">{{ d.email }}</a>
+        </dd>
+      </div>
+    }
+    @if (d.telephone) {
+      <div>
+        <dt>Téléphone</dt>
+        <dd>
+          <a [href]="'tel:' + d.telephone">{{ d.telephone }}</a>
+        </dd>
+      </div>
+    }
+    @if (d.localite) {
+      <div>
+        <dt>Localité</dt>
+        <dd>{{ d.localite }}</dd>
+      </div>
+    }
+  </dl>
+
+  <!-- Le justificatif est la pièce principale de la décision : il est mis en évidence -->
+  @if (d.preuveUrl | fichier; as preuve) {
+    <a class="justificatif" [href]="preuve" target="_blank" rel="noopener">
+      <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
+      <span>
+        <strong>Voir le justificatif</strong>
+        <span class="sr-only"> (nouvel onglet)</span>
+      </span>
+      <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
+    </a>
+  } @else {
+    <p class="justificatif justificatif-absent">
+      <ng-icon name="lucideTriangleAlert" size="1.125rem" aria-hidden="true" />
+      Aucun justificatif fourni
+    </p>
+  }
+
+  <footer class="actions">
+    <button
+      matButton="outlined"
+      type="button"
+      class="gw-bouton-danger"
+      [disabled]="enCours()"
+      (click)="refuser.emit(d)"
+    >
+      Refuser…
+    </button>
+    <button matButton="filled" type="button" [disabled]="enCours()" (click)="valider.emit(d)">
+      <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+      Valider
+    </button>
+  </footer>
+</article>

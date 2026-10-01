@@ -1,0 +1,20 @@
+<div [class]="'toast toast-' + donnees.type" [style.--gw-duree-toast]="donnees.duree + 'ms'">
+  <span class="pastille" aria-hidden="true">
+    <ng-icon [name]="apparence().icone" size="1.25rem" />
+  </span>
+  <div class="textes">
+    <p class="titre">{{ apparence().titre }}</p>
+    <p class="message">{{ donnees.message }}</p>
+  </div>
+  <button
+    matIconButton
+    type="button"
+    class="fermer"
+    aria-label="Fermer la notification"
+    (click)="fermer()"
+  >
+    <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+  </button>
+  <!-- Barre qui se vide pendant la durée d'affichage (décorative) -->
+  <span class="minuteur" aria-hidden="true"></span>
+</div>

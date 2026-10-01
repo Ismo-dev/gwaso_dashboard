@@ -1,0 +1,608 @@
+@if (chargement()) {
+  <div class="squelette" aria-busy="true" aria-label="Chargement de la recette">
+    <div class="gw-squelette sq-titre"></div>
+    <div class="gw-squelette sq-bloc"></div>
+  </div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Recette introuvable"
+      message="Elle a peut-être été supprimée, ou l'adresse est incorrecte."
+      icone="lucideFileQuestion"
+    >
+      <a matButton="filled" routerLink="/recettes">Voir toutes les recettes</a>
+    </app-empty-state>
+  </div>
+} @else {
+  <app-page-header
+    surtitre="Recettes"
+    [titre]="estNouvelle() ? 'Nouvelle recette' : 'Modifier la recette'"
+    [description]="
+      estNouvelle()
+        ? 'Commencez par les informations principales. La photo, les ingrédients et les étapes se débloquent ensuite.'
+        : 'Les modifications sont enregistrées section par section.'
+    "
+  >
+    @if (recette(); as r) {
+      <a matButton="outlined" [routerLink]="['/recettes', r.id]">
+        <ng-icon name="lucideEye" size="1.125rem" aria-hidden="true" />
+        Voir la fiche
+      </a>
+    }
+  </app-page-header>
+
+  <div class="disposition">
+    <div class="sections">
+      <!-- ===================== 1. Informations ===================== -->
+      <section class="section gw-carte" aria-labelledby="titre-infos">
+        <header class="section-entete">
+          <span class="numero" [class.numero-fait]="!!recette()" aria-hidden="true">
+            @if (recette()) {
+              <ng-icon name="lucideCheck" size="1rem" />
+            } @else {
+              1
+            }
+          </span>
+          <div>
+            <h2 id="titre-infos">Informations</h2>
+            <p>Ce que les membres voient en premier.</p>
+          </div>
+        </header>
+
+        <form
+          class="formulaire"
+          [formGroup]="formulaire"
+          (ngSubmit)="enregistrerInfos()"
+          novalidate
+        >
+          @if (erreurInfos()) {
+            <p class="erreur" role="alert">{{ erreurInfos() }}</p>
+          }
+
+          <div class="grille-2">
+            <mat-form-field>
+              <mat-label>Nom de la recette</mat-label>
+              <input matInput formControlName="nom" maxlength="120" />
+              <mat-hint>Ex. Tô sauce gombo, Riz au gras</mat-hint>
+              <mat-error>Le nom est obligatoire.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field>
+              <mat-label>Catégorie</mat-label>
+              <mat-select formControlName="categorieId">
+                @for (categorie of categories(); track categorie.id) {
+                  <mat-option [value]="categorie.id">{{ categorie.nom }}</mat-option>
+                }
+              </mat-select>
+              <mat-error>Choisissez une catégorie.</mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Autres noms : un même plat peut s'appeler Mafé ou Tigadèguèna -->
+          <div class="autres-noms">
+            <mat-form-field class="champ-autre-nom" subscriptSizing="dynamic">
+              <mat-label>Autres noms du plat</mat-label>
+              <input
+                matInput
+                [formControl]="champNom"
+                maxlength="120"
+                placeholder="Ex. Tigadèguèna"
+                (keydown.enter)="$event.preventDefault(); ajouterNom()"
+              />
+              <button
+                matIconButton
+                matSuffix
+                type="button"
+                aria-label="Ajouter ce nom"
+                matTooltip="Ajouter"
+                [disabled]="!champNom.value.trim()"
+                (click)="ajouterNom()"
+              >
+                <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+              </button>
+              <mat-hint>Facultatif · Entrée pour ajouter. La recherche trouve la recette sous chacun de ces noms.</mat-hint>
+            </mat-form-field>
+            @if (noms().length > 0 || nomsEnAttente().length > 0) {
+              <ul class="puces-noms" aria-label="Autres noms du plat">
+                @for (nom of noms(); track nom.id) {
+                  <li class="puce-nom">
+                    {{ nom.nom }}
+                    <button
+                      type="button"
+                      [attr.aria-label]="'Retirer le nom ' + nom.nom"
+                      (click)="retirerNom(nom)"
+                    >
+                      <ng-icon name="lucideX" size="0.875rem" aria-hidden="true" />
+                    </button>
+                  </li>
+                }
+                @for (nom of nomsEnAttente(); track nom) {
+                  <li class="puce-nom puce-attente" matTooltip="Enregistré à la création de la recette">
+                    {{ nom }}
+                    <button
+                      type="button"
+                      [attr.aria-label]="'Retirer le nom ' + nom"
+                      (click)="retirerNomEnAttente(nom)"
+                    >
+                      <ng-icon name="lucideX" size="0.875rem" aria-hidden="true" />
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          <app-editeur-riche
+            class="pleine-largeur"
+            formControlName="description"
+            libelle="Présentation"
+            aide="L'histoire du plat, sa région, quand on le mange… Mettez en gras ce qui compte."
+            [longueurMax]="3000"
+          />
+
+          <div class="grille-3">
+            <mat-form-field>
+              <mat-label>Durée totale</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                inputmode="numeric"
+                formControlName="dureeMin"
+              />
+              <span matTextSuffix>min</span>
+              <mat-error>Indiquez une durée (en minutes).</mat-error>
+            </mat-form-field>
+
+            <mat-form-field>
+              <mat-label>Nombre de personnes</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                inputmode="numeric"
+                formControlName="nbPersonnes"
+              />
+              <mat-error>Entre 1 et 100 personnes.</mat-error>
+            </mat-form-field>
+
+            <mat-form-field>
+              <mat-label>Difficulté</mat-label>
+              <mat-select formControlName="difficulte">
+                @for (d of difficultes; track d.valeur) {
+                  <mat-option [value]="d.valeur">{{ d.libelle }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="options">
+            <mat-checkbox formControlName="estMalienne"
+              >Recette de la cuisine malienne</mat-checkbox
+            >
+            <mat-checkbox formControlName="telechargeable"
+              >Consultable hors connexion sur l'application</mat-checkbox
+            >
+          </div>
+
+          <div class="section-actions">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="enregistrementInfos() || (!!recette() && formulaire.pristine)"
+            >
+              @if (enregistrementInfos()) {
+                <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+              }
+              {{ recette() ? 'Enregistrer les informations' : 'Créer la recette et continuer' }}
+              @if (!recette()) {
+                <ng-icon name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
+              }
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ===================== 2. Photo ===================== -->
+      <section
+        class="section gw-carte"
+        [class.section-verrouillee]="verrouille()"
+        aria-labelledby="titre-photo"
+      >
+        <header class="section-entete">
+          <span class="numero" [class.numero-fait]="!!recette()?.photoUrl" aria-hidden="true">
+            @if (recette()?.photoUrl) {
+              <ng-icon name="lucideCheck" size="1rem" />
+            } @else {
+              2
+            }
+          </span>
+          <div>
+            <h2 id="titre-photo">Photo du plat</h2>
+            <p>Une photo lumineuse, prise de près, donne envie de cuisiner.</p>
+          </div>
+        </header>
+
+        @if (verrouille()) {
+          <p class="verrou">
+            <ng-icon name="lucideCircle" size="1rem" aria-hidden="true" />Disponible après
+            l'enregistrement des informations.
+          </p>
+        } @else {
+          <app-image-upload
+            libelle="Photo principale"
+            [imageActuelle]="recette()?.photoUrl ?? null"
+            (fichierChoisi)="photo.set($event)"
+          />
+          @if (photo()) {
+            <div class="section-actions">
+              <button
+                matButton="filled"
+                type="button"
+                [disabled]="envoiPhoto()"
+                (click)="envoyerPhoto()"
+              >
+                @if (envoiPhoto()) {
+                  <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+                }
+                Enregistrer la photo
+              </button>
+            </div>
+          }
+        }
+      </section>
+
+      <!-- ===================== 3. Ingrédients ===================== -->
+      <section
+        class="section gw-carte"
+        [class.section-verrouillee]="verrouille()"
+        aria-labelledby="titre-ingredients"
+      >
+        <header class="section-entete">
+          <span class="numero" [class.numero-fait]="ingredients().length > 0" aria-hidden="true">
+            @if (ingredients().length > 0) {
+              <ng-icon name="lucideCheck" size="1rem" />
+            } @else {
+              3
+            }
+          </span>
+          <div>
+            <h2 id="titre-ingredients">Ingrédients <span class="obligatoire">obligatoire</span></h2>
+            <p>Au moins un ingrédient est nécessaire pour publier.</p>
+          </div>
+        </header>
+
+        @if (verrouille()) {
+          <p class="verrou">
+            <ng-icon name="lucideCircle" size="1rem" aria-hidden="true" />Disponible après
+            l'enregistrement des informations.
+          </p>
+        } @else {
+          @if (ingredients().length > 0) {
+            <ul class="liste-ingredients">
+              @for (ingredient of ingredients(); track ingredient.id) {
+                <li>
+                  <span class="ingredient-nom">{{ ingredient.ingredientNom }}</span>
+                  <span class="ingredient-quantite gw-chiffres">
+                    {{ ingredient.quantite | number: '1.0-2' : 'fr' }}
+                    {{ ingredient.unite | unite }}
+                  </span>
+                  <button
+                    matIconButton
+                    type="button"
+                    class="bouton-retirer"
+                    [attr.aria-label]="'Retirer ' + ingredient.ingredientNom"
+                    matTooltip="Retirer"
+                    (click)="retirerIngredient(ingredient)"
+                  >
+                    <ng-icon name="lucideX" size="1.125rem" aria-hidden="true" />
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+
+          <!-- Budget : calculé par l'API à partir des prix des ingrédients (jamais saisi) -->
+          <div class="budget" aria-live="polite">
+            <ng-icon name="lucideCoins" size="1.25rem" aria-hidden="true" />
+            <div>
+              <p class="budget-libelle">Budget estimé</p>
+              @if (recette()?.prixMin != null) {
+                <p class="budget-valeur gw-chiffres">
+                  @if (recette()!.prixMin === recette()!.prixMax) {
+                    {{ recette()!.prixMin | number: '1.0-0' : 'fr' }} FCFA
+                  } @else {
+                    {{ recette()!.prixMin | number: '1.0-0' : 'fr' }} –
+                    {{ recette()!.prixMax | number: '1.0-0' : 'fr' }} FCFA
+                  }
+                </p>
+              } @else {
+                <p class="budget-vide">Pas encore d'estimation</p>
+              }
+              <p class="budget-aide">
+                Calculé automatiquement avec les prix du marché des ingrédients. Un ingrédient sans prix
+                n'est pas compté.
+              </p>
+            </div>
+          </div>
+
+          <!-- Ajout d'un ingrédient : les trois champs sur une ligne, l'action juste à côté (proximité) -->
+          <div class="ajout-ingredient" role="group" aria-label="Ajouter un ingrédient">
+            <mat-form-field class="champ-ingredient" subscriptSizing="dynamic">
+              <mat-label>Ingrédient</mat-label>
+              <input
+                matInput
+                [formControl]="champIngredient"
+                [matAutocomplete]="listeIngredients"
+                placeholder="Tapez pour chercher ou créer"
+              />
+              <mat-autocomplete
+                #listeIngredients="matAutocomplete"
+                [displayWith]="nomIngredient"
+                (optionSelected)="choisirIngredient($event.option.value)"
+              >
+                @for (ingredient of suggestions(); track ingredient.id) {
+                  <mat-option [value]="ingredient">{{ ingredient.nom }}</mat-option>
+                } @empty {
+                  @if (!peutCreerIngredient()) {
+                    <mat-option disabled>Aucun ingrédient ne correspond</mat-option>
+                  }
+                }
+                @if (peutCreerIngredient()) {
+                  <mat-option [value]="{ creer: texteIngredient() }" class="option-creer">
+                    <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
+                    Créer l'ingrédient « {{ texteIngredient() }} »
+                  </mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+
+            <mat-form-field class="champ-quantite" subscriptSizing="dynamic">
+              <mat-label>Quantité</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                step="0.5"
+                inputmode="decimal"
+                [formControl]="quantite"
+              />
+            </mat-form-field>
+
+            <mat-form-field class="champ-unite" subscriptSizing="dynamic">
+              <mat-label>Unité</mat-label>
+              <mat-select [formControl]="unite">
+                @for (u of unites; track u.valeur) {
+                  <mat-option [value]="u.valeur">{{ u.libelle }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <button
+              matButton="outlined"
+              type="button"
+              class="bouton-ajouter"
+              [disabled]="ajoutIngredient()"
+              (click)="ajouterIngredient()"
+            >
+              <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+              Ajouter
+            </button>
+          </div>
+          @if (erreurIngredient()) {
+            <p class="erreur-groupe" role="alert">{{ erreurIngredient() }}</p>
+          }
+          <p class="aide">
+            Un ingrédient manque ? Ajoutez-le d'abord dans
+            <a routerLink="/ingredients">le catalogue des ingrédients</a>.
+          </p>
+        }
+      </section>
+
+      <!-- ===================== 4. Étapes ===================== -->
+      <section
+        class="section gw-carte"
+        [class.section-verrouillee]="verrouille()"
+        aria-labelledby="titre-etapes"
+      >
+        <header class="section-entete">
+          <span class="numero" [class.numero-fait]="etapes().length > 0" aria-hidden="true">
+            @if (etapes().length > 0) {
+              <ng-icon name="lucideCheck" size="1rem" />
+            } @else {
+              4
+            }
+          </span>
+          <div>
+            <h2 id="titre-etapes">Étapes de préparation</h2>
+            <p>
+              @if (dureeEtapes() > 0) {
+                {{ etapes().length }} étape(s) · {{ dureeEtapes() }} min au total
+              } @else {
+                Dans l'ordre où on les réalise.
+              }
+            </p>
+          </div>
+        </header>
+
+        @if (verrouille()) {
+          <p class="verrou">
+            <ng-icon name="lucideCircle" size="1rem" aria-hidden="true" />Disponible après
+            l'enregistrement des informations.
+          </p>
+        } @else {
+          @if (etapes().length > 0) {
+            <ol class="liste-etapes">
+              @for (
+                etape of etapes();
+                track etape.id;
+                let i = $index, premiere = $first, derniere = $last
+              ) {
+                <li class="etape" [class.etape-occupee]="etapeEnCours() === etape.id">
+                  <span class="etape-numero gw-chiffres" aria-hidden="true">{{ i + 1 }}</span>
+                  <div class="etape-textes">
+                    <h3>
+                      <span class="sr-only">Étape {{ i + 1 }} : </span>{{ etape.titre }}
+                    </h3>
+                    <app-texte-riche
+                      class="etape-instructions"
+                      [html]="etape.instructions"
+                      [lignesMax]="3"
+                    />
+
+                    <!-- Résumé du contenu de l'étape : on voit d'un coup d'œil ce qui est prêt -->
+                    <ul class="etape-resume">
+                      @if (etape.dureeMinutes) {
+                        <li class="resume-duree">
+                          <ng-icon name="lucideClock" size="0.875rem" aria-hidden="true" />
+                          {{ etape.dureeMinutes }} min
+                        </li>
+                      }
+                      @for (
+                        ingredient of contenuEtapes()[etape.id]?.ingredients ?? [];
+                        track ingredient.id
+                      ) {
+                        <li class="resume-ingredient">
+                          <ng-icon name="lucideShoppingBasket" size="0.875rem" aria-hidden="true" />
+                          {{ ingredient.ingredientNom }}
+                          <span class="gw-chiffres"
+                            >{{ ingredient.quantite | number: '1.0-2' : 'fr' }}
+                            {{ ingredient.unite | unite }}</span
+                          >
+                        </li>
+                      }
+                      @for (
+                        ustensile of contenuEtapes()[etape.id]?.ustensiles ?? [];
+                        track ustensile.id
+                      ) {
+                        <li class="resume-ustensile">
+                          <ng-icon name="lucideCookingPot" size="0.875rem" aria-hidden="true" />
+                          {{ ustensile.ustensileNom }}
+                        </li>
+                      }
+                      @if (etape.photoUrl) {
+                        <li class="resume-media">
+                          <ng-icon name="lucideImage" size="0.875rem" aria-hidden="true" />
+                          Photo
+                        </li>
+                      }
+                      @if (etape.videoUrl) {
+                        <li class="resume-media">
+                          <ng-icon name="lucideVideo" size="0.875rem" aria-hidden="true" />
+                          Vidéo
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                  @if (etape.photoUrl | fichier; as photo) {
+                    <img class="etape-vignette" [src]="photo" alt="" loading="lazy" />
+                  }
+                  <div class="etape-actions">
+                    <button
+                      matIconButton
+                      type="button"
+                      [disabled]="premiere || !!etapeEnCours()"
+                      [attr.aria-label]="'Monter l\'étape ' + (i + 1)"
+                      matTooltip="Monter"
+                      (click)="deplacerEtape(i, -1)"
+                    >
+                      <ng-icon name="lucideArrowUp" size="1.125rem" aria-hidden="true" />
+                    </button>
+                    <button
+                      matIconButton
+                      type="button"
+                      [disabled]="derniere || !!etapeEnCours()"
+                      [attr.aria-label]="'Descendre l\'étape ' + (i + 1)"
+                      matTooltip="Descendre"
+                      (click)="deplacerEtape(i, 1)"
+                    >
+                      <ng-icon name="lucideArrowDown" size="1.125rem" aria-hidden="true" />
+                    </button>
+                    <button
+                      matIconButton
+                      type="button"
+                      [attr.aria-label]="'Modifier l\'étape ' + (i + 1)"
+                      matTooltip="Modifier"
+                      (click)="modifierEtape(etape, i)"
+                    >
+                      <ng-icon name="lucidePencil" size="1.125rem" aria-hidden="true" />
+                    </button>
+                    <button
+                      matIconButton
+                      type="button"
+                      class="bouton-retirer"
+                      [attr.aria-label]="'Supprimer l\'étape ' + (i + 1)"
+                      matTooltip="Supprimer"
+                      (click)="supprimerEtape(etape, i)"
+                    >
+                      <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+                    </button>
+                  </div>
+                </li>
+              }
+            </ol>
+          }
+          <button matButton="outlined" type="button" class="bouton-etape" (click)="ajouterEtape()">
+            <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+            Ajouter l'étape {{ etapes().length + 1 }}
+          </button>
+        }
+      </section>
+    </div>
+
+    <!-- ===================== Publication (colonne de droite) ===================== -->
+    <aside class="publication gw-carte" aria-labelledby="titre-publication">
+      <h2 id="titre-publication">Publication</h2>
+      <p class="statut">
+        Statut :
+        @if (recette(); as r) {
+          <app-status-badge [statut]="r.statut" />
+        } @else {
+          <span class="non-cree">pas encore créée</span>
+        }
+      </p>
+
+      <ul class="controles">
+        @for (controle of controles(); track controle.libelle) {
+          <li [class.controle-fait]="controle.fait">
+            <ng-icon
+              [name]="controle.fait ? 'lucideCircleCheck' : 'lucideCircle'"
+              size="1.125rem"
+              aria-hidden="true"
+            />
+            <span>
+              {{ controle.libelle }}
+              <span class="sr-only">{{ controle.fait ? ' : fait' : ' : à faire' }}</span>
+              @if (!controle.obligatoire) {
+                <span class="recommande">recommandé</span>
+              }
+            </span>
+          </li>
+        }
+      </ul>
+
+      @if (recette()?.statut === 'PUBLIEE') {
+        <p class="note">
+          <ng-icon name="lucideBadgeCheck" size="1rem" aria-hidden="true" />
+          Recette publiée : vos modifications sont visibles immédiatement.
+        </p>
+      } @else {
+        <button
+          matButton="filled"
+          type="button"
+          class="bouton-publier"
+          [disabled]="!peutPublier() || publication()"
+          (click)="publier()"
+        >
+          @if (publication()) {
+            <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+          }
+          Publier la recette
+        </button>
+        @if (!peutPublier()) {
+          <p class="note">Complétez les points obligatoires pour publier.</p>
+        }
+      }
+    </aside>
+  </div>
+}

@@ -1,0 +1,49 @@
+<div class="video-upload">
+  <p class="libelle">{{ libelle() }}</p>
+
+  <div class="apercu" [class.apercu-vide]="!aUneVideo()">
+    @if (apercuLocal(); as apercu) {
+      <video
+        [src]="apercu"
+        controls
+        preload="metadata"
+        aria-label="Aperçu de la nouvelle vidéo"
+      ></video>
+    } @else if (videoActuelle() | fichier; as actuelle) {
+      <video [src]="actuelle" controls preload="metadata" aria-label="Vidéo actuelle"></video>
+    } @else {
+      <ng-icon name="lucideFilm" size="1.75rem" aria-hidden="true" />
+      <span>Aucune vidéo</span>
+    }
+  </div>
+
+  <div class="commandes">
+    <input
+      #champ
+      class="sr-only"
+      type="file"
+      [accept]="typesAcceptes"
+      [attr.aria-describedby]="idAide"
+      tabindex="-1"
+      (change)="choisir($event)"
+    />
+    <button
+      matButton="outlined"
+      type="button"
+      [attr.aria-describedby]="idAide"
+      (click)="champ.click()"
+    >
+      <ng-icon name="lucideUpload" size="1rem" aria-hidden="true" />
+      {{ aUneVideo() ? 'Remplacer la vidéo' : 'Choisir une vidéo' }}
+    </button>
+    @if (apercuLocal()) {
+      <button matButton type="button" (click)="annulerChoix()">Annuler ce choix</button>
+    }
+  </div>
+  <p class="aide" [id]="idAide">
+    MP4, WebM ou MOV · {{ tailleMax }} Mo maximum · courte de préférence
+  </p>
+  @if (erreur()) {
+    <p class="erreur" role="alert">{{ erreur() }}</p>
+  }
+</div>

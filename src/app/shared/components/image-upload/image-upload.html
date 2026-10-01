@@ -1,0 +1,54 @@
+<div
+  class="image-upload"
+  [class.carre]="format() === 'carre'"
+  [class.verticale]="disposition() === 'verticale'"
+>
+  <p class="libelle">{{ libelle() }}</p>
+
+  <div class="zone">
+    <div class="apercu" [class.apercu-vide]="!aUneImage()">
+      @if (apercuLocal(); as apercu) {
+        <img [src]="apercu" alt="Aperçu de la nouvelle image" />
+      } @else if (imageActuelle() | fichier; as actuelle) {
+        <img [src]="actuelle" alt="Image actuelle" />
+      } @else {
+        <ng-icon name="lucideImageOff" size="1.75rem" aria-hidden="true" />
+        <span>Aucune image</span>
+      }
+    </div>
+
+    <div class="commandes">
+      <!-- Le vrai champ fichier est masqué ; le bouton visible l'ouvre (plus joli et accessible au clavier) -->
+      <input
+        #champ
+        class="sr-only"
+        type="file"
+        [accept]="typesAcceptes"
+        [attr.aria-describedby]="idAide"
+        tabindex="-1"
+        (change)="choisir($event)"
+      />
+      <button
+        matButton="outlined"
+        type="button"
+        (click)="champ.click()"
+        [attr.aria-describedby]="idAide"
+      >
+        {{ aUneImage() ? "Remplacer l'image" : 'Choisir une image' }}
+      </button>
+      @if (apercuLocal()) {
+        <button matButton type="button" (click)="annulerChoix()">Annuler ce choix</button>
+      }
+      <p class="aide" [id]="idAide">JPG, PNG, WebP ou GIF · {{ tailleMax }} Mo maximum</p>
+      @if (nomFichier()) {
+        <p class="nom-fichier">
+          <ng-icon name="lucideCheck" size="0.875rem" aria-hidden="true" />
+          {{ nomFichier() }} sera enregistrée avec le formulaire.
+        </p>
+      }
+      @if (erreur()) {
+        <p class="erreur" role="alert">{{ erreur() }}</p>
+      }
+    </div>
+  </div>
+</div>

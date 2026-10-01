@@ -1,0 +1,27 @@
+<article class="stat gw-carte">
+  <div class="entete">
+    <h3 class="libelle">{{ libelle() }}</h3>
+    <span class="icone" aria-hidden="true">
+      <ng-icon [name]="icone()" size="1.125rem" />
+    </span>
+  </div>
+  <p class="valeur gw-chiffres">{{ valeur().toLocaleString('fr-FR') }}</p>
+
+  @if (total() > 0) {
+    <div class="barre" aria-hidden="true">
+      @for (part of parts(); track part.libelle) {
+        <span [class]="'part ton-' + part.ton" [style.width.%]="part.largeur"></span>
+      }
+    </div>
+    <ul class="legende">
+      @for (segment of segments(); track segment.libelle) {
+        <li>
+          <span [class]="'pastille ton-' + segment.ton" aria-hidden="true"></span>
+          <span class="gw-chiffres">{{ segment.valeur }}</span> {{ segment.libelle }}
+        </li>
+      }
+    </ul>
+  } @else if (detail()) {
+    <p class="detail">{{ detail() }}</p>
+  }
+</article>

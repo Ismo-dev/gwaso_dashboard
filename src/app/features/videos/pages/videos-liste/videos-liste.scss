@@ -1,0 +1,48 @@
+@use 'points-de-rupture' as ecran;
+
+.liste {
+  overflow: hidden;
+}
+
+// Grille de cartes : autant de colonnes que la largeur le permet
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--gw-espace-4);
+  margin: 0;
+  padding: 0 var(--gw-espace-5) var(--gw-espace-5);
+  list-style: none;
+  transition: opacity var(--gw-duree) var(--gw-courbe);
+
+  @include ecran.mobile {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gw-espace-3);
+    padding: 0 var(--gw-espace-4) var(--gw-espace-4);
+  }
+}
+
+// Rechargement après un changement de filtre : on garde les cartes, légèrement estompées
+.rechargement {
+  opacity: 0.55;
+}
+
+// ----- Squelette -----
+.squelette-carte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+}
+
+.sq-vignette {
+  aspect-ratio: 4 / 5;
+  border-radius: var(--gw-rayon-lg);
+}
+
+.sq-ligne {
+  width: 80%;
+  height: 14px;
+}
+
+.courte {
+  width: 50%;
+}

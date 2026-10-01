@@ -1,0 +1,6 @@
+<div
+  class="texte-riche"
+  [class.tronque]="lignesMax() !== null"
+  [style.--lignes-max]="lignesMax()"
+  [innerHTML]="contenu()"
+></div>

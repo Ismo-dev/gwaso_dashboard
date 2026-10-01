@@ -1,0 +1,37 @@
+<article class="carte gw-carte" [class.carre]="format() === 'carre'">
+  <div class="visuel">
+    @if (image() | fichier; as url) {
+      <img [src]="url" alt="" />
+    } @else {
+      <span class="visuel-vide" aria-hidden="true">
+        <ng-icon [name]="iconeVide()" size="2rem" />
+      </span>
+    }
+  </div>
+
+  <div class="corps">
+    <h3>{{ titre() }}</h3>
+    @if (description()) {
+      <p class="description">{{ description() }}</p>
+    } @else {
+      <p class="description description-vide">Aucune description</p>
+    }
+  </div>
+
+  <footer class="actions">
+    <button matButton type="button" (click)="modifier.emit()">
+      <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+      Modifier<span class="sr-only"> {{ titre() }}</span>
+    </button>
+    <button
+      matIconButton
+      type="button"
+      class="bouton-supprimer"
+      [attr.aria-label]="'Supprimer ' + titre()"
+      matTooltip="Supprimer"
+      (click)="supprimer.emit()"
+    >
+      <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+    </button>
+  </footer>
+</article>

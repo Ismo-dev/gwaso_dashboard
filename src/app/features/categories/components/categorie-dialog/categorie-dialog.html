@@ -1,0 +1,40 @@
+<h2 mat-dialog-title>{{ donnees.categorie ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}</h2>
+
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  <mat-dialog-content>
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <mat-form-field class="champ">
+      <mat-label>Nom de la catégorie</mat-label>
+      <input matInput formControlName="nom" maxlength="80" cdkFocusInitial />
+      <mat-hint>Ex. Plats traditionnels, Sauces, Boissons</mat-hint>
+      <mat-error>Le nom est obligatoire.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="champ">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3" maxlength="255"></textarea>
+      <mat-hint>Facultatif · affichée sur l'application</mat-hint>
+    </mat-form-field>
+
+    <app-image-upload
+      libelle="Image de la catégorie"
+      [imageActuelle]="enregistree()?.imageUrl ?? null"
+      (fichierChoisi)="image = $event"
+    />
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" [mat-dialog-close]="enregistree() ?? undefined">
+      Annuler
+    </button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      {{ donnees.categorie ? 'Enregistrer' : 'Créer la catégorie' }}
+    </button>
+  </mat-dialog-actions>
+</form>

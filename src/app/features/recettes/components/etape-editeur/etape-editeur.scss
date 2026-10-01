@@ -1,0 +1,401 @@
+@use 'points-de-rupture' as ecran;
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+// Panneau pleine hauteur : en-tête et pied fixes, seul le corps défile
+.panneau {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--gw-surface);
+}
+
+// ----- En-tête -----
+.entete {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-5) var(--gw-espace-5) var(--gw-espace-5) var(--gw-espace-6);
+  background: var(--gw-cacao);
+  color: var(--gw-sidebar-texte);
+
+  // Motif bogolan discret, rappel de l'identité
+  background-image: var(--gw-motif-bogolan);
+  background-size: 44px 44px;
+  background-blend-mode: soft-light;
+
+  button {
+    color: inherit;
+  }
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4);
+  }
+}
+
+.numero {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gw-terre-cuite);
+  color: var(--gw-cacao-profond);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.entete-textes {
+  flex: 1;
+  min-width: 0;
+}
+
+.surtitre {
+  color: var(--gw-sidebar-texte-doux);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.titre {
+  // mat-dialog-title ajoute ses propres marges : on les neutralise
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  color: var(--gw-blanc) !important;
+  font-size: var(--gw-taille-titre-section);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &::before {
+    display: none !important;
+  }
+}
+
+// ----- Corps -----
+.corps {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--gw-espace-2) var(--gw-espace-6) var(--gw-espace-8);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-2) var(--gw-espace-4) var(--gw-espace-6);
+  }
+}
+
+.section {
+  padding: var(--gw-espace-6) 0;
+  border-bottom: 1px solid var(--gw-bordure);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.verrouillee {
+  .section-titre {
+    color: var(--gw-texte-doux);
+  }
+}
+
+.section-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  margin-bottom: var(--gw-espace-4);
+  font-size: var(--gw-taille-titre-carte);
+  font-weight: 600;
+}
+
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gw-fond-accent);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-label);
+  font-weight: 700;
+}
+
+.pastille-faite {
+  background: var(--gw-succes-fond);
+  color: var(--gw-succes);
+}
+
+.facultatif {
+  color: var(--gw-texte-discret);
+  font-size: var(--gw-taille-petit);
+  font-weight: 400;
+}
+
+.verrou,
+.vide {
+  color: var(--gw-texte-doux);
+}
+
+.verrou {
+  font-style: italic;
+}
+
+.vide {
+  margin-bottom: var(--gw-espace-4);
+}
+
+// ----- Formulaire -----
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+}
+
+.erreur {
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.ligne-titre {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: var(--gw-espace-3);
+
+  @include ecran.mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.actions-section {
+  display: flex;
+  justify-content: flex-end;
+
+  @include ecran.mobile {
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// ----- Puces d'ingrédients -----
+.puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+  margin: 0 0 var(--gw-espace-4);
+  padding: 0;
+  list-style: none;
+}
+
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-1) var(--gw-espace-1) var(--gw-espace-1) var(--gw-espace-3);
+  border: 1px solid var(--gw-terre-cuite-pale-2);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-terre-cuite-pale);
+}
+
+.puce-nom {
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.puce-quantite {
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-label);
+}
+
+.puce-retirer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gw-karite);
+  cursor: pointer;
+
+  &:hover {
+    background: rgb(112 61 30 / 0.12);
+  }
+}
+
+// ----- Ligne d'ajout (ingrédient ou ustensile) -----
+.ajout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px minmax(0, 0.8fr) auto;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-3);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond);
+
+  // Ustensile : pas de colonne « unité »
+  &:not(:has(.ajout-unite)) {
+    grid-template-columns: minmax(0, 1fr) 110px auto;
+  }
+
+  @include ecran.mobile {
+    grid-template-columns: 1fr 1fr auto;
+
+    .ajout-principal {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.bouton-ajout {
+  --mat-icon-button-state-layer-size: 48px;
+  background: var(--gw-action);
+  color: var(--gw-blanc);
+
+  &:disabled {
+    background: var(--gw-desactive);
+  }
+}
+
+.aide {
+  margin-top: var(--gw-espace-2);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.aide-media {
+  margin: 0 0 var(--gw-espace-4);
+}
+
+// ----- Ustensiles -----
+.ustensiles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+  margin: 0 0 var(--gw-espace-4);
+  padding: 0;
+  list-style: none;
+}
+
+.ustensile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-3) var(--gw-espace-3) var(--gw-espace-3) var(--gw-espace-4);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+}
+
+.ustensile-haut {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+}
+
+.ustensile-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--gw-rayon-sm);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+}
+
+.ustensile-nom {
+  flex: 1;
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.ustensile-quantite {
+  margin-left: var(--gw-espace-1);
+  color: var(--gw-texte-doux);
+  font-weight: 500;
+}
+
+.bouton-retirer {
+  color: var(--gw-texte-doux);
+
+  &:hover {
+    color: var(--gw-danger);
+  }
+}
+
+// ----- Médias -----
+.medias {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gw-espace-5);
+
+  @include ecran.mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.media {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  min-width: 0;
+}
+
+.bouton-media {
+  align-self: flex-start;
+}
+
+// ----- Pied -----
+.pied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-6);
+  border-top: 1px solid var(--gw-bordure);
+  background: var(--gw-surface-2);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-3) var(--gw-espace-4);
+  }
+}
+
+.etat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-label);
+}
+
+// Information : l'ingrédient choisi sera aussi ajouté à la recette
+.aide-info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-radius: var(--gw-rayon-sm);
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+
+  ng-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+// Option « Créer … » en bas des listes de suggestions
+.option-creer {
+  color: var(--gw-action);
+  font-weight: 600;
+}

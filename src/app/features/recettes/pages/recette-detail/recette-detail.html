@@ -1,0 +1,320 @@
+<div class="barre-haut">
+  <a class="retour" routerLink="/recettes" [queryParams]="{ statut: recette()?.statut }">
+    <ng-icon name="lucideArrowLeft" size="1rem" aria-hidden="true" />
+    Retour aux recettes
+  </a>
+  @if (recette(); as r) {
+    <a matButton="outlined" [routerLink]="['/recettes', r.id, 'modifier']">
+      <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+      Modifier
+    </a>
+  }
+</div>
+
+@if (chargement()) {
+  <div class="squelette" aria-busy="true" aria-label="Chargement de la recette">
+    <div class="gw-squelette sq-entete"></div>
+    <div class="squelette-colonnes">
+      <div class="gw-squelette sq-bloc"></div>
+      <div class="gw-squelette sq-bloc sq-bloc-haut"></div>
+    </div>
+  </div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Recette introuvable"
+      message="Elle a peut-être été supprimée, ou l'adresse est incorrecte."
+      icone="lucideFileQuestion"
+    >
+      <a matButton="filled" routerLink="/recettes">Voir toutes les recettes</a>
+    </app-empty-state>
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger la recette"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">
+        <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+        Réessayer
+      </button>
+    </app-empty-state>
+  </div>
+} @else if (recette(); as recette) {
+  <!-- 1. Identité de la recette -->
+  <article class="entete gw-carte">
+    <div class="visuel">
+      @if (recette.photoUrl | fichier; as photo) {
+        <img [src]="photo" [alt]="'Photo de la recette ' + recette.nom" />
+      } @else {
+        <div class="visuel-vide">
+          <ng-icon name="lucideImageOff" size="2rem" aria-hidden="true" />
+          <p>Aucune photo</p>
+        </div>
+      }
+    </div>
+
+    <div class="identite">
+      <div class="identite-haut">
+        <app-status-badge [statut]="recette.statut" />
+        @if (recette.estMalienne) {
+          <span class="etiquette">Cuisine malienne</span>
+        }
+      </div>
+      <h1>{{ recette.nom }}</h1>
+      @if (autresNoms().length > 0) {
+        <p class="autres-noms">
+          Aussi appelé <strong>{{ autresNoms().join(' · ') }}</strong>
+        </p>
+      }
+      <p class="auteur">
+        Proposée par <strong>{{ recette.auteurNom ?? 'un auteur inconnu' }}</strong> le
+        {{ recette.dateCreation | date: 'd MMMM y' }}
+        @if (recette.categorieNom) {
+          · {{ recette.categorieNom }}
+        }
+      </p>
+      @if (recette.description) {
+        <app-texte-riche class="description" [html]="recette.description" />
+      }
+
+      <dl class="faits">
+        <div class="fait">
+          <dt><ng-icon name="lucideClock" size="1rem" aria-hidden="true" />Durée</dt>
+          <dd>{{ recette.dureeMin ? recette.dureeMin + ' min' : 'Non précisée' }}</dd>
+        </div>
+        <div class="fait">
+          <dt><ng-icon name="lucideUsers" size="1rem" aria-hidden="true" />Personnes</dt>
+          <dd>{{ recette.nbPersonnes ?? 'Non précisé' }}</dd>
+        </div>
+        <div class="fait">
+          <dt><ng-icon name="lucideGauge" size="1rem" aria-hidden="true" />Difficulté</dt>
+          <dd>{{ difficultes[recette.difficulte] }}</dd>
+        </div>
+        <div class="fait">
+          <dt><ng-icon name="lucideCoins" size="1rem" aria-hidden="true" />Budget</dt>
+          <dd>
+            @if (recette.prixMin !== null && recette.prixMax !== null) {
+              {{ recette.prixMin | number: '1.0-0' : 'fr' }} à
+              {{ recette.prixMax | number: '1.0-0' : 'fr' }} FCFA
+            } @else {
+              Non précisé
+            }
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+
+  <!-- 2. Décision : juste sous l'identité, avant le détail -->
+  @if (enAttente()) {
+    <section class="decision" aria-labelledby="titre-decision">
+      <div class="decision-texte">
+        <h2 id="titre-decision">Cette recette attend votre décision</h2>
+        <p>Vérifiez les ingrédients et les étapes ci-dessous avant de la publier.</p>
+      </div>
+      <div class="decision-actions">
+        <button
+          matButton="outlined"
+          type="button"
+          class="gw-bouton-danger"
+          [disabled]="actionEnCours()"
+          (click)="rejeter()"
+        >
+          <ng-icon name="lucideCircleX" size="1.125rem" aria-hidden="true" />
+          Rejeter…
+        </button>
+        <button matButton="filled" type="button" [disabled]="actionEnCours()" (click)="valider()">
+          <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+          <span>Publier<span class="texte-long"> la recette</span></span>
+        </button>
+      </div>
+    </section>
+  } @else if (recette.statut === 'REJETEE' && recette.motifRejet) {
+    <section class="bandeau bandeau-danger" aria-labelledby="titre-rejet">
+      <ng-icon name="lucideCircleX" size="1.25rem" aria-hidden="true" />
+      <div>
+        <h2 id="titre-rejet">Recette rejetée</h2>
+        <p>Motif communiqué à l'auteur : « {{ recette.motifRejet }} »</p>
+      </div>
+    </section>
+  } @else if (recette.statut === 'PUBLIEE') {
+    <section class="bandeau bandeau-succes" aria-labelledby="titre-publiee">
+      <ng-icon name="lucideBadgeCheck" size="1.25rem" aria-hidden="true" />
+      <div>
+        <h2 id="titre-publiee">Recette publiée</h2>
+        <p>
+          @if (recette.datePublication) {
+            Le {{ recette.datePublication | date: 'd MMMM y' }}
+          }
+          @if (recette.valideParAdminNom) {
+            par {{ recette.valideParAdminNom }}
+          }
+        </p>
+      </div>
+    </section>
+  }
+
+  <!-- 3. Contenu -->
+  <div class="colonnes">
+    <section class="gw-carte panneau" aria-labelledby="titre-ingredients">
+      <div class="panneau-entete">
+        <h2 id="titre-ingredients">
+          <ng-icon name="lucideShoppingBasket" size="1.125rem" aria-hidden="true" />
+          Ingrédients
+        </h2>
+        <span class="compte gw-chiffres">{{ ingredients().length }}</span>
+      </div>
+
+      @if (ingredients().length > 0) {
+        <ul class="ingredients">
+          @for (ingredient of ingredients(); track ingredient.id) {
+            <li>
+              <span class="ingredient-nom">{{ ingredient.ingredientNom }}</span>
+              <span class="ingredient-quantite gw-chiffres">
+                @if (ingredient.quantite !== null) {
+                  {{ ingredient.quantite | number: '1.0-2' : 'fr' }} {{ ingredient.unite | unite }}
+                } @else {
+                  Selon le goût
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="vide">Aucun ingrédient renseigné.</p>
+      }
+    </section>
+
+    <section class="gw-carte panneau" aria-labelledby="titre-etapes">
+      <div class="panneau-entete">
+        <h2 id="titre-etapes">
+          <ng-icon name="lucideListOrdered" size="1.125rem" aria-hidden="true" />
+          Étapes de préparation
+        </h2>
+        @if (dureeEtapes() > 0) {
+          <span class="compte">{{ dureeEtapes() }} min au total</span>
+        }
+      </div>
+
+      @if (etapes().length > 0) {
+        <ol class="etapes">
+          @for (etape of etapes(); track etape.id) {
+            <li class="etape">
+              <span class="etape-numero gw-chiffres" aria-hidden="true">{{ etape.ordre }}</span>
+              <div class="etape-contenu">
+                <h3>
+                  <span class="sr-only">Étape {{ etape.ordre }} : </span>
+                  {{ etape.titre ?? 'Étape ' + etape.ordre }}
+                  @if (etape.dureeMinutes) {
+                    <span class="etape-duree">
+                      <ng-icon name="lucideClock" size="0.875rem" aria-hidden="true" />{{
+                        etape.dureeMinutes
+                      }}
+                      min
+                    </span>
+                  }
+                </h3>
+                @if (etape.instructions) {
+                  <app-texte-riche class="etape-instructions" [html]="etape.instructions" />
+                }
+
+                <!-- Ce qu'il faut pour cette étape -->
+                @if (contenuEtapes()[etape.id]; as contenu) {
+                  @if (contenu.ingredients.length > 0 || contenu.ustensiles.length > 0) {
+                    <div class="etape-besoins">
+                      @if (contenu.ingredients.length > 0) {
+                        <div class="besoin">
+                          <p class="besoin-titre">
+                            <ng-icon
+                              name="lucideShoppingBasket"
+                              size="0.875rem"
+                              aria-hidden="true"
+                            />
+                            Ingrédients
+                          </p>
+                          <ul class="besoin-liste">
+                            @for (ingredient of contenu.ingredients; track ingredient.id) {
+                              <li>
+                                {{ ingredient.ingredientNom }}
+                                <span class="gw-chiffres"
+                                  >{{ ingredient.quantite | number: '1.0-2' : 'fr' }}
+                                  {{ ingredient.unite | unite }}</span
+                                >
+                              </li>
+                            }
+                          </ul>
+                        </div>
+                      }
+                      @if (contenu.ustensiles.length > 0) {
+                        <div class="besoin">
+                          <p class="besoin-titre">
+                            <ng-icon name="lucideCookingPot" size="0.875rem" aria-hidden="true" />
+                            Ustensiles
+                          </p>
+                          <ul class="besoin-liste">
+                            @for (ustensile of contenu.ustensiles; track ustensile.id) {
+                              <li>
+                                {{ ustensile.ustensileNom }}
+                                @if (ustensile.quantite && ustensile.quantite > 1) {
+                                  <span class="gw-chiffres">× {{ ustensile.quantite }}</span>
+                                }
+                                @if (ustensile.alternatives.length > 0) {
+                                  <span class="alternative">
+                                    <ng-icon
+                                      name="lucideRepeat2"
+                                      size="0.75rem"
+                                      aria-hidden="true"
+                                    />
+                                    sinon :
+                                    @for (
+                                      alt of ustensile.alternatives;
+                                      track alt.id;
+                                      let dernier = $last
+                                    ) {
+                                      {{ alt.alternativeNom }}{{ dernier ? '' : ', ' }}
+                                    }
+                                  </span>
+                                }
+                              </li>
+                            }
+                          </ul>
+                        </div>
+                      }
+                    </div>
+                  }
+                }
+
+                <!-- Photo et vidéo de l'étape -->
+                @if (etape.photoUrl || etape.videoUrl) {
+                  <div class="etape-medias">
+                    @if (etape.photoUrl | fichier; as photo) {
+                      <img
+                        [src]="photo"
+                        [alt]="'Photo de l\'étape ' + etape.ordre + ' : ' + (etape.titre ?? '')"
+                        loading="lazy"
+                      />
+                    }
+                    @if (etape.videoUrl | fichier; as video) {
+                      <video
+                        [src]="video"
+                        controls
+                        preload="metadata"
+                        [attr.aria-label]="'Vidéo de l\'étape ' + etape.ordre"
+                      ></video>
+                    }
+                  </div>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="vide">Aucune étape renseignée.</p>
+      }
+    </section>
+  </div>
+}

@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>{{ donnees.ustensile ? "Modifier l'ustensile" : 'Nouvel ustensile' }}</h2>
+
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  <mat-dialog-content>
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <mat-form-field class="champ">
+      <mat-label>Nom de l'ustensile</mat-label>
+      <input matInput formControlName="nom" maxlength="80" cdkFocusInitial />
+      <mat-hint>Ex. Canari, Mortier et pilon, Couscoussier</mat-hint>
+      <mat-error>Le nom est obligatoire.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="champ">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3" maxlength="255"></textarea>
+      <mat-hint>Facultatif · à quoi il sert</mat-hint>
+    </mat-form-field>
+
+    <app-image-upload
+      libelle="Photo de l'ustensile"
+      format="carre"
+      [imageActuelle]="enregistre()?.photoUrl ?? null"
+      (fichierChoisi)="photo = $event"
+    />
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" [mat-dialog-close]="enregistre() ?? undefined">
+      Annuler
+    </button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      {{ donnees.ustensile ? 'Enregistrer' : "Créer l'ustensile" }}
+    </button>
+  </mat-dialog-actions>
+</form>

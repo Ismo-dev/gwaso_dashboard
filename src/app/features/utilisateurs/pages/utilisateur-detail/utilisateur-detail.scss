@@ -1,0 +1,321 @@
+@use 'points-de-rupture' as ecran;
+
+.retour {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 36px;
+  margin-bottom: var(--gw-espace-4);
+  color: var(--gw-texte-doux);
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--gw-action);
+  }
+}
+
+.squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+
+  .gw-squelette {
+    border-radius: var(--gw-rayon-lg);
+  }
+}
+
+.sq-entete {
+  height: 140px;
+}
+
+.sq-bloc {
+  height: 280px;
+}
+
+// ----- Identité -----
+.entete {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--gw-espace-5);
+  overflow: hidden;
+  padding: 100px var(--gw-espace-6) var(--gw-espace-6);
+
+  // L'avatar chevauche le bandeau ; le nom reste dessous, toujours lisible
+  app-avatar {
+    position: relative;
+    margin-top: -56px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 5px var(--gw-surface);
+  }
+
+  > * {
+    position: relative;
+  }
+}
+
+// Bandeau cacao et motif bogolan, comme « Mon profil »
+.entete-fond {
+  position: absolute !important;
+  inset: 0 0 auto;
+  height: 84px;
+  background: var(--gw-cacao);
+  background-image: var(--gw-motif-bogolan);
+  background-size: 44px 44px;
+  background-blend-mode: soft-light;
+}
+
+.identite {
+  flex: 1;
+  min-width: 220px;
+}
+
+h1 {
+  font-size: var(--gw-taille-titre-page);
+  font-weight: 700;
+}
+
+.moi {
+  color: var(--gw-texte-doux);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.role {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin-top: var(--gw-espace-1);
+  color: var(--gw-karite);
+  font-weight: 500;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+  margin-top: var(--gw-espace-3);
+}
+
+.inscription {
+  align-self: flex-end;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+// ----- Colonnes -----
+.colonnes {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+  gap: var(--gw-espace-4);
+  margin-top: var(--gw-espace-4);
+
+  @include ecran.tablette-et-moins {
+    grid-template-columns: 1fr;
+  }
+}
+
+.colonne-principale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+}
+
+.panneau {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-6);
+
+  h2 {
+    font-size: var(--gw-taille-titre-section);
+    font-weight: 700;
+  }
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-5) var(--gw-espace-4);
+  }
+}
+
+// Demande en attente : liseré terre cuite, la décision est la priorité de la page
+.panneau-attente {
+  border-left: 4px solid var(--gw-terre-cuite);
+}
+
+.explication {
+  color: var(--gw-texte-doux);
+}
+
+.explication-succes,
+.explication-danger {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  font-weight: 500;
+}
+
+.explication-succes {
+  background: var(--gw-succes-fond);
+  color: var(--gw-succes);
+}
+
+.explication-danger {
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.justificatif {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+  text-decoration: none;
+
+  .fleche {
+    margin-left: auto;
+    transition: transform var(--gw-duree) var(--gw-courbe);
+  }
+
+  &:hover .fleche {
+    transform: translateX(3px);
+  }
+}
+
+.justificatif-absent {
+  background: var(--gw-attention-fond);
+  color: var(--gw-attention);
+  font-weight: 500;
+}
+
+.decision {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--gw-espace-3);
+
+  @include ecran.mobile {
+    button {
+      flex: 1;
+    }
+  }
+}
+
+.infos {
+  margin: 0;
+
+  div {
+    display: flex;
+    gap: var(--gw-espace-4);
+    padding: var(--gw-espace-3) 0;
+    border-top: 1px solid var(--gw-bordure);
+
+    &:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+  }
+
+  dt {
+    width: 120px;
+    flex-shrink: 0;
+    color: var(--gw-texte-doux);
+  }
+
+  dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  a {
+    color: var(--gw-cacao);
+    font-weight: 500;
+  }
+}
+
+.vide {
+  color: var(--gw-texte-discret);
+}
+
+.statut-actuel {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+}
+
+.actions-compte {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--gw-espace-2);
+}
+
+// ----- Colonne de côté : profil puis compte -----
+.colonne-cote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+  min-width: 0;
+}
+
+.profil-entete {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  margin-top: var(--gw-espace-3);
+}
+
+.profil-icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--gw-rayon);
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-action);
+}
+
+.profil-nom {
+  color: var(--gw-cacao);
+  font-weight: 700;
+}
+
+.profil-compte {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.profil-droits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-1);
+  margin: var(--gw-espace-4) 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 2px var(--gw-espace-2);
+    border-radius: var(--gw-rayon-sm);
+    background: var(--gw-karite-pale);
+    color: var(--gw-karite);
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+.profil-lien {
+  align-self: flex-start;
+  margin-top: var(--gw-espace-3);
+  margin-left: calc(var(--gw-espace-3) * -1);
+}

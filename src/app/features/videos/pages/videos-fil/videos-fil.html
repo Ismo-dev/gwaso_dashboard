@@ -1,0 +1,188 @@
+<div class="scene">
+  <!-- Barre du haut : retour et choix du fil -->
+  <div class="barre">
+    <a matButton routerLink="/videos" class="retour">
+      <ng-icon name="lucideArrowLeft" size="1.125rem" aria-hidden="true" />
+      Liste des vidéos
+    </a>
+    <mat-button-toggle-group
+      class="choix-fil"
+      aria-label="Vidéos à parcourir"
+      [value]="statutActif()"
+      (change)="changerFil($event.value)"
+      hideSingleSelectionIndicator
+    >
+      <mat-button-toggle value="PUBLIEE">Publiées</mat-button-toggle>
+      <mat-button-toggle value="EN_ATTENTE_VALIDATION">À valider</mat-button-toggle>
+    </mat-button-toggle-group>
+    <p class="astuce">
+      <kbd>↑</kbd> <kbd>↓</kbd> pour naviguer · <kbd>M</kbd> pour le son
+    </p>
+  </div>
+
+  <!-- Fil : une vidéo par écran, défilement « aimanté » -->
+  <div class="fil" #conteneur tabindex="-1" aria-label="Fil de vidéos">
+    @for (video of videos(); track video.id; let i = $index) {
+      <section
+        class="diapo"
+        #diapo
+        [attr.data-index]="i"
+        [attr.aria-label]="'Vidéo ' + (i + 1) + ' : ' + video.titre"
+        [class.en-cours]="actionEnCours() === video.id"
+      >
+        <div class="ecran">
+          <video
+            #lecteur
+            [attr.data-index]="i"
+            [src]="video.videoUrl | fichier"
+            [poster]="(video.miniatureUrl | fichier) ?? ''"
+            loop
+            playsinline
+            muted
+            preload="metadata"
+            (click)="basculerLecture(i)"
+          ></video>
+
+          <!-- Informations en bas, comme dans l'application -->
+          <div class="legende">
+            <div class="auteur">
+              <app-avatar
+                [prenom]="video.auteurPrenom"
+                [nom]="video.auteurNom"
+                [photo]="video.auteurPhotoProfil"
+                taille="sm"
+              />
+              <span class="auteur-nom">{{ video.auteurPrenom }} {{ video.auteurNom }}</span>
+              <span class="date">· {{ video.dateSoumission ?? video.dateCreation | depuis }}</span>
+            </div>
+            <h2 class="titre">{{ video.titre }}</h2>
+            @if (video.description) {
+              <p class="description">{{ video.description }}</p>
+            }
+            <p class="etiquette">
+              <ng-icon name="lucideTag" size="0.875rem" aria-hidden="true" />
+              {{ types[video.type] }}
+              @if (video.recetteNom) {
+                · {{ video.recetteNom }}
+              }
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="bouton-son"
+            [attr.aria-label]="son() ? 'Couper le son' : 'Activer le son'"
+            (click)="son.set(!son())"
+          >
+            <ng-icon [name]="son() ? 'lucideVolume2' : 'lucideVolumeX'" size="1.25rem" aria-hidden="true" />
+          </button>
+        </div>
+
+        <!-- Colonne d'actions à droite de la vidéo -->
+        <div class="actions" role="group" [attr.aria-label]="'Actions sur ' + video.titre">
+          <span class="stat" matTooltip="J'aime" matTooltipPosition="left">
+            <ng-icon name="lucideHeart" size="1.5rem" aria-hidden="true" />
+            <span class="gw-chiffres">{{ video.nbJaime | number: '1.0-0' : 'fr' }}</span>
+          </span>
+          <span class="stat" matTooltip="Commentaires" matTooltipPosition="left">
+            <ng-icon name="lucideMessageCircle" size="1.5rem" aria-hidden="true" />
+            <span class="gw-chiffres">{{ video.nbCommentaires | number: '1.0-0' : 'fr' }}</span>
+          </span>
+          <span class="stat" matTooltip="Vues" matTooltipPosition="left">
+            <ng-icon name="lucideEye" size="1.5rem" aria-hidden="true" />
+            <span class="gw-chiffres">{{ video.nbVues | number: '1.0-0' : 'fr' }}</span>
+          </span>
+
+          <span class="separateur" aria-hidden="true"></span>
+
+          @if (video.statut === 'EN_ATTENTE_VALIDATION') {
+            <button
+              matIconButton
+              type="button"
+              class="action action-publier"
+              matTooltip="Publier"
+              matTooltipPosition="left"
+              aria-label="Publier la vidéo"
+              [disabled]="actionEnCours() === video.id"
+              (click)="publier(video)"
+            >
+              <ng-icon name="lucideCheck" size="1.375rem" aria-hidden="true" />
+            </button>
+            <button
+              matIconButton
+              type="button"
+              class="action action-refuser"
+              matTooltip="Refuser"
+              matTooltipPosition="left"
+              aria-label="Refuser la vidéo"
+              [disabled]="actionEnCours() === video.id"
+              (click)="refuser(video)"
+            >
+              <ng-icon name="lucideX" size="1.375rem" aria-hidden="true" />
+            </button>
+          } @else {
+            <button
+              matIconButton
+              type="button"
+              class="action"
+              matTooltip="Retirer de la communauté"
+              matTooltipPosition="left"
+              aria-label="Retirer la vidéo de la communauté"
+              [disabled]="actionEnCours() === video.id"
+              (click)="retirer(video)"
+            >
+              <ng-icon name="lucideEyeOff" size="1.25rem" aria-hidden="true" />
+            </button>
+          }
+          <a
+            matIconButton
+            class="action"
+            [routerLink]="['/videos', video.id]"
+            matTooltip="Détails et auteur"
+            matTooltipPosition="left"
+            aria-label="Voir les détails de la vidéo"
+          >
+            <ng-icon name="lucideInfo" size="1.25rem" aria-hidden="true" />
+          </a>
+          <button
+            matIconButton
+            type="button"
+            class="action action-supprimer"
+            matTooltip="Supprimer"
+            matTooltipPosition="left"
+            aria-label="Supprimer la vidéo"
+            [disabled]="actionEnCours() === video.id"
+            (click)="supprimer(video)"
+          >
+            <ng-icon name="lucideTrash2" size="1.25rem" aria-hidden="true" />
+          </button>
+        </div>
+      </section>
+    }
+
+    @if (chargement()) {
+      <div class="etat">
+        <mat-progress-spinner mode="indeterminate" diameter="36" aria-label="Chargement des vidéos" />
+      </div>
+    } @else if (erreur()) {
+      <div class="etat">
+        <app-empty-state titre="Impossible de charger les vidéos" icone="lucideCircleAlert" ton="erreur">
+          <button matButton="filled" type="button" (click)="chargerSuite()">Réessayer</button>
+        </app-empty-state>
+      </div>
+    } @else if (videos().length === 0) {
+      <div class="etat">
+        @if (statutActif() === 'EN_ATTENTE_VALIDATION') {
+          <app-empty-state titre="Tout est à jour" message="Aucune vidéo n'attend votre décision." icone="lucideCircleCheck" ton="succes" />
+        } @else {
+          <app-empty-state titre="Aucune vidéo publiée" message="Les vidéos validées apparaîtront ici." icone="lucideClapperboard" />
+        }
+      </div>
+    } @else if (toutVu()) {
+      <div class="fin">
+        <ng-icon name="lucideCircleCheck" size="1.5rem" aria-hidden="true" />
+        Vous avez tout vu.
+      </div>
+    }
+  </div>
+</div>

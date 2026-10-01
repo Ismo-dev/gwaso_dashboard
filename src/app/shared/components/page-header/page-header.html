@@ -1,0 +1,16 @@
+<div class="page-header">
+  <div class="textes">
+    @if (surtitre()) {
+      <p class="surtitre">{{ surtitre() }}</p>
+    }
+    <h1>{{ titre() }}</h1>
+    @if (description()) {
+      <p class="description">{{ description() }}</p>
+    }
+  </div>
+
+  <!-- Actions de la page, placées entre les balises <app-page-header> ... </app-page-header> -->
+  <div class="actions">
+    <ng-content />
+  </div>
+</div>

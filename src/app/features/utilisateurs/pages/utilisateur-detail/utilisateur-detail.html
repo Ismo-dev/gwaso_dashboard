@@ -1,0 +1,249 @@
+<a class="retour" routerLink="/utilisateurs" [queryParams]="{ onglet: 'membres' }">
+  <ng-icon name="lucideArrowLeft" size="1rem" aria-hidden="true" />
+  Retour aux utilisateurs
+</a>
+
+@if (chargement()) {
+  <div class="squelette" aria-busy="true" aria-label="Chargement de la fiche">
+    <div class="gw-squelette sq-entete"></div>
+    <div class="gw-squelette sq-bloc"></div>
+  </div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Utilisateur introuvable"
+      message="Le compte a peut-être été supprimé, ou l'adresse est incorrecte."
+      icone="lucideFileQuestion"
+    >
+      <a matButton="filled" routerLink="/utilisateurs" [queryParams]="{ onglet: 'membres' }"
+        >Voir tous les membres</a
+      >
+    </app-empty-state>
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger la fiche"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (fiche(); as f) {
+  <!-- 1. Identité -->
+  <header class="entete gw-carte">
+    <div class="entete-fond" aria-hidden="true"></div>
+    <app-avatar [prenom]="f.prenom" [nom]="f.nom" [photo]="f.photoProfil" taille="lg" />
+    <div class="identite">
+      <h1>
+        {{ f.prenom }} {{ f.nom }}
+        @if (estMoi()) {
+          <span class="moi">(vous)</span>
+        }
+      </h1>
+      <p class="role">
+        <ng-icon [name]="iconesRole[f.role]" size="1rem" aria-hidden="true" />
+        {{ f.profilNom ?? libellesRole[f.role] }}
+        @if (f.niveau) {
+          · niveau {{ libellesNiveau[f.niveau] | lowercase }}
+        }
+      </p>
+      <div class="badges">
+        <app-status-badge [statut]="f.statutCompte" />
+        @if (f.statutRole) {
+          <app-status-badge [statut]="f.statutRole" />
+        }
+      </div>
+    </div>
+    <p class="inscription">Membre depuis le {{ f.dateInscription | date: 'd MMMM y' }}</p>
+  </header>
+
+  <div class="colonnes">
+    <div class="colonne-principale">
+      <!-- 2. Demande de statut (chefs et producteurs) -->
+      @if (aUnStatutAValider()) {
+        <section
+          class="gw-carte panneau"
+          [class.panneau-attente]="f.statutRole === 'EN_ATTENTE'"
+          aria-labelledby="titre-statut"
+        >
+          <h2 id="titre-statut">Statut « {{ libellesRole[f.role] }} »</h2>
+
+          @switch (f.statutRole) {
+            @case ('EN_ATTENTE') {
+              <p class="explication">
+                Cette personne demande le statut {{ libellesRole[f.role] | lowercase }}. Vérifiez
+                son justificatif avant de décider.
+              </p>
+            }
+            @case ('VALIDE') {
+              <p class="explication explication-succes">
+                <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
+                Validé
+                @if (f.dateValidation) {
+                  le {{ f.dateValidation | date: 'd MMMM y' }}
+                }
+                @if (f.valideParAdminNom) {
+                  par {{ f.valideParAdminNom }}
+                }
+              </p>
+            }
+            @case ('REJETE') {
+              <div class="explication explication-danger">
+                <ng-icon name="lucideCircleX" size="1.125rem" aria-hidden="true" />
+                <p>Demande refusée. Motif communiqué : « {{ f.motifRejet ?? 'non précisé' }} »</p>
+              </div>
+            }
+          }
+
+          @if (f.preuveUrl | fichier; as preuve) {
+            <a class="justificatif" [href]="preuve" target="_blank" rel="noopener">
+              <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
+              <strong>Voir le justificatif</strong>
+              <span class="sr-only"> (nouvel onglet)</span>
+              <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
+            </a>
+          } @else {
+            <p class="justificatif justificatif-absent">
+              <ng-icon name="lucideTriangleAlert" size="1.125rem" aria-hidden="true" />
+              Aucun justificatif fourni
+            </p>
+          }
+
+          @if (f.statutRole === 'EN_ATTENTE') {
+            <div class="decision">
+              <button
+                matButton="outlined"
+                type="button"
+                class="gw-bouton-danger"
+                [disabled]="actionEnCours()"
+                (click)="refuser()"
+              >
+                Refuser…
+              </button>
+              <button
+                matButton="filled"
+                type="button"
+                [disabled]="actionEnCours()"
+                (click)="valider()"
+              >
+                <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+                Valider la demande
+              </button>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- 3. Coordonnées -->
+      <section class="gw-carte panneau" aria-labelledby="titre-coordonnees">
+        <h2 id="titre-coordonnees">Coordonnées</h2>
+        <dl class="infos">
+          <div>
+            <dt>Email</dt>
+            <dd>
+              @if (f.email) {
+                <a [href]="'mailto:' + f.email">{{ f.email }}</a>
+              } @else {
+                <span class="vide">Non renseigné</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Téléphone</dt>
+            <dd>
+              @if (f.telephone) {
+                <a [href]="'tel:' + f.telephone">{{ f.telephone }}</a>
+              } @else {
+                <span class="vide">Non renseigné</span>
+              }
+            </dd>
+          </div>
+          @if (f.localite) {
+            <div>
+              <dt>Localité</dt>
+              <dd>{{ f.localite }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    </div>
+
+    <!-- 4. Profil : ce que la personne peut faire -->
+    <aside class="colonne-cote">
+    <section class="gw-carte panneau profil" aria-labelledby="titre-profil">
+      <h2 id="titre-profil">Profil</h2>
+      <div class="profil-entete">
+        <span class="profil-icone" aria-hidden="true">
+          <ng-icon [name]="iconesRole[f.role]" size="1.25rem" />
+        </span>
+        <div>
+          <p class="profil-nom">{{ f.profilNom ?? 'Aucun profil' }}</p>
+          <p class="profil-compte gw-chiffres">
+            {{ droitsProfil().length }} droit{{ droitsProfil().length > 1 ? 's' : '' }}
+          </p>
+        </div>
+      </div>
+      @if (droitsProfil().length > 0) {
+        <ul class="profil-droits">
+          @for (droit of droitsProfil(); track droit.id) {
+            <li [title]="droit.droitDescription ?? ''">{{ droit.droitAction }}</li>
+          }
+        </ul>
+      }
+      <a matButton routerLink="/profils" class="profil-lien">
+        Gérer les profils
+        <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
+      </a>
+    </section>
+
+    <!-- 5. Gestion du compte : actions sensibles, à part -->
+    <section class="gw-carte panneau compte" aria-labelledby="titre-compte">
+      <h2 id="titre-compte">Compte</h2>
+      <p class="statut-actuel">Statut actuel : <app-status-badge [statut]="f.statutCompte" /></p>
+
+      @if (estMoi()) {
+        <p class="explication">Vous ne pouvez pas suspendre ni désactiver votre propre compte.</p>
+      } @else if (f.statutCompte === 'ACTIF') {
+        <p class="explication">
+          Suspendez un compte en cas d'abus. La personne ne pourra plus se connecter.
+        </p>
+        <div class="actions-compte">
+          <button
+            matButton="outlined"
+            type="button"
+            class="gw-bouton-danger"
+            [disabled]="actionEnCours()"
+            (click)="changerStatut('SUSPENDU')"
+          >
+            Suspendre le compte…
+          </button>
+          <button
+            matButton
+            type="button"
+            [disabled]="actionEnCours()"
+            (click)="changerStatut('INACTIF')"
+          >
+            Désactiver le compte…
+          </button>
+        </div>
+      } @else {
+        <p class="explication">Ce compte ne peut plus se connecter.</p>
+        <div class="actions-compte">
+          <button
+            matButton="filled"
+            type="button"
+            [disabled]="actionEnCours()"
+            (click)="changerStatut('ACTIF')"
+          >
+            <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+            Réactiver le compte
+          </button>
+        </div>
+      }
+    </section>
+    </aside>
+  </div>
+}

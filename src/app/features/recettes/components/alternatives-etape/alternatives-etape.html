@@ -1,0 +1,70 @@
+<div class="alternatives">
+  <p class="intro">
+    <ng-icon name="lucideRepeat2" size="0.875rem" aria-hidden="true" />
+    Si vous n'en avez pas :
+  </p>
+
+  <ul class="puces" [attr.aria-label]="'Alternatives à ' + ustensile().ustensileNom">
+    @for (alternative of alternatives(); track alternative.id) {
+      <li class="puce">
+        {{ alternative.alternativeNom }}
+        <button
+          type="button"
+          class="retirer"
+          [attr.aria-label]="'Retirer l\'alternative ' + alternative.alternativeNom"
+          (click)="retirer(alternative)"
+        >
+          <ng-icon name="lucideX" size="0.75rem" aria-hidden="true" />
+        </button>
+      </li>
+    } @empty {
+      @if (!ajoutOuvert()) {
+        <li class="aucune">aucune alternative</li>
+      }
+    }
+
+    @if (!ajoutOuvert()) {
+      <li>
+        <button type="button" class="ajouter" (click)="ouvrirAjout()">
+          <ng-icon name="lucidePlus" size="0.75rem" aria-hidden="true" />
+          Ajouter
+        </button>
+      </li>
+    }
+  </ul>
+
+  @if (ajoutOuvert()) {
+    <div class="ajout">
+      <mat-form-field class="champ" subscriptSizing="dynamic">
+        <mat-label>Remplacer « {{ ustensile().ustensileNom }} » par…</mat-label>
+        <input
+          matInput
+          [formControl]="champ"
+          [matAutocomplete]="liste"
+          placeholder="Ex. bouteille en verre"
+          cdkFocusInitial
+          (keydown.escape)="fermerAjout()"
+        />
+        <mat-autocomplete
+          #liste="matAutocomplete"
+          [displayWith]="affichage"
+          (optionSelected)="ajouter($event.option.value)"
+        >
+          @for (suggestion of suggestions(); track suggestion.id) {
+            <mat-option [value]="suggestion">{{ suggestion.nom }}</mat-option>
+          }
+          @if (peutCreer()) {
+            <mat-option [value]="{ creer: texte() }" class="option-creer">
+              <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
+              Créer « {{ texte() }} »
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+      <button matButton type="button" [disabled]="enCours()" (click)="fermerAjout()">
+        Annuler
+      </button>
+    </div>
+    <p class="note">Valable seulement pour cette étape de cette recette.</p>
+  }
+</div>

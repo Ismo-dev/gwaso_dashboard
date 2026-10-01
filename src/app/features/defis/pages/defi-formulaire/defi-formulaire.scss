@@ -1,0 +1,156 @@
+@use 'points-de-rupture' as ecran;
+
+// Formulaire à gauche, bouton d'enregistrement à droite (toujours visible sur ordinateur)
+.disposition {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--gw-espace-5);
+  align-items: start;
+
+  @include ecran.tablette-et-moins {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.colonne {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-5);
+  min-width: 0;
+}
+
+.bloc {
+  padding: var(--gw-espace-5) var(--gw-espace-6);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4);
+  }
+}
+
+.bloc-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  margin-bottom: var(--gw-espace-4);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-titre-section);
+  font-weight: 600;
+}
+
+.numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-petit);
+  font-weight: 700;
+}
+
+.facultatif {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  font-weight: 400;
+}
+
+.large {
+  width: 100%;
+}
+
+.icone-champ {
+  margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+}
+
+.dates {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-3);
+
+  mat-form-field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .fleche {
+    margin-top: 18px;
+    color: var(--gw-texte-doux);
+  }
+
+  @include ecran.mobile {
+    flex-direction: column;
+    gap: 0;
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .fleche {
+      display: none;
+    }
+  }
+}
+
+.riche {
+  display: block;
+  margin-top: var(--gw-espace-4);
+}
+
+.erreur {
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.erreur-champ {
+  margin: calc(-1 * var(--gw-espace-2)) 0 var(--gw-espace-2);
+  color: var(--gw-danger);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+}
+
+// ----- Colonne d'action -----
+.cote {
+  @include ecran.bureau {
+    position: sticky;
+    top: var(--gw-espace-5);
+  }
+}
+
+.resume {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-5);
+}
+
+.resume-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  color: var(--gw-cacao);
+  font-weight: 700;
+
+  ng-icon {
+    color: var(--gw-action);
+  }
+}
+
+.resume-texte {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  line-height: 1.5;
+}
+
+.bouton-enregistrer {
+  width: 100%;
+}
+
+.sq-bloc {
+  height: 420px;
+  border-radius: var(--gw-rayon-lg);
+}

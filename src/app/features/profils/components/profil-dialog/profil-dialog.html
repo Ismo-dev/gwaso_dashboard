@@ -1,0 +1,80 @@
+<h2 mat-dialog-title>{{ donnees.profil ? 'Modifier le profil' : 'Nouveau profil' }}</h2>
+
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  <mat-dialog-content>
+    <p class="intro">
+      Chaque utilisateur a un seul profil, et ses droits sont ceux de ce profil. Exemples :
+      Administrateur, Cuisinier, Chef cuisinier, Producteur.
+    </p>
+
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <mat-form-field class="champ">
+      <mat-label>Nom du profil</mat-label>
+      <input matInput formControlName="nom" maxlength="60" cdkFocusInitial />
+      <mat-error>Le nom est obligatoire.</mat-error>
+    </mat-form-field>
+
+    <fieldset class="groupe">
+      <legend>Accès donné par ce profil</legend>
+      <p class="explication">
+        Détermine où la personne se connecte et les informations demandées à la création du compte
+        (niveau, localité, justificatif…).
+      </p>
+      @if (toutPris) {
+        <div class="tout-pris" role="status">
+          <ng-icon name="lucideInfo" size="1.25rem" aria-hidden="true" />
+          <p>
+            Chaque type de compte (dashboard, cuisinier, chef, producteur) a déjà son profil. Pour
+            changer des droits, modifiez plutôt le profil existant.
+          </p>
+        </div>
+      }
+      <div class="gw-choix-grille" [hidden]="toutPris">
+        @for (role of ordreAcces; track role) {
+          @let dejaPris = pris(role);
+          <label
+            class="gw-choix"
+            [class.gw-choix-actif]="accesChoisi() === role"
+            [class.gw-choix-desactive]="!!dejaPris"
+          >
+            <input
+              type="radio"
+              class="sr-only"
+              formControlName="role"
+              [value]="role"
+              [attr.disabled]="dejaPris ? '' : null"
+            />
+            <span class="gw-choix-icone" aria-hidden="true">
+              <ng-icon [name]="acces[role].icone" size="1.125rem" />
+            </span>
+            <span class="gw-choix-textes">
+              <span class="gw-choix-titre">{{ acces[role].libelle }}</span>
+              <span class="gw-choix-aide">
+                {{ dejaPris ? 'Déjà donné par « ' + dejaPris.nom + ' »' : acces[role].aide }}
+              </span>
+            </span>
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    <mat-form-field class="champ">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3" maxlength="255"></textarea>
+      <mat-hint>Facultatif · ce que les membres de ce profil peuvent faire</mat-hint>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" mat-dialog-close>Annuler</button>
+    <button matButton="filled" type="submit" [disabled]="enCours() || toutPris">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      {{ donnees.profil ? 'Enregistrer' : 'Créer le profil' }}
+    </button>
+  </mat-dialog-actions>
+</form>

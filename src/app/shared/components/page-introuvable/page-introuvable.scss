@@ -1,0 +1,22 @@
+.introuvable {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--gw-espace-6);
+  text-align: center;
+}
+
+.code {
+  margin: 0;
+  font-size: clamp(4rem, 15vw, 7rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--gw-terre-cuite);
+}
+
+.explication {
+  margin: 0 0 var(--gw-espace-6);
+  color: var(--gw-texte-doux);
+}

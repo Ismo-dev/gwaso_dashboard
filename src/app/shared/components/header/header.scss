@@ -1,0 +1,175 @@
+@use 'points-de-rupture' as ecran;
+
+// La barre reste visible en haut quand le contenu défile
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-4);
+  min-height: var(--gw-hauteur-topbar);
+  padding: var(--gw-espace-2) var(--gw-espace-8);
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: saturate(1.2) blur(8px);
+  border-bottom: 1px solid var(--gw-bordure);
+
+  @include ecran.tablette {
+    padding: var(--gw-espace-2) var(--gw-espace-6);
+  }
+
+  @include ecran.mobile {
+    gap: var(--gw-espace-2);
+    padding: var(--gw-espace-2) var(--gw-espace-3);
+  }
+}
+
+// ----- Fil d'Ariane -----
+.fil-ariane {
+  flex: 1;
+  min-width: 0;
+
+  ol {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
+    min-width: 0;
+  }
+
+  a {
+    color: var(--gw-texte-doux);
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--gw-action);
+      text-decoration: underline;
+    }
+  }
+
+  [aria-current='page'] {
+    overflow: hidden;
+    color: var(--gw-cacao);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chevron {
+    color: var(--gw-texte-discret);
+  }
+
+  // Sur téléphone, on n'affiche que la page courante
+  @include ecran.mobile {
+    .masque-mobile {
+      display: none;
+    }
+  }
+}
+
+// ----- Actions à droite -----
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+}
+
+.bouton-cloche {
+  position: relative;
+  color: var(--gw-cacao);
+}
+
+.pastille {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 4px;
+  border: 2px solid var(--gw-surface);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-action);
+  color: var(--gw-blanc);
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 0.875rem;
+}
+
+.bouton-compte {
+  --mat-button-text-label-text-color: var(--gw-cacao);
+  height: 48px;
+  padding: 0 var(--gw-espace-2);
+  text-align: left;
+}
+
+.avatar-compte {
+  flex-shrink: 0;
+}
+
+.identite {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.nom {
+  font-weight: 600;
+}
+
+.role {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  font-weight: 400;
+}
+
+// ----- Contenu des menus -----
+.menu-entete {
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+}
+
+.menu-titre {
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.menu-sous-titre {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.menu-libelle {
+  flex: 1;
+}
+
+.menu-nombre {
+  margin-left: var(--gw-espace-6);
+  padding: 0 var(--gw-espace-2);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-petit);
+  font-weight: 700;
+}
+
+.menu-vide {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  max-width: 280px;
+  padding: var(--gw-espace-3) var(--gw-espace-4) var(--gw-espace-4);
+  color: var(--gw-succes);
+
+  p {
+    color: var(--gw-texte-doux);
+  }
+}

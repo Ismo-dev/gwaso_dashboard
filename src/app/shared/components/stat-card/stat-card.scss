@@ -1,0 +1,132 @@
+@use 'points-de-rupture' as ecran;
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-1);
+  height: 100%;
+  padding: var(--gw-espace-5);
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-espace-3);
+}
+
+.libelle {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-label);
+  font-weight: 500;
+}
+
+.icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--gw-rayon);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+}
+
+.valeur {
+  margin-top: var(--gw-espace-2);
+  color: var(--gw-cacao);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.detail {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+// ----- Barre de répartition -----
+.barre {
+  display: flex;
+  gap: 2px;
+  overflow: hidden;
+  height: 6px;
+  margin-top: var(--gw-espace-3);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond);
+}
+
+.part {
+  min-width: 4px;
+  height: 100%;
+  animation: gw-pousse 700ms var(--gw-courbe) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes gw-pousse {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--gw-espace-3);
+  margin: var(--gw-espace-2) 0 0;
+  padding: 0;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  list-style: none;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .gw-chiffres {
+    color: var(--gw-cacao);
+    font-weight: 600;
+  }
+}
+
+.pastille {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ton-cacao {
+  background: var(--gw-cacao);
+}
+
+.ton-terre {
+  background: var(--gw-terre-cuite);
+}
+
+.ton-karite {
+  background: var(--gw-karite);
+}
+
+.ton-sable {
+  background: var(--gw-terre-cuite-pale-2);
+}
+
+@include ecran.mobile {
+  .stat {
+    padding: var(--gw-espace-4);
+  }
+
+  .icone {
+    display: none;
+  }
+
+  .valeur {
+    font-size: 1.375rem;
+  }
+}

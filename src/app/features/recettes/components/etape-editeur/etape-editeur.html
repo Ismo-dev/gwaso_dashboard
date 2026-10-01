@@ -1,0 +1,398 @@
+<div class="panneau" role="document">
+  <!-- ===================== En-tête ===================== -->
+  <header class="entete">
+    <span class="numero gw-chiffres" aria-hidden="true">{{ donnees.numero }}</span>
+    <div class="entete-textes">
+      <p class="surtitre">Étape {{ donnees.numero }}</p>
+      <h2 mat-dialog-title class="titre">{{ titreAffiche() }}</h2>
+    </div>
+    <button matIconButton type="button" aria-label="Fermer l'éditeur d'étape" (click)="fermer()">
+      <ng-icon name="lucideX" size="1.25rem" aria-hidden="true" />
+    </button>
+  </header>
+
+  <div class="corps">
+    <!-- ===================== 1. Ce qu'il faut faire ===================== -->
+    <section class="section" aria-labelledby="etape-section-1">
+      <h3 class="section-titre" id="etape-section-1">
+        <span class="pastille" [class.pastille-faite]="!!etape()" aria-hidden="true">
+          @if (etape()) {
+            <ng-icon name="lucideCheck" size="0.875rem" />
+          } @else {
+            1
+          }
+        </span>
+        Ce qu'il faut faire
+      </h3>
+
+      <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+        @if (erreur()) {
+          <p class="erreur" role="alert">{{ erreur() }}</p>
+        }
+
+        <div class="ligne-titre">
+          <mat-form-field class="champ-titre">
+            <mat-label>Titre de l'étape</mat-label>
+            <input matInput formControlName="titre" maxlength="120" cdkFocusInitial />
+            <mat-hint>Une action courte, ex. « Préparer la sauce »</mat-hint>
+            <mat-error>Le titre est obligatoire.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="champ-duree">
+            <mat-label>Durée</mat-label>
+            <input
+              matInput
+              type="number"
+              min="1"
+              max="1440"
+              inputmode="numeric"
+              formControlName="dureeMinutes"
+            />
+            <span matTextSuffix>min</span>
+            <mat-error>Entre 1 et 1 440.</mat-error>
+          </mat-form-field>
+        </div>
+
+        <app-editeur-riche
+          formControlName="instructions"
+          libelle="Instructions"
+          aide="Écrivez comme si vous parliez à quelqu'un qui cuisine pour la première fois."
+          [obligatoire]="true"
+          [longueurMax]="4000"
+          hauteurMin="160px"
+        />
+
+        <div class="actions-section">
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="enregistrement() || (!!etape() && formulaire.pristine)"
+          >
+            @if (enregistrement()) {
+              <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+            }
+            {{ etape() ? 'Enregistrer les modifications' : "Enregistrer l'étape et continuer" }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ===================== 2. Ingrédients de l'étape ===================== -->
+    <section class="section" [class.verrouillee]="!etape()" aria-labelledby="etape-section-2">
+      <h3 class="section-titre" id="etape-section-2">
+        <span
+          class="pastille"
+          [class.pastille-faite]="ingredientsEtape().length > 0"
+          aria-hidden="true"
+        >
+          <ng-icon name="lucideShoppingBasket" size="0.875rem" />
+        </span>
+        Ingrédients utilisés
+        <span class="facultatif">facultatif</span>
+      </h3>
+
+      @if (!etape()) {
+        <p class="verrou">Enregistrez d'abord l'étape.</p>
+      } @else {
+        @if (ingredientsEtape().length > 0) {
+          <ul class="puces" aria-label="Ingrédients de l'étape">
+            @for (ingredient of ingredientsEtape(); track ingredient.id) {
+              <li class="puce puce-ingredient">
+                <span class="puce-nom">{{ ingredient.ingredientNom }}</span>
+                <span class="puce-quantite gw-chiffres">
+                  {{ ingredient.quantite | number: '1.0-2' : 'fr' }} {{ ingredient.unite | unite }}
+                </span>
+                <button
+                  type="button"
+                  class="puce-retirer"
+                  [attr.aria-label]="'Retirer ' + ingredient.ingredientNom + ' de l\'étape'"
+                  (click)="retirerIngredient(ingredient)"
+                >
+                  <ng-icon name="lucideX" size="0.875rem" aria-hidden="true" />
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="vide">Cette étape n'utilise aucun ingrédient pour l'instant.</p>
+        }
+
+        <div class="ajout" role="group" aria-label="Ajouter un ingrédient à l'étape">
+          <mat-form-field class="ajout-principal" subscriptSizing="dynamic">
+            <mat-label>Ingrédient</mat-label>
+            <input
+              matInput
+              [formControl]="champIngredient"
+              [matAutocomplete]="listeIngredients"
+              placeholder="Tapez pour chercher ou créer"
+            />
+            <mat-autocomplete
+              #listeIngredients="matAutocomplete"
+              [displayWith]="nomIngredient"
+              (optionSelected)="choisirIngredient($event.option.value)"
+            >
+              @if (suggestionsIngredients().recette.length > 0) {
+                <mat-optgroup label="Dans la recette">
+                  @for (ingredient of suggestionsIngredients().recette; track ingredient.id) {
+                    <mat-option [value]="ingredient">{{ ingredient.nom }}</mat-option>
+                  }
+                </mat-optgroup>
+              }
+              @if (suggestionsIngredients().autres.length > 0) {
+                <mat-optgroup label="Autres ingrédients (seront ajoutés à la recette)">
+                  @for (ingredient of suggestionsIngredients().autres; track ingredient.id) {
+                    <mat-option [value]="ingredient">{{ ingredient.nom }}</mat-option>
+                  }
+                </mat-optgroup>
+              }
+              @if (peutCreerIngredient()) {
+                <mat-option [value]="{ creer: texteIngredient() }" class="option-creer">
+                  <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
+                  Créer l'ingrédient « {{ texteIngredient() }} »
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+          <mat-form-field class="ajout-quantite" subscriptSizing="dynamic">
+            <mat-label>Quantité</mat-label>
+            <input
+              matInput
+              type="number"
+              min="0"
+              step="0.5"
+              inputmode="decimal"
+              [formControl]="quantiteIngredient"
+            />
+          </mat-form-field>
+          <mat-form-field class="ajout-unite" subscriptSizing="dynamic">
+            <mat-label>Unité</mat-label>
+            <mat-select [formControl]="uniteIngredient">
+              @for (u of unites; track u.valeur) {
+                <mat-option [value]="u.valeur">{{ u.libelle }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button
+            matIconButton
+            type="button"
+            class="bouton-ajout"
+            aria-label="Ajouter l'ingrédient à l'étape"
+            matTooltip="Ajouter"
+            [disabled]="ajoutIngredient()"
+            (click)="ajouterIngredient()"
+          >
+            <ng-icon name="lucidePlus" size="1.25rem" aria-hidden="true" />
+          </button>
+        </div>
+        @if (horsRecette()) {
+          <p class="aide aide-info" role="status">
+            <ng-icon name="lucideInfo" size="0.875rem" aria-hidden="true" />
+            {{ ingredientChoisi()?.nom }} n'est pas encore dans la recette : il y sera ajouté avec
+            cette quantité.
+          </p>
+        } @else {
+          <p class="aide">
+            Pour un ingrédient de la recette, la quantité proposée est celle de la recette :
+            ajustez-la si l'étape n'en utilise qu'une partie.
+          </p>
+        }
+      }
+    </section>
+
+    <!-- ===================== 3. Ustensiles ===================== -->
+    <section class="section" [class.verrouillee]="!etape()" aria-labelledby="etape-section-3">
+      <h3 class="section-titre" id="etape-section-3">
+        <span
+          class="pastille"
+          [class.pastille-faite]="ustensilesEtape().length > 0"
+          aria-hidden="true"
+        >
+          <ng-icon name="lucideCookingPot" size="0.875rem" />
+        </span>
+        Ustensiles
+        <span class="facultatif">facultatif</span>
+      </h3>
+
+      @if (!etape()) {
+        <p class="verrou">Enregistrez d'abord l'étape.</p>
+      } @else {
+        @if (ustensilesEtape().length > 0) {
+          <ul class="ustensiles">
+            @for (ustensile of ustensilesEtape(); track ustensile.id) {
+              <li class="ustensile">
+                <div class="ustensile-haut">
+                  <span class="ustensile-icone" aria-hidden="true"
+                    ><ng-icon name="lucideCookingPot" size="1rem"
+                  /></span>
+                  <span class="ustensile-nom">
+                    {{ ustensile.ustensileNom }}
+                    @if (ustensile.quantite && ustensile.quantite > 1) {
+                      <span class="ustensile-quantite gw-chiffres">× {{ ustensile.quantite }}</span>
+                    }
+                  </span>
+                  <button
+                    matIconButton
+                    type="button"
+                    class="bouton-retirer"
+                    [attr.aria-label]="'Retirer ' + ustensile.ustensileNom + ' de l\'étape'"
+                    matTooltip="Retirer de l'étape"
+                    (click)="retirerUstensile(ustensile)"
+                  >
+                    <ng-icon name="lucideTrash2" size="1rem" aria-hidden="true" />
+                  </button>
+                </div>
+                <app-alternatives-etape
+                  [ustensile]="ustensile"
+                  (alternativesChange)="majAlternatives(ustensile.id, $event)"
+                />
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="vide">Aucun ustensile particulier pour cette étape.</p>
+        }
+
+        <div class="ajout" role="group" aria-label="Ajouter un ustensile à l'étape">
+          <mat-form-field class="ajout-principal" subscriptSizing="dynamic">
+            <mat-label>Ustensile</mat-label>
+            <input
+              matInput
+              [formControl]="champUstensile"
+              [matAutocomplete]="listeUstensiles"
+              placeholder="Tapez pour chercher ou créer"
+            />
+            <mat-autocomplete
+              #listeUstensiles="matAutocomplete"
+              [displayWith]="nomUstensile"
+              (optionSelected)="choisirUstensile($event.option.value)"
+            >
+              @for (ustensile of suggestionsUstensiles(); track ustensile.id) {
+                <mat-option [value]="ustensile">{{ ustensile.nom }}</mat-option>
+              } @empty {
+                @if (!peutCreerUstensile()) {
+                  <mat-option disabled>Aucun ustensile ne correspond</mat-option>
+                }
+              }
+              @if (peutCreerUstensile()) {
+                <mat-option [value]="{ creer: texteUstensile() }" class="option-creer">
+                  <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
+                  Créer l'ustensile « {{ texteUstensile() }} »
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+          <mat-form-field class="ajout-quantite" subscriptSizing="dynamic">
+            <mat-label>Nombre</mat-label>
+            <input
+              matInput
+              type="number"
+              min="1"
+              inputmode="numeric"
+              [formControl]="quantiteUstensile"
+            />
+          </mat-form-field>
+          <button
+            matIconButton
+            type="button"
+            class="bouton-ajout"
+            aria-label="Ajouter l'ustensile à l'étape"
+            matTooltip="Ajouter"
+            [disabled]="ajoutUstensile()"
+            (click)="ajouterUstensile()"
+          >
+            <ng-icon name="lucidePlus" size="1.25rem" aria-hidden="true" />
+          </button>
+        </div>
+      }
+    </section>
+
+    <!-- ===================== 4. Photo ou vidéo ===================== -->
+    <section class="section" [class.verrouillee]="!etape()" aria-labelledby="etape-section-4">
+      <h3 class="section-titre" id="etape-section-4">
+        <span
+          class="pastille"
+          [class.pastille-faite]="!!etape()?.photoUrl || !!etape()?.videoUrl"
+          aria-hidden="true"
+        >
+          <ng-icon name="lucideImage" size="0.875rem" />
+        </span>
+        Photo ou vidéo
+        <span class="facultatif">facultatif</span>
+      </h3>
+
+      @if (!etape()) {
+        <p class="verrou">Enregistrez d'abord l'étape.</p>
+      } @else {
+        <p class="aide aide-media">
+          Une image vaut mieux qu'un long texte : montrez la texture attendue ou le bon geste.
+        </p>
+        <div class="medias">
+          <div class="media">
+            <app-image-upload
+              libelle="Photo"
+              disposition="verticale"
+              [imageActuelle]="etape()?.photoUrl ?? null"
+              (fichierChoisi)="photo.set($event)"
+            />
+            @if (photo()) {
+              <button
+                matButton="filled"
+                type="button"
+                class="bouton-media"
+                [disabled]="envoiPhoto()"
+                (click)="envoyerPhoto()"
+              >
+                @if (envoiPhoto()) {
+                  <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+                }
+                Enregistrer la photo
+              </button>
+            }
+          </div>
+          <div class="media">
+            <app-video-upload
+              libelle="Vidéo"
+              [videoActuelle]="etape()?.videoUrl ?? null"
+              (fichierChoisi)="video.set($event)"
+            />
+            @if (video()) {
+              <button
+                matButton="filled"
+                type="button"
+                class="bouton-media"
+                [disabled]="envoiVideo()"
+                (click)="envoyerVideo()"
+              >
+                @if (envoiVideo()) {
+                  <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+                  Envoi en cours…
+                } @else {
+                  Enregistrer la vidéo
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+
+  <!-- ===================== Pied ===================== -->
+  <footer class="pied">
+    <p class="etat" aria-live="polite">
+      @if (!etape()) {
+        <ng-icon name="lucideCircle" size="1rem" aria-hidden="true" />
+        Étape pas encore enregistrée
+      } @else if (formulaire.dirty) {
+        <ng-icon name="lucideCircleAlert" size="1rem" aria-hidden="true" />
+        Modifications non enregistrées
+      } @else {
+        <ng-icon name="lucideCircleCheck" size="1rem" aria-hidden="true" />
+        Étape enregistrée
+      }
+    </p>
+    <button matButton="outlined" type="button" (click)="fermer()">
+      {{ etape() ? 'Terminé' : 'Fermer' }}
+    </button>
+  </footer>
+</div>

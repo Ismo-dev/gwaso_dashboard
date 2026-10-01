@@ -1,0 +1,414 @@
+// =============================================================================
+// DESIGN SYSTEM GWASO — styles globaux
+//
+// 1. Jetons (couleurs, typographie, espacements, formes, ombres, mouvements)
+// 2. Thème Angular Material relié aux jetons
+// 3. Bases (typographie, focus, accessibilité)
+// 4. Classes utilitaires partagées (carte, bouton danger, notifications, squelettes)
+//
+// Règle : les composants n'utilisent JAMAIS de couleur en dur, seulement var(--gw-...).
+// =============================================================================
+@use 'theme-material';
+@use 'listes';
+@use 'choix';
+
+:root {
+  // ----- Charte graphique (ne pas modifier sans validation) -----
+  --gw-cacao: #3b2f29; // structure, titres, navigation
+  --gw-cacao-profond: #1f1612; // texte sur terre cuite (5,5:1)
+  --gw-terre-cuite: #e36e1e; // marque : accents, indicateurs, grands éléments
+  --gw-karite: #703d1e; // états actifs, éléments secondaires
+  --gw-blanc: #ffffff; // surfaces
+
+  // ----- Déclinaisons accessibles de la charte (WCAG AA) -----
+  // Le blanc sur #E36E1E ne contraste qu'à 3,2:1 : les boutons et liens utilisent
+  // une terre cuite plus profonde (4,8:1 avec le blanc).
+  --gw-action: #b95412;
+  --gw-action-survol: #a04810;
+  --gw-action-appui: #8a3e0e;
+  --gw-terre-cuite-pale: #fcefe6;
+  --gw-terre-cuite-pale-2: #f8dcc8;
+  --gw-karite-pale: #f5ece6;
+
+  // ----- Neutres chauds (fonds, bordures, textes secondaires) -----
+  --gw-fond: #f7f4f1; // fond des pages
+  --gw-fond-accent: #efe9e4; // zones légèrement marquées (squelettes, en-têtes)
+  --gw-surface: #ffffff; // cartes, tableaux, menus
+  --gw-surface-2: #fbf9f7; // en-têtes de tableaux, zones secondaires
+  --gw-bordure: #ebe5df;
+  --gw-contour-champ: #8f8279; // contour des champs (3,7:1 : visible)
+  --gw-texte: var(--gw-cacao); // 12,9:1 sur blanc
+  --gw-texte-doux: #6b5e55; // 6,2:1 sur blanc
+  --gw-texte-discret: #776a61; // 4,9:1 sur blanc
+  --gw-desactive: #b8aca3;
+
+  // ----- Sidebar (fond cacao) -----
+  --gw-sidebar-fond: var(--gw-cacao);
+  --gw-sidebar-texte: #f4ede7; // 11,2:1
+  --gw-sidebar-texte-doux: #bcaea4; // 6:1
+  --gw-sidebar-survol: rgb(255 255 255 / 0.06);
+  --gw-sidebar-actif: var(--gw-karite);
+
+  // ----- États (toujours accompagnés d'un texte ou d'une icône) -----
+  --gw-succes: #1e6b45;
+  --gw-succes-fond: #e6f3ec;
+  --gw-attention: #8a4b00;
+  --gw-attention-fond: #fdf0da;
+  --gw-danger: #b42318;
+  --gw-danger-fond: #fdecea;
+  --gw-info: #2b5a87;
+  --gw-info-fond: #e8f0f8;
+  --gw-neutre: #5c5049;
+  --gw-neutre-fond: #efebe7;
+
+  // ----- Typographie (Poppins) -----
+  --gw-police: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --gw-taille-titre-page: 1.5rem; // 24 px, Bold
+  --gw-taille-titre-section: 1.125rem; // 18 px, Bold
+  --gw-taille-titre-carte: 1rem; // 16 px, SemiBold
+  --gw-taille-texte: 0.875rem; // 14 px, Regular
+  --gw-taille-label: 0.8125rem; // 13 px, Medium
+  --gw-taille-petit: 0.75rem; // 12 px
+
+  // ----- Espacements (échelle de 4 px) -----
+  --gw-espace-1: 0.25rem;
+  --gw-espace-2: 0.5rem;
+  --gw-espace-3: 0.75rem;
+  --gw-espace-4: 1rem;
+  --gw-espace-5: 1.25rem;
+  --gw-espace-6: 1.5rem;
+  --gw-espace-8: 2rem;
+  --gw-espace-10: 2.5rem;
+  --gw-espace-12: 3rem;
+
+  // ----- Formes -----
+  --gw-rayon-sm: 6px;
+  --gw-rayon: 10px; // boutons, champs
+  --gw-rayon-lg: 14px; // cartes, fenêtres
+  --gw-rayon-pilule: 999px;
+
+  // ----- Ombres (très discrètes) -----
+  --gw-ombre-1: 0 1px 2px rgb(59 47 41 / 0.05);
+  --gw-ombre-2: 0 6px 20px rgb(59 47 41 / 0.08);
+
+  // ----- Mouvements -----
+  --gw-duree: 150ms;
+  --gw-duree-lente: 250ms;
+  --gw-courbe: cubic-bezier(0.2, 0, 0, 1);
+
+  // ----- Mise en page -----
+  --gw-largeur-sidebar: 264px;
+  --gw-largeur-sidebar-compacte: 80px;
+  --gw-hauteur-topbar: 68px;
+  --gw-largeur-contenu: 1320px;
+
+  // ----- Motif discret inspiré du bogolan (losanges et points), pour les fonds sombres -----
+  --gw-motif-bogolan: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23F4EDE7' stroke-width='1.2' opacity='0.5'%3E%3Cpath d='M24 6 L34 16 L24 26 L14 16 Z'/%3E%3Cpath d='M0 34 L8 42 M16 42 L8 34 M32 34 L40 42 M48 34 L40 42'/%3E%3C/g%3E%3Cg fill='%23F4EDE7' opacity='0.5'%3E%3Ccircle cx='24' cy='16' r='1.6'/%3E%3Ccircle cx='4' cy='4' r='1.2'/%3E%3Ccircle cx='44' cy='4' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html {
+  @include theme-material.theme-gwaso;
+}
+
+// =============================================================================
+// Bases
+// =============================================================================
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--gw-police);
+  font-size: var(--gw-taille-texte);
+  line-height: 1.55;
+  color: var(--gw-texte);
+  background: var(--gw-fond);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--gw-cacao);
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: var(--gw-action);
+}
+
+// Focus clavier : anneau terre cuite (version accessible sur fond clair)
+:focus-visible {
+  outline: 2px solid var(--gw-action);
+  outline-offset: 2px;
+}
+
+// Champ de recherche : on masque la croix du navigateur (nos champs ont leur propre bouton « Effacer »)
+input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+// Icônes Lucide.
+// La bibliothèque impose « overflow: hidden » et aligne le dessin sur la ligne de base du texte :
+// le bas de l'icône était coupé. On centre le dessin dans sa boîte et on le laisse visible.
+// (!important nécessaire : le style par défaut vient de l'intérieur du composant de la bibliothèque)
+ng-icon {
+  display: inline-flex !important;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: visible !important;
+  vertical-align: middle !important;
+
+  svg {
+    display: block;
+  }
+}
+
+// =============================================================================
+// Classes partagées
+// =============================================================================
+
+// Carte : surface blanche, bordure fine, ombre très légère
+.gw-carte {
+  background: var(--gw-surface);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-lg);
+  box-shadow: var(--gw-ombre-1);
+}
+
+// Chiffres alignés (statistiques, tableaux)
+.gw-chiffres {
+  font-variant-numeric: tabular-nums;
+}
+
+// Bouton d'action destructrice : <button matButton="filled" class="gw-bouton-danger">
+.gw-bouton-danger {
+  --mat-button-filled-container-color: var(--gw-danger);
+  --mat-button-filled-label-text-color: var(--gw-blanc);
+  --mat-button-outlined-label-text-color: var(--gw-danger);
+  --mat-button-outlined-outline-color: var(--gw-danger);
+  --mat-button-text-label-text-color: var(--gw-danger);
+}
+
+// Bouton de validation : <button matButton="filled" class="gw-bouton-succes">
+.gw-bouton-succes {
+  --mat-button-filled-container-color: var(--gw-succes);
+  --mat-button-filled-label-text-color: var(--gw-blanc);
+}
+
+// Contenu d'un bouton Material avec icône : icône + texte alignés
+.mdc-button .mdc-button__label,
+.mat-mdc-button .mdc-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+}
+
+// Éléments de menu (mat-menu) : icône + texte alignés
+.mat-mdc-menu-item .mat-mdc-menu-item-text {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+}
+
+// =============================================================================
+// Tableaux : <table mat-table class="gw-tableau">
+// Même présentation partout (répétition, CRAP). Les titres et le contenu d'une colonne
+// ont exactement le même alignement :
+//   - 1re colonne (nom) : alignée à gauche ;
+//   - colonnes de données courtes : .gw-col-centre (titre et contenu centrés) ;
+//   - colonne d'actions : .gw-col-actions (à droite, largeur minimale).
+// =============================================================================
+.gw-tableau {
+  --mat-table-background-color: var(--gw-surface);
+  --mat-table-header-headline-color: var(--gw-texte-doux);
+  --mat-table-header-headline-size: var(--gw-taille-petit);
+  --mat-table-header-headline-weight: 600;
+  --mat-table-header-container-height: 46px;
+  --mat-table-row-item-label-text-size: var(--gw-taille-texte);
+  --mat-table-row-item-container-height: 68px;
+  --mat-table-row-item-outline-color: var(--gw-bordure);
+  width: 100%;
+
+  th.mat-mdc-header-cell {
+    background: var(--gw-surface-2);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  th.mat-mdc-header-cell,
+  td.mat-mdc-cell {
+    padding: 0 var(--gw-espace-3);
+    vertical-align: middle;
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-left: var(--gw-espace-5);
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-right: var(--gw-espace-5);
+  }
+
+  .gw-col-centre {
+    text-align: center;
+  }
+
+  .gw-col-actions {
+    width: 1%;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  tr.mat-mdc-row {
+    transition: background-color var(--gw-duree) var(--gw-courbe);
+
+    &:hover {
+      background: var(--gw-surface-2);
+    }
+  }
+}
+
+// Conteneur d'un tableau : défilement horizontal maîtrisé si l'écran est étroit
+.gw-tableau-conteneur {
+  overflow-x: auto;
+}
+
+// Pagination sous un tableau ou une grille
+.gw-pagination {
+  --mat-paginator-container-background-color: transparent;
+  border-top: 1px solid var(--gw-bordure);
+}
+
+// =============================================================================
+// Texte riche (description des recettes, instructions des étapes)
+// Couleurs proposées par l'éditeur : uniquement celles de la charte, lisibles sur fond blanc.
+// =============================================================================
+.gw-couleur-cacao {
+  color: var(--gw-cacao);
+}
+
+.gw-couleur-terre {
+  color: var(--gw-action);
+}
+
+.gw-couleur-karite {
+  color: var(--gw-karite);
+}
+
+.gw-couleur-vert {
+  color: var(--gw-succes);
+}
+
+// =============================================================================
+// Notifications (toasts) : en haut à droite, sous la barre du haut
+// =============================================================================
+.gw-toast {
+  --mat-snack-bar-container-color: transparent;
+  --mat-snack-bar-supporting-text-color: inherit;
+  margin-top: calc(var(--gw-hauteur-topbar) + var(--gw-espace-2)) !important;
+  margin-right: var(--gw-espace-5) !important;
+
+  .mat-mdc-snackbar-surface {
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    padding: 0 !important;
+  }
+}
+
+// =============================================================================
+// Panneau latéral (boîte de dialogue ouverte sur le côté droit, ex. éditeur d'étape)
+// =============================================================================
+.gw-panneau-lateral {
+  --mat-dialog-container-shape: var(--gw-rayon-lg) 0 0 var(--gw-rayon-lg);
+  --mat-dialog-container-max-width: 100vw;
+
+  .mat-mdc-dialog-surface {
+    border-radius: var(--gw-rayon-lg) 0 0 var(--gw-rayon-lg);
+    animation: gw-glisse-gauche var(--gw-duree-lente) var(--gw-courbe);
+  }
+}
+
+@keyframes gw-glisse-gauche {
+  from {
+    transform: translateX(48px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+// Squelette de chargement : <span class="gw-squelette" style="width: 60%"></span>
+.gw-squelette {
+  display: block;
+  height: 0.875rem;
+  border-radius: var(--gw-rayon-sm);
+  background: linear-gradient(
+    90deg,
+    var(--gw-fond-accent) 0%,
+    var(--gw-surface-2) 50%,
+    var(--gw-fond-accent) 100%
+  );
+  background-size: 200% 100%;
+  animation: gw-scintille 1.4s ease-in-out infinite;
+}
+
+@keyframes gw-scintille {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+// Texte lu par les lecteurs d'écran mais invisible à l'écran
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// Respect du réglage « réduire les animations » du système
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

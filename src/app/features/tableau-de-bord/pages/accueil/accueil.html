@@ -1,0 +1,240 @@
+@if (chargement()) {
+  <!-- Squelette : la mise en page apparaît tout de suite, sans « saut » à l'arrivée des données -->
+  <div class="squelette" aria-busy="true" aria-label="Chargement du tableau de bord">
+    <div class="gw-squelette sq-bandeau"></div>
+    <div class="grille-files">
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="gw-squelette sq-file"></div>
+      }
+    </div>
+    <div class="grille-chiffres">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="gw-squelette sq-chiffre"></div>
+      }
+    </div>
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger le tableau de bord"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">
+        <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+        Réessayer
+      </button>
+    </app-empty-state>
+  </div>
+} @else if (statistiques(); as stats) {
+  <!-- 1. Accueil : la phrase clé dit tout de suite s'il y a du travail -->
+  <section class="bienvenue" aria-labelledby="titre-bienvenue">
+    <div class="bienvenue-texte">
+      <p class="date">{{ aujourdhui | date: 'EEEE d MMMM y' }}</p>
+      <h1 id="titre-bienvenue">{{ salutation() }}, {{ session.utilisateur()?.prenom }}</h1>
+      @if (totalATraiter() > 0) {
+        <p class="resume">
+          <strong class="gw-chiffres">{{ totalATraiter() }}</strong>
+          {{ totalATraiter() > 1 ? 'éléments attendent' : 'élément attend' }} votre décision.
+        </p>
+      } @else {
+        <p class="resume">Tout est à jour : aucun contenu n'attend votre validation.</p>
+      }
+    </div>
+    @if (files()[0]; as premiere) {
+      @if (premiere.nombre > 0) {
+        <a class="bouton-revue" [routerLink]="premiere.lien" [queryParams]="premiere.parametres">
+          Commencer par les {{ premiere.libelle | lowercase }}
+          <ng-icon name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
+        </a>
+      }
+    }
+    <img class="bienvenue-embleme" src="images/embleme-gwaso-clair.png" alt="" aria-hidden="true" />
+  </section>
+
+  <!-- 2. À traiter -->
+  <section class="section" aria-labelledby="titre-a-traiter">
+    <div class="section-entete">
+      <h2 id="titre-a-traiter">À traiter</h2>
+      <p>Classé par nombre d'éléments en attente.</p>
+    </div>
+    <ul class="grille-files">
+      @for (file of files(); track file.libelle) {
+        <li>
+          <a
+            class="file gw-carte"
+            [class.file-active]="file.nombre > 0"
+            [routerLink]="file.lien"
+            [queryParams]="file.parametres"
+          >
+            <span class="file-haut">
+              <span class="file-icone" aria-hidden="true"
+                ><ng-icon [name]="file.icone" size="1.25rem"
+              /></span>
+              @if (file.nombre > 0) {
+                <span class="file-nombre gw-chiffres" aria-hidden="true">{{ file.nombre }}</span>
+              }
+            </span>
+            <span class="file-libelle">{{ file.libelle }}</span>
+            <span class="file-description">{{ file.description }}</span>
+            @if (file.nombre > 0) {
+              <span class="file-statut file-statut-attente">
+                <strong class="gw-chiffres">{{ file.nombre }}</strong> à examiner
+                <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
+              </span>
+            } @else {
+              <span class="file-statut file-statut-ok">
+                <ng-icon name="lucideCircleCheck" size="1rem" aria-hidden="true" />
+                À jour
+              </span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+
+  <!-- 3. Chiffres clés -->
+  <section class="section" aria-labelledby="titre-chiffres">
+    <div class="section-entete">
+      <h2 id="titre-chiffres">Vue d'ensemble</h2>
+    </div>
+    <div class="grille-chiffres">
+      <app-stat-card
+        libelle="Membres"
+        [valeur]="stats.utilisateurs.total"
+        icone="lucideUsers"
+        [segments]="[
+          { libelle: pluriel(stats.utilisateurs.cuisiniers, 'cuisinier'), valeur: stats.utilisateurs.cuisiniers, ton: 'terre' },
+          { libelle: pluriel(stats.utilisateurs.chefs, 'chef'), valeur: stats.utilisateurs.chefs, ton: 'karite' },
+          { libelle: pluriel(stats.utilisateurs.producteurs, 'producteur'), valeur: stats.utilisateurs.producteurs, ton: 'cacao' },
+          { libelle: pluriel(stats.utilisateurs.admins, 'admin'), valeur: stats.utilisateurs.admins, ton: 'sable' }
+        ]"
+      />
+      <app-stat-card
+        libelle="Recettes publiées"
+        [valeur]="stats.recettes.publiees"
+        icone="lucideBookOpen"
+        [segments]="[
+          { libelle: pluriel(stats.recettes.publiees, 'publiée'), valeur: stats.recettes.publiees, ton: 'terre' },
+          { libelle: 'en attente', valeur: stats.recettes.enAttente, ton: 'karite' },
+          { libelle: pluriel(stats.recettes.brouillons, 'brouillon'), valeur: stats.recettes.brouillons, ton: 'sable' }
+        ]"
+      />
+      <app-stat-card
+        libelle="Vidéos publiées"
+        [valeur]="stats.videos.publiees"
+        icone="lucideClapperboard"
+        [segments]="[
+          { libelle: pluriel(stats.videos.publiees, 'publiée'), valeur: stats.videos.publiees, ton: 'terre' },
+          { libelle: 'en attente', valeur: stats.videos.enAttente, ton: 'karite' },
+          { libelle: pluriel(stats.videos.desactivees, 'retirée'), valeur: stats.videos.desactivees, ton: 'cacao' }
+        ]"
+      />
+      <app-stat-card
+        libelle="Défis en cours"
+        [valeur]="stats.defis.enCours"
+        icone="lucideTrophy"
+        [segments]="[
+          { libelle: 'en cours', valeur: stats.defis.enCours, ton: 'terre' },
+          { libelle: 'à venir', valeur: stats.defis.valides, ton: 'karite' },
+          { libelle: pluriel(stats.defis.termines, 'terminé'), valeur: stats.defis.termines, ton: 'cacao' }
+        ]"
+        [detail]="'Aucun défi pour le moment'"
+      />
+    </div>
+  </section>
+
+  <!-- 4. Recettes en attente + répartition -->
+  <div class="colonnes">
+    <section class="gw-carte panneau" aria-labelledby="titre-en-attente">
+      <div class="panneau-entete">
+        <div>
+          <h2 id="titre-en-attente">Recettes en attente</h2>
+          <p>Les plus anciennes en premier.</p>
+        </div>
+        <a
+          matButton
+          [routerLink]="['/recettes']"
+          [queryParams]="{ statut: 'EN_ATTENTE_VALIDATION' }"
+        >
+          Tout voir
+          <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
+        </a>
+      </div>
+
+      @if (recettesEnAttente().length > 0) {
+        <ul class="liste-recettes">
+          @for (recette of recettesEnAttente(); track recette.id) {
+            <li class="recette">
+              @if (recette.photoUrl | fichier; as photo) {
+                <img class="recette-photo" [src]="photo" alt="" loading="lazy" />
+              } @else {
+                <span class="recette-photo recette-photo-vide" aria-hidden="true">
+                  <ng-icon name="lucideCookingPot" size="1.25rem" />
+                </span>
+              }
+              <div class="recette-infos">
+                <a class="recette-nom" [routerLink]="['/recettes', recette.id]">{{
+                  recette.nom
+                }}</a>
+                <p class="recette-meta">
+                  {{ recette.auteurNom ?? 'Auteur inconnu' }}
+                  @if (recette.categorieNom) {
+                    · {{ recette.categorieNom }}
+                  }
+                </p>
+              </div>
+              <span class="recette-date" [title]="recette.dateCreation | date: 'd MMMM y à HH:mm'">
+                <ng-icon name="lucideClock" size="0.875rem" aria-hidden="true" />
+                {{ recette.dateCreation | depuis }}
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-empty-state
+          titre="Aucune recette en attente"
+          message="Les nouvelles propositions apparaîtront ici."
+          icone="lucideCircleCheck"
+          ton="succes"
+        />
+      }
+    </section>
+
+    <section class="gw-carte panneau" aria-labelledby="titre-repartition">
+      <div class="panneau-entete">
+        <div>
+          <h2 id="titre-repartition">Répartition des recettes</h2>
+          <p>
+            <span class="gw-chiffres">{{ totalRecettes() }}</span> recettes au total
+          </p>
+        </div>
+      </div>
+
+      <!-- Barre décorative : les mêmes chiffres sont écrits dans la légende -->
+      <div class="barre" aria-hidden="true">
+        @for (part of repartition(); track part.libelle) {
+          @if (part.nombre > 0) {
+            <span [class]="'segment ' + part.classe" [style.flex-grow]="part.nombre"></span>
+          }
+        }
+      </div>
+
+      <dl class="legende">
+        @for (part of repartition(); track part.libelle) {
+          <div class="legende-ligne">
+            <dt>
+              <span [class]="'legende-pastille ' + part.classe" aria-hidden="true"></span>
+              {{ part.libelle }}
+            </dt>
+            <dd class="gw-chiffres">
+              {{ part.nombre }} <span class="pourcentage">({{ part.pourcentage }} %)</span>
+            </dd>
+          </div>
+        }
+      </dl>
+    </section>
+  </div>
+}

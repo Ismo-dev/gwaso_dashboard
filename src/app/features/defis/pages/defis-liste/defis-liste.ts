@@ -1,0 +1,221 @@
+import { DatePipe } from '@angular/common';
+import { Component, computed, effect, inject, input, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
+import { MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatRow,
+  MatRowDef,
+  MatTable,
+} from '@angular/material/table';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
+import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap, tap } from 'rxjs';
+import { PageResponse } from '../../../../core/models/page-response.model';
+import { AValiderService } from '../../../../core/services/a-valider.service';
+import { EcranService } from '../../../../core/services/ecran.service';
+import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
+import { PageHeader } from '../../../../shared/components/page-header/page-header';
+import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
+import { Statistiques } from '../../../tableau-de-bord/models/statistiques.model';
+import { StatistiquesService } from '../../../tableau-de-bord/services/statistiques.service';
+import { DefiResponse, FiltresDefis, StatutDefi } from '../../models/defi.model';
+import { DefiService } from '../../services/defi.service';
+
+type FiltreStatut = StatutDefi | 'TOUS';
+
+interface Onglet {
+  valeur: FiltreStatut;
+  libelle: string;
+  compteur?: keyof Statistiques['defis'];
+}
+
+/** Onglets dans l'ordre de vie d'un défi : d'abord les propositions des chefs à examiner. */
+const ONGLETS: Onglet[] = [
+  { valeur: 'PROPOSE', libelle: 'À valider', compteur: 'proposes' },
+  { valeur: 'VALIDE', libelle: 'À venir', compteur: 'valides' },
+  { valeur: 'EN_COURS', libelle: 'En cours', compteur: 'enCours' },
+  { valeur: 'TERMINE', libelle: 'Terminés', compteur: 'termines' },
+  { valeur: 'REJETE', libelle: 'Refusés' },
+  { valeur: 'ANNULE', libelle: 'Annulés' },
+  { valeur: 'TOUS', libelle: 'Tous' },
+];
+
+const TAILLES = [10, 20, 50];
+
+interface EtatListe {
+  chargement: boolean;
+  erreur: boolean;
+  page: PageResponse<DefiResponse> | null;
+}
+
+/**
+ * Défis culinaires : examiner les propositions des chefs, suivre les défis en cours,
+ * et créer ses propres défis. Filtres dans l'adresse, comme les autres listes.
+ */
+@Component({
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    DatePipe,
+    MatButton,
+    MatIconButton,
+    MatButtonToggleGroup,
+    MatButtonToggle,
+    MatFormField,
+    MatLabel,
+    MatPrefix,
+    MatSuffix,
+    MatInput,
+    MatPaginator,
+    MatTable,
+    MatColumnDef,
+    MatHeaderCell,
+    MatHeaderCellDef,
+    MatCell,
+    MatCellDef,
+    MatHeaderRow,
+    MatHeaderRowDef,
+    MatRow,
+    MatRowDef,
+    NgIcon,
+    PageHeader,
+    EmptyState,
+    StatusBadge,
+  ],
+  selector: 'app-defis-liste',
+  styleUrl: './defis-liste.scss',
+  templateUrl: './defis-liste.html',
+})
+export class DefisListe implements OnInit {
+  private defiService = inject(DefiService);
+  private statistiquesService = inject(StatistiquesService);
+  private aValider = inject(AValiderService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  protected ecran = inject(EcranService);
+
+  readonly statut = input<string>();
+  readonly recherche = input<string>();
+  readonly page = input<string>();
+  readonly taille = input<string>();
+
+  protected readonly onglets = ONGLETS;
+  protected readonly tailles = TAILLES;
+
+  protected statutActif = computed<FiltreStatut>(
+    () => ONGLETS.find((o) => o.valeur === this.statut())?.valeur ?? 'PROPOSE',
+  );
+  protected pageActive = computed(() => Math.max(Number(this.page() ?? 0) || 0, 0));
+  protected tailleActive = computed(() => Number(this.taille() ?? TAILLES[0]) || TAILLES[0]);
+
+  private rechargement = signal(0);
+  private filtres = computed<FiltresDefis & { rechargement: number }>(() => ({
+    statut: this.statutActif() === 'TOUS' ? undefined : (this.statutActif() as StatutDefi),
+    recherche: this.recherche(),
+    page: this.pageActive(),
+    taille: this.tailleActive(),
+    rechargement: this.rechargement(),
+  }));
+
+  protected etat = signal<EtatListe>({ chargement: true, erreur: false, page: null });
+  protected defis = computed(() => this.etat().page?.contenu ?? []);
+  protected statistiques = signal<Statistiques | null>(null);
+
+  protected colonnes = computed(() =>
+    this.ecran.tablette()
+      ? ['defi', 'periode', 'statut', 'actions']
+      : ['defi', 'auteur', 'periode', 'statut', 'actions'],
+  );
+
+  protected champRecherche = new FormControl('', { nonNullable: true });
+  protected lignesSquelette = [1, 2, 3, 4, 5];
+
+  constructor() {
+    toObservable(this.filtres)
+      .pipe(
+        tap(() => this.etat.update((e) => ({ ...e, chargement: true, erreur: false }))),
+        switchMap(({ rechargement, ...filtres }) =>
+          this.defiService.rechercher(filtres).pipe(
+            map((page): EtatListe => ({ chargement: false, erreur: false, page })),
+            catchError(() => of<EtatListe>({ chargement: false, erreur: true, page: null })),
+          ),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((etat) => this.etat.set(etat));
+
+    this.champRecherche.valueChanges
+      .pipe(debounceTime(350), distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((texte) => this.naviguer({ recherche: texte.trim() || null, page: null }));
+
+    effect(() => this.champRecherche.setValue(this.recherche() ?? '', { emitEvent: false }));
+  }
+
+  ngOnInit(): void {
+    this.statistiquesService.getStatistiques().subscribe({
+      next: (statistiques) => {
+        this.statistiques.set(statistiques);
+        this.aValider.mettreAJour(statistiques.aValider);
+      },
+      error: () => this.statistiques.set(null),
+    });
+  }
+
+  protected compteur(onglet: Onglet): number | null {
+    const defis = this.statistiques()?.defis;
+    return onglet.compteur && defis ? defis[onglet.compteur] : null;
+  }
+
+  /** « Dans 3 jours », « Encore 5 jours », « Terminé »... selon les dates du défi. */
+  protected echeance(defi: DefiResponse): string {
+    const jour = 24 * 60 * 60 * 1000;
+    const aujourdhui = new Date(new Date().toDateString()).getTime();
+    const debut = new Date(defi.dateDebut + 'T00:00:00').getTime();
+    const fin = new Date(defi.dateFin + 'T00:00:00').getTime();
+    if (aujourdhui < debut) {
+      const n = Math.round((debut - aujourdhui) / jour);
+      return n === 1 ? 'Commence demain' : `Commence dans ${n} jours`;
+    }
+    if (aujourdhui <= fin) {
+      const n = Math.round((fin - aujourdhui) / jour);
+      return n === 0 ? "Se termine aujourd'hui" : `Encore ${n} jour${n > 1 ? 's' : ''}`;
+    }
+    return 'Période terminée';
+  }
+
+  changerStatut(statut: FiltreStatut): void {
+    this.naviguer({ statut, page: null });
+  }
+
+  changerPage(evenement: PageEvent): void {
+    this.naviguer({
+      page: evenement.pageIndex || null,
+      taille: evenement.pageSize === TAILLES[0] ? null : evenement.pageSize,
+    });
+  }
+
+  recharger(): void {
+    this.rechargement.update((v) => v + 1);
+  }
+
+  private naviguer(parametres: Record<string, string | number | null>): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: parametres,
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+}

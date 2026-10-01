@@ -1,0 +1,100 @@
+// =============================================================================
+// Cartes à choisir (boutons radio présentés en cartes) : profil d'un utilisateur, accès d'un profil...
+//
+// <div class="gw-choix-grille" role="radiogroup">
+//   <label class="gw-choix" [class.gw-choix-actif]="...">
+//     <input type="radio" class="sr-only" ... />
+//     <span class="gw-choix-icone"><ng-icon ... /></span>
+//     <span class="gw-choix-textes"><span class="gw-choix-titre">…</span><span class="gw-choix-aide">…</span></span>
+//   </label>
+// </div>
+// =============================================================================
+@use 'points-de-rupture' as ecran;
+
+.gw-choix-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gw-espace-2);
+
+  @include ecran.mobile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.gw-choix {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  min-width: 0;
+  padding: var(--gw-espace-3);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-surface);
+  cursor: pointer;
+  transition:
+    border-color var(--gw-duree) var(--gw-courbe),
+    background-color var(--gw-duree) var(--gw-courbe),
+    box-shadow var(--gw-duree) var(--gw-courbe);
+
+  &:hover {
+    border-color: var(--gw-contour-champ);
+  }
+
+  // Focus clavier visible sur la carte (le bouton radio est masqué visuellement)
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--gw-action);
+    outline-offset: 2px;
+  }
+}
+
+.gw-choix-actif {
+  border-color: var(--gw-action);
+  background: var(--gw-terre-cuite-pale);
+  box-shadow: 0 0 0 1px var(--gw-action);
+
+  .gw-choix-icone {
+    background: var(--gw-action);
+    color: var(--gw-blanc);
+  }
+}
+
+.gw-choix-desactive {
+  cursor: not-allowed;
+  opacity: 0.55;
+
+  &:hover {
+    border-color: var(--gw-bordure);
+  }
+}
+
+.gw-choix-icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+  transition: background-color var(--gw-duree) var(--gw-courbe);
+}
+
+.gw-choix-textes {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gw-choix-titre {
+  color: var(--gw-cacao);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.gw-choix-aide {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  line-height: 1.35;
+}

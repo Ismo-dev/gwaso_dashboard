@@ -1,0 +1,12 @@
+<div class="vide" [class]="'vide ton-' + ton()" [attr.role]="ton() === 'erreur' ? 'alert' : null">
+  <span class="icone" aria-hidden="true">
+    <ng-icon [name]="icone()" size="1.75rem" />
+  </span>
+  <p class="titre">{{ titre() }}</p>
+  @if (message()) {
+    <p class="message">{{ message() }}</p>
+  }
+  <div class="actions">
+    <ng-content />
+  </div>
+</div>

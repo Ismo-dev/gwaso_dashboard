@@ -1,0 +1,201 @@
+.editeur {
+  display: flex;
+  flex-direction: column;
+}
+
+.libelle {
+  margin-bottom: var(--gw-espace-2);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-label);
+  font-weight: 500;
+}
+
+// Cadre commun à la barre et à la zone de saisie : même contour que les champs Material
+.barre,
+.zone {
+  border: 1px solid var(--gw-contour-champ);
+  background: var(--gw-surface);
+  transition: border-color var(--gw-duree) var(--gw-courbe);
+}
+
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  padding: var(--gw-espace-1) var(--gw-espace-2);
+  border-bottom: 0;
+  border-radius: var(--gw-rayon) var(--gw-rayon) 0 0;
+  background: var(--gw-surface-2);
+}
+
+.groupe {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.groupe-droite {
+  margin-left: auto;
+}
+
+.separateur {
+  width: 1px;
+  height: 20px;
+  margin: 0 var(--gw-espace-1);
+  background: var(--gw-bordure);
+}
+
+// Bouton d'outil : 34 px, lisible et facile à toucher
+.outil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 var(--gw-espace-2);
+  border: 0;
+  border-radius: var(--gw-rayon-sm);
+  background: transparent;
+  color: var(--gw-texte-doux);
+  cursor: pointer;
+  transition:
+    background-color var(--gw-duree) var(--gw-courbe),
+    color var(--gw-duree) var(--gw-courbe);
+
+  &:hover:not(:disabled) {
+    background: var(--gw-fond-accent);
+    color: var(--gw-cacao);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Mise en forme active : fond karité, comme l'élément actif du menu
+.outil-actif {
+  background: var(--gw-karite);
+  color: var(--gw-blanc);
+
+  &:hover:not(:disabled) {
+    background: var(--gw-karite);
+    color: var(--gw-blanc);
+  }
+}
+
+.zone {
+  border-radius: 0 0 var(--gw-rayon) var(--gw-rayon);
+  cursor: text;
+
+  // Le contenu est créé par l'éditeur, hors du gabarit Angular : on le cible avec ::ng-deep
+  ::ng-deep .contenu {
+    min-height: var(--hauteur-min, 140px);
+    max-height: 420px;
+    padding: var(--gw-espace-3) var(--gw-espace-4);
+    overflow-y: auto;
+    color: var(--gw-texte);
+    font-size: var(--gw-taille-texte);
+    line-height: 1.65;
+    outline: none;
+
+    p {
+      margin: 0 0 var(--gw-espace-2);
+    }
+
+    ul,
+    ol {
+      margin: 0 0 var(--gw-espace-2);
+      padding-left: var(--gw-espace-6);
+    }
+
+    li p {
+      margin: 0;
+    }
+
+    strong {
+      font-weight: 600;
+      color: var(--gw-cacao);
+    }
+  }
+}
+
+.focus {
+  .barre,
+  .zone {
+    border-color: var(--gw-action);
+  }
+
+  .zone {
+    box-shadow: inset 0 0 0 1px var(--gw-action);
+  }
+}
+
+.invalide {
+  .barre,
+  .zone {
+    border-color: var(--gw-danger);
+  }
+
+  .libelle {
+    color: var(--gw-danger);
+  }
+}
+
+.desactive .zone {
+  background: var(--gw-surface-2);
+  cursor: not-allowed;
+}
+
+.pied {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gw-espace-4);
+  min-height: 1.5rem;
+  padding: var(--gw-espace-1) var(--gw-espace-4) 0;
+  font-size: var(--gw-taille-petit);
+}
+
+.aide {
+  color: var(--gw-texte-doux);
+}
+
+.erreur {
+  color: var(--gw-danger);
+  font-weight: 500;
+}
+
+.compteur {
+  flex-shrink: 0;
+  color: var(--gw-texte-doux);
+}
+
+// Pastilles du menu des couleurs
+.pastille {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.pastille-gw-couleur-terre {
+  background: var(--gw-action);
+}
+
+.pastille-gw-couleur-karite {
+  background: var(--gw-karite);
+}
+
+.pastille-gw-couleur-cacao {
+  background: var(--gw-cacao);
+}
+
+.pastille-gw-couleur-vert {
+  background: var(--gw-succes);
+}
+
+.pastille-aucune {
+  border: 2px solid var(--gw-contour-champ);
+}

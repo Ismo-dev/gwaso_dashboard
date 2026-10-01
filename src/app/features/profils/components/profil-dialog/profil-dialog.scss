@@ -1,0 +1,55 @@
+// display: contents : le formulaire ne casse pas la mise en page du dialogue
+.formulaire {
+  display: contents;
+}
+
+.intro {
+  margin-bottom: var(--gw-espace-5);
+  color: var(--gw-texte-doux);
+}
+
+.erreur {
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.champ {
+  width: 100%;
+}
+
+.groupe {
+  min-width: 0;
+  margin: var(--gw-espace-2) 0 var(--gw-espace-5);
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: var(--gw-espace-1);
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-label);
+    font-weight: 600;
+  }
+}
+
+.explication {
+  margin-bottom: var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.tout-pris {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+
+  p {
+    color: var(--gw-cacao);
+  }
+}

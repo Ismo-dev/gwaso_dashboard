@@ -1,0 +1,121 @@
+<div class="sidebar" [class.compact]="compact()">
+  <div class="marque">
+    <a
+      class="logo"
+      routerLink="/"
+      (click)="fermer.emit()"
+      aria-label="Gwaso Admin, tableau de bord"
+    >
+      <img class="embleme" src="images/embleme-gwaso-clair.png" alt="" width="44" height="44" />
+      @if (!compact()) {
+        <span class="nom-marque">
+          <span class="nom">Gwaso</span>
+          <span class="sous-nom">Administration</span>
+        </span>
+      }
+    </a>
+
+    @if (mobile()) {
+      <button
+        matIconButton
+        type="button"
+        class="bouton-fermer"
+        aria-label="Fermer le menu"
+        (click)="fermer.emit()"
+      >
+        <ng-icon name="lucideX" size="1.25rem" aria-hidden="true" />
+      </button>
+    }
+  </div>
+
+  <nav class="navigation" aria-label="Menu principal">
+    @for (section of sections; track section.titre) {
+      @if (compact()) {
+        <hr class="separateur" aria-hidden="true" />
+      } @else {
+        <p class="titre-section">{{ section.titre }}</p>
+      }
+      <ul>
+        @for (lien of section.liens; track lien.lien) {
+          <li>
+            <a
+              class="lien"
+              [routerLink]="lien.lien"
+              routerLinkActive="actif"
+              [routerLinkActiveOptions]="{ exact: lien.lien === '/' }"
+              ariaCurrentWhenActive="page"
+              [matTooltip]="
+                lien.libelle + (nombre(lien) ? ' · ' + nombre(lien) + ' à valider' : '')
+              "
+              matTooltipPosition="right"
+              [matTooltipDisabled]="!compact()"
+              (click)="fermer.emit()"
+            >
+              <ng-icon class="icone" [name]="lien.icone" size="1.25rem" aria-hidden="true" />
+              <span class="libelle" [class.sr-only]="compact()">{{ lien.libelle }}</span>
+              @if (nombre(lien) > 0) {
+                <span class="compteur gw-chiffres" [class.compteur-point]="compact()">
+                  <span aria-hidden="true">{{ compact() ? '' : nombre(lien) }}</span>
+                  <span class="sr-only">, {{ nombre(lien) }} à valider</span>
+                </span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </nav>
+
+  <!-- Compte de l'administrateur : un clic ouvre « Mon profil » -->
+  @if (session.utilisateur(); as utilisateur) {
+    <div class="compte-zone">
+      <a
+        class="compte"
+        routerLink="/mon-profil"
+        routerLinkActive="actif"
+        ariaCurrentWhenActive="page"
+        [attr.aria-label]="compact() ? 'Mon profil' : null"
+        [matTooltip]="compact() ? 'Mon profil' : ''"
+        matTooltipPosition="right"
+        (click)="fermer.emit()"
+      >
+        <app-avatar
+          [prenom]="utilisateur.prenom"
+          [nom]="utilisateur.nom"
+          [photo]="utilisateur.photoProfil"
+          taille="sm"
+        />
+        @if (!compact()) {
+          <span class="compte-textes">
+            <span class="compte-nom">{{ utilisateur.prenom }} {{ utilisateur.nom }}</span>
+            <span class="compte-lien">Mon profil</span>
+          </span>
+          <ng-icon name="lucideChevronRight" size="1rem" aria-hidden="true" class="compte-fleche" />
+        }
+      </a>
+    </div>
+  }
+
+  @if (peutReduire()) {
+    <div class="pied">
+      <button
+        type="button"
+        class="bouton-reduire"
+        [attr.aria-label]="compact() ? 'Agrandir le menu' : 'Réduire le menu'"
+        [attr.aria-expanded]="!compact()"
+        [matTooltip]="compact() ? 'Agrandir le menu' : ''"
+        matTooltipPosition="right"
+        (click)="basculerCompact.emit()"
+      >
+        <ng-icon
+          [name]="compact() ? 'lucidePanelLeftOpen' : 'lucidePanelLeftClose'"
+          size="1.25rem"
+          aria-hidden="true"
+        />
+        @if (!compact()) {
+          <span>Réduire le menu</span>
+        }
+      </button>
+    </div>
+  }
+</div>

@@ -1,0 +1,204 @@
+<app-page-header
+  surtitre="Communauté"
+  titre="Défis culinaires"
+  description="Examinez les défis proposés par les chefs, suivez les défis en cours et publiez les classements."
+>
+  <a matButton="filled" routerLink="nouveau">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+    Nouveau défi
+  </a>
+</app-page-header>
+
+<div class="gw-onglets-conteneur">
+  <mat-button-toggle-group
+    class="gw-onglets"
+    name="statut"
+    aria-label="Filtrer les défis par statut"
+    [value]="statutActif()"
+    (change)="changerStatut($event.value)"
+    hideSingleSelectionIndicator
+  >
+    @for (onglet of onglets; track onglet.valeur) {
+      <mat-button-toggle [value]="onglet.valeur">
+        {{ onglet.libelle }}
+        @if (compteur(onglet) !== null) {
+          <span class="gw-onglet-compteur gw-chiffres">{{ compteur(onglet) }}</span>
+        }
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+</div>
+
+<section class="gw-carte liste" aria-label="Liste des défis">
+  <div class="gw-outils">
+    <mat-form-field class="gw-champ-recherche" subscriptSizing="dynamic">
+      <mat-label>Rechercher un défi</mat-label>
+      <ng-icon matPrefix class="gw-icone-champ" name="lucideSearch" size="1.125rem" aria-hidden="true" />
+      <input matInput type="search" [formControl]="champRecherche" placeholder="Nom, recette ou chef" />
+      @if (champRecherche.value) {
+        <button matIconButton matSuffix type="button" aria-label="Effacer la recherche" (click)="champRecherche.setValue('')">
+          <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+        </button>
+      }
+    </mat-form-field>
+  </div>
+
+  <p class="gw-resume" aria-live="polite">
+    @if (!etat().chargement && etat().page; as page) {
+      <strong class="gw-chiffres">{{ page.totalElements }}</strong>
+      {{ page.totalElements > 1 ? 'défis' : 'défi' }}
+    }
+  </p>
+
+  @if (etat().chargement && !etat().page) {
+    <div class="squelette" aria-busy="true" aria-label="Chargement des défis">
+      @for (ligne of lignesSquelette; track ligne) {
+        <div class="squelette-ligne">
+          <span class="gw-squelette sq-icone"></span>
+          <span class="sq-textes">
+            <span class="gw-squelette sq-titre"></span>
+            <span class="gw-squelette sq-sous-titre"></span>
+          </span>
+        </div>
+      }
+    </div>
+  } @else if (etat().erreur) {
+    <app-empty-state
+      titre="Impossible de charger les défis"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="recharger()">Réessayer</button>
+    </app-empty-state>
+  } @else if (defis().length === 0) {
+    @if (recherche()) {
+      <app-empty-state titre="Aucun défi ne correspond" message="Essayez un autre mot." icone="lucideSearch" />
+    } @else if (statutActif() === 'PROPOSE') {
+      <app-empty-state
+        titre="Tout est à jour"
+        message="Aucun défi proposé par un chef n'attend votre décision."
+        icone="lucideCircleCheck"
+        ton="succes"
+      />
+    } @else {
+      <app-empty-state titre="Aucun défi ici" message="Créez un défi pour animer la communauté." icone="lucideTrophy">
+        <a matButton="filled" routerLink="nouveau">Nouveau défi</a>
+      </app-empty-state>
+    }
+  } @else if (ecran.mobile()) {
+    <!-- Téléphone : une carte par défi -->
+    <ul class="cartes">
+      @for (defi of defis(); track defi.id) {
+        <li>
+          <a class="carte-defi" [routerLink]="[defi.id]">
+            <span class="icone-defi" aria-hidden="true"><ng-icon name="lucideTrophy" size="1.25rem" /></span>
+            <span class="carte-textes">
+              <span class="defi-nom">{{ defi.nom }}</span>
+              <span class="defi-meta">{{ defi.dateDebut | date: 'd MMM' }} → {{ defi.dateFin | date: 'd MMM y' }}</span>
+              <span class="defi-meta">{{ defi.chefCuisinierNom ? 'Chef ' + defi.chefCuisinierNom : 'Administration' }}</span>
+            </span>
+            <app-status-badge [statut]="defi.statut" />
+          </a>
+        </li>
+      }
+    </ul>
+  } @else {
+    <div class="gw-tableau-conteneur" [class.rechargement]="etat().chargement">
+      <table mat-table [dataSource]="defis()" class="gw-tableau">
+        <ng-container matColumnDef="defi">
+          <th mat-header-cell *matHeaderCellDef scope="col">Défi</th>
+          <td mat-cell *matCellDef="let defi">
+            <div class="cellule-defi">
+              <span class="icone-defi" aria-hidden="true"><ng-icon name="lucideTrophy" size="1.25rem" /></span>
+              <span class="cellule-textes">
+                <a class="defi-nom" [routerLink]="[defi.id]">{{ defi.nom }}</a>
+                @if (defi.recetteNom) {
+                  <span class="defi-meta">
+                    <ng-icon name="lucideBookOpen" size="0.875rem" aria-hidden="true" />
+                    {{ defi.recetteNom }}
+                  </span>
+                }
+              </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="auteur">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Proposé par</th>
+          <td mat-cell *matCellDef="let defi" class="gw-col-centre">
+            @if (defi.chefCuisinierNom) {
+              <span class="auteur">
+                <ng-icon name="lucideChefHat" size="1rem" aria-hidden="true" />
+                Chef {{ defi.chefCuisinierNom }}
+              </span>
+            } @else {
+              <span class="auteur auteur-admin">
+                <ng-icon name="lucideShieldCheck" size="1rem" aria-hidden="true" />
+                Administration
+              </span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="periode">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Période</th>
+          <td mat-cell *matCellDef="let defi" class="gw-col-centre">
+            <span class="periode">
+              <span class="gw-chiffres">{{ defi.dateDebut | date: 'd MMM' }} → {{ defi.dateFin | date: 'd MMM y' }}</span>
+              @if (defi.statut === 'VALIDE' || defi.statut === 'EN_COURS') {
+                <span class="echeance">{{ echeance(defi) }}</span>
+              }
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="statut">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Statut</th>
+          <td mat-cell *matCellDef="let defi" class="gw-col-centre">
+            <app-status-badge [statut]="defi.statut" />
+            @if (defi.classementPublie) {
+              <span class="classement-publie">
+                <ng-icon name="lucideMedal" size="0.875rem" aria-hidden="true" /> Classement publié
+              </span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-actions">
+            <span class="sr-only">Actions</span>
+          </th>
+          <td mat-cell *matCellDef="let defi" class="gw-col-actions">
+            @if (defi.statut === 'PROPOSE') {
+              <a matButton="outlined" [routerLink]="[defi.id]">
+                <ng-icon name="lucideEye" size="1rem" aria-hidden="true" />
+                Examiner
+              </a>
+            } @else {
+              <a matButton [routerLink]="[defi.id]">
+                <ng-icon name="lucideEye" size="1rem" aria-hidden="true" />
+                Voir
+              </a>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colonnes()"></tr>
+        <tr mat-row *matRowDef="let defi; columns: colonnes()"></tr>
+      </table>
+    </div>
+  }
+
+  @if (defis().length > 0) {
+    <mat-paginator
+      class="gw-pagination"
+      [length]="etat().page?.totalElements ?? 0"
+      [pageIndex]="pageActive()"
+      [pageSize]="tailleActive()"
+      [pageSizeOptions]="tailles"
+      (page)="changerPage($event)"
+      aria-label="Pages de défis"
+    />
+  }
+</section>

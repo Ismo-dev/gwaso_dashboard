@@ -1,0 +1,187 @@
+<app-page-header
+  surtitre="Mon compte"
+  titre="Mon profil"
+  description="Vos informations, votre photo et votre mot de passe."
+/>
+
+@if (session.utilisateur(); as u) {
+  <div class="disposition">
+    <!-- ===================== Carte d'identité ===================== -->
+    <aside class="identite gw-carte" aria-label="Résumé du compte">
+      <div class="identite-fond" aria-hidden="true"></div>
+      <app-avatar [prenom]="u.prenom" [nom]="u.nom" [photo]="u.photoProfil" taille="lg" />
+      <h2 class="identite-nom">{{ u.prenom }} {{ u.nom }}</h2>
+      <p class="identite-role">
+        <ng-icon name="lucideShieldCheck" size="1rem" aria-hidden="true" />
+        {{ u.profilNom ?? 'Administrateur' }}
+      </p>
+      <dl class="identite-infos">
+        <div>
+          <dt>Email</dt>
+          <dd>{{ u.email ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>Téléphone</dt>
+          <dd class="gw-chiffres">{{ u.telephone ?? '—' }}</dd>
+        </div>
+      </dl>
+      @if (u.droits.length > 0) {
+        <p class="droits-titre">Droits de mon profil</p>
+        <ul class="droits">
+          @for (droit of u.droits; track droit) {
+            <li>{{ droit }}</li>
+          }
+        </ul>
+      }
+    </aside>
+
+    <div class="blocs">
+      <!-- ===================== Informations ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-infos">
+        <h2 id="titre-infos" class="bloc-titre">
+          <ng-icon name="lucideUser" size="1.25rem" aria-hidden="true" />
+          Mes informations
+        </h2>
+        <form [formGroup]="infos" (ngSubmit)="enregistrerInfos()" novalidate>
+          @if (erreurInfos()) {
+            <p class="erreur" role="alert">{{ erreurInfos() }}</p>
+          }
+          <div class="ligne">
+            <mat-form-field>
+              <mat-label>Prénom</mat-label>
+              <input matInput formControlName="prenom" autocomplete="given-name" />
+              <mat-error>Le prénom est obligatoire.</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Nom</mat-label>
+              <input matInput formControlName="nom" autocomplete="family-name" />
+              <mat-error>Le nom est obligatoire.</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="ligne">
+            <mat-form-field>
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" autocomplete="email" />
+              <mat-hint>Sert à vous connecter</mat-hint>
+              <mat-error>Adresse email obligatoire et valide.</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Téléphone</mat-label>
+              <input
+                matInput
+                type="tel"
+                inputmode="tel"
+                formControlName="telephone"
+                placeholder="+223 70 00 00 00"
+                autocomplete="tel"
+              />
+              <mat-error>Numéro invalide (8 chiffres minimum).</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="actions">
+            <button
+              matButton="filled"
+              type="submit"
+              [disabled]="enregistrementInfos() || infos.pristine"
+            >
+              @if (enregistrementInfos()) {
+                <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+              }
+              Enregistrer mes informations
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ===================== Photo ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-photo">
+        <h2 id="titre-photo" class="bloc-titre">
+          <ng-icon name="lucideImage" size="1.25rem" aria-hidden="true" />
+          Ma photo
+        </h2>
+        <app-image-upload
+          libelle="Photo de profil"
+          format="carre"
+          [imageActuelle]="u.photoProfil"
+          (fichierChoisi)="photo.set($event)"
+        />
+        @if (photo()) {
+          <div class="actions">
+            <button matButton="filled" type="button" [disabled]="envoiPhoto()" (click)="envoyerPhoto()">
+              @if (envoiPhoto()) {
+                <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+              }
+              Enregistrer la photo
+            </button>
+          </div>
+        }
+      </section>
+
+      <!-- ===================== Mot de passe ===================== -->
+      <section class="gw-carte bloc" aria-labelledby="titre-mdp">
+        <h2 id="titre-mdp" class="bloc-titre">
+          <ng-icon name="lucideKeyRound" size="1.25rem" aria-hidden="true" />
+          Mot de passe
+        </h2>
+        <form [formGroup]="motDePasse" #formMotDePasse="ngForm" (ngSubmit)="changerMotDePasse(formMotDePasse)" novalidate>
+          @if (erreurMotDePasse()) {
+            <p class="erreur" role="alert">{{ erreurMotDePasse() }}</p>
+          }
+          <mat-form-field class="large">
+            <mat-label>Mot de passe actuel</mat-label>
+            <input
+              matInput
+              [type]="visible() ? 'text' : 'password'"
+              formControlName="ancien"
+              autocomplete="current-password"
+            />
+            <button
+              matIconButton
+              matSuffix
+              type="button"
+              [attr.aria-label]="visible() ? 'Masquer les mots de passe' : 'Afficher les mots de passe'"
+              (click)="visible.set(!visible())"
+            >
+              <ng-icon [name]="visible() ? 'lucideEyeOff' : 'lucideEye'" size="1.125rem" />
+            </button>
+            <mat-error>Indiquez votre mot de passe actuel.</mat-error>
+          </mat-form-field>
+          <div class="ligne">
+            <mat-form-field>
+              <mat-label>Nouveau mot de passe</mat-label>
+              <input
+                matInput
+                [type]="visible() ? 'text' : 'password'"
+                formControlName="nouveau"
+                autocomplete="new-password"
+              />
+              <mat-hint>8 caractères minimum</mat-hint>
+              <mat-error>8 caractères minimum.</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Confirmer le nouveau</mat-label>
+              <input
+                matInput
+                [type]="visible() ? 'text' : 'password'"
+                formControlName="confirmation"
+                autocomplete="new-password"
+              />
+              @if (motDePasse.hasError('differents') && motDePasse.controls.confirmation.touched) {
+                <mat-hint class="indice-erreur">Les deux saisies sont différentes.</mat-hint>
+              }
+              <mat-error>Retapez le nouveau mot de passe.</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="actions">
+            <button matButton="filled" type="submit" [disabled]="enregistrementMotDePasse()">
+              @if (enregistrementMotDePasse()) {
+                <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+              }
+              Changer le mot de passe
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </div>
+}

@@ -1,0 +1,92 @@
+// Thème Angular Material aux couleurs de Gwaso.
+// Material est construit sur des « jetons » (variables CSS --mat-...) :
+// on les relie ici aux couleurs de la charte (variables --gw-... définies dans styles.scss).
+@use '@angular/material' as mat;
+
+@mixin theme-gwaso {
+  color-scheme: light;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$orange-palette,
+        tertiary: mat.$red-palette,
+      ),
+      typography: (
+        plain-family: var(--gw-police),
+        brand-family: var(--gw-police),
+        bold-weight: 700,
+        medium-weight: 500,
+        regular-weight: 400,
+      ),
+      density: 0,
+    )
+  );
+
+  // Couleurs système de Material → couleurs de la charte
+  @include mat.theme-overrides(
+    (
+      primary: var(--gw-action),
+      on-primary: var(--gw-blanc),
+      primary-container: var(--gw-terre-cuite-pale),
+      on-primary-container: var(--gw-karite),
+      secondary: var(--gw-karite),
+      on-secondary: var(--gw-blanc),
+      secondary-container: var(--gw-karite-pale),
+      on-secondary-container: var(--gw-karite),
+      surface: var(--gw-surface),
+      on-surface: var(--gw-cacao),
+      on-surface-variant: var(--gw-texte-doux),
+      surface-container-lowest: var(--gw-surface),
+      surface-container-low: var(--gw-surface),
+      surface-container: var(--gw-surface),
+      surface-container-high: var(--gw-surface),
+      surface-container-highest: var(--gw-fond-accent),
+      outline: var(--gw-contour-champ),
+      outline-variant: var(--gw-bordure),
+      error: var(--gw-danger),
+      on-error: var(--gw-blanc),
+      error-container: var(--gw-danger-fond),
+      on-error-container: var(--gw-danger),
+      inverse-surface: var(--gw-cacao),
+      inverse-on-surface: var(--gw-sidebar-texte),
+      inverse-primary: var(--gw-terre-cuite),
+      corner-extra-small: 6px,
+      corner-small: 8px,
+      corner-medium: 10px,
+      corner-large: 16px,
+      label-large-weight: 600,
+      label-large-size: 14px,
+      body-medium-size: 14px,
+    )
+  );
+
+  // Composants : arrondis et tailles cohérents avec la charte
+  --mat-button-filled-container-shape: var(--gw-rayon);
+  --mat-button-outlined-container-shape: var(--gw-rayon);
+  --mat-button-text-container-shape: var(--gw-rayon);
+  --mat-button-tonal-container-shape: var(--gw-rayon);
+  --mat-button-filled-container-height: 42px;
+  --mat-button-outlined-container-height: 42px;
+  --mat-button-text-container-height: 42px;
+  --mat-button-filled-label-text-weight: 600;
+  --mat-button-outlined-label-text-weight: 600;
+  --mat-button-outlined-outline-color: var(--gw-contour-champ);
+  --mat-form-field-outlined-container-shape: var(--gw-rayon);
+  --mat-dialog-container-shape: var(--gw-rayon-lg);
+  --mat-dialog-subhead-font: var(--gw-police);
+  --mat-dialog-subhead-size: 1.125rem;
+  --mat-dialog-subhead-weight: 700;
+  --mat-dialog-subhead-line-height: 1.4;
+  --mat-dialog-subhead-color: var(--gw-cacao);
+  --mat-dialog-supporting-text-size: 0.875rem;
+  --mat-dialog-supporting-text-color: var(--gw-texte-doux);
+  --mat-menu-container-shape: var(--gw-rayon);
+  --mat-snack-bar-container-shape: var(--gw-rayon);
+  --mat-tooltip-container-shape: var(--gw-rayon-sm);
+  --mat-button-toggle-shape: var(--gw-rayon);
+  --mat-sidenav-container-shape: 0;
+  --mat-table-header-headline-weight: 600;
+  --mat-table-row-item-outline-color: var(--gw-bordure);
+  --mat-paginator-container-text-size: 13px;
+}

@@ -1,0 +1,9 @@
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-12);
+  color: var(--gw-texte-doux);
+}

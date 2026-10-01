@@ -1,0 +1,52 @@
+:host {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+  object-fit: cover;
+}
+
+.taille-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.75rem;
+}
+
+.taille-md {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.8125rem;
+}
+
+.taille-lg {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.375rem;
+}
+
+// Toutes les teintes ont un contraste texte/fond supérieur à 4,5:1
+.teinte-karite {
+  background: var(--gw-karite);
+  color: var(--gw-blanc);
+}
+
+.teinte-cacao {
+  background: var(--gw-cacao);
+  color: var(--gw-blanc);
+}
+
+.teinte-terre {
+  background: var(--gw-terre-cuite-pale-2);
+  color: var(--gw-karite);
+}
+
+.teinte-sable {
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+}

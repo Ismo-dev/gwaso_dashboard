@@ -1,0 +1,51 @@
+<h2 mat-dialog-title>{{ donnees.droit ? 'Modifier le droit' : 'Nouveau droit' }}</h2>
+
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  <mat-dialog-content>
+    <p class="intro">
+      Un droit autorise une action précise. Son code est utilisé par l'application pour vérifier les
+      accès.
+    </p>
+
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <mat-form-field class="champ">
+      <mat-label>Code du droit</mat-label>
+      <input
+        matInput
+        class="code"
+        formControlName="action"
+        maxlength="60"
+        (input)="normaliserCode()"
+        cdkFocusInitial
+      />
+      <mat-hint>Ex. RECETTE_VALIDER · majuscules, chiffres et « _ »</mat-hint>
+      @if (formulaire.controls.action.hasError('required')) {
+        <mat-error>Le code est obligatoire.</mat-error>
+      } @else if (formulaire.controls.action.hasError('pattern')) {
+        <mat-error
+          >Commencez par une lettre ; utilisez seulement des majuscules, chiffres et « _
+          ».</mat-error
+        >
+      }
+    </mat-form-field>
+
+    <mat-form-field class="champ">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3" maxlength="255"></textarea>
+      <mat-hint>Facultatif · en langage clair, ex. « Publier ou rejeter une recette »</mat-hint>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" mat-dialog-close>Annuler</button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      {{ donnees.droit ? 'Enregistrer' : 'Créer le droit' }}
+    </button>
+  </mat-dialog-actions>
+</form>

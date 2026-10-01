@@ -1,0 +1,184 @@
+@use 'points-de-rupture' as ecran;
+
+// Carte d'identité à gauche, blocs de modification à droite
+.disposition {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: var(--gw-espace-5);
+  align-items: start;
+
+  @include ecran.tablette-et-moins {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// ----- Identité -----
+.identite {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 var(--gw-espace-5) var(--gw-espace-5);
+  text-align: center;
+
+  @include ecran.bureau {
+    position: sticky;
+    top: var(--gw-espace-5);
+  }
+
+  app-avatar {
+    position: relative;
+    margin-top: 44px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px var(--gw-surface);
+  }
+}
+
+// Bandeau cacao avec le motif bogolan, rappel de la sidebar
+.identite-fond {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 80px;
+  background: var(--gw-cacao);
+  background-image: var(--gw-motif-bogolan);
+  background-size: 44px 44px;
+  background-blend-mode: soft-light;
+}
+
+.identite-nom {
+  margin-top: var(--gw-espace-3);
+  color: var(--gw-cacao);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.identite-role {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  margin-top: var(--gw-espace-1);
+  padding: 2px var(--gw-espace-3);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-action);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}
+
+.identite-infos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  width: 100%;
+  margin: var(--gw-espace-5) 0 0;
+  padding-top: var(--gw-espace-4);
+  border-top: 1px solid var(--gw-bordure);
+  text-align: left;
+
+  dt {
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--gw-cacao);
+    font-weight: 500;
+  }
+}
+
+.droits-titre {
+  align-self: flex-start;
+  margin: var(--gw-espace-4) 0 var(--gw-espace-2);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.droits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 2px var(--gw-espace-2);
+    border-radius: var(--gw-rayon-sm);
+    background: var(--gw-karite-pale);
+    color: var(--gw-karite);
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+  }
+}
+
+// ----- Blocs -----
+.blocs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-5);
+  min-width: 0;
+}
+
+.bloc {
+  padding: var(--gw-espace-5) var(--gw-espace-6);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4);
+  }
+}
+
+.bloc-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin-bottom: var(--gw-espace-4);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-titre-section);
+  font-weight: 600;
+
+  ng-icon {
+    color: var(--gw-karite);
+  }
+}
+
+.ligne {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gw-espace-2) var(--gw-espace-4);
+
+  @include ecran.mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.large {
+  width: 100%;
+}
+
+.erreur {
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.indice-erreur {
+  color: var(--gw-danger);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--gw-espace-3);
+
+  @include ecran.mobile {
+    button {
+      width: 100%;
+    }
+  }
+}

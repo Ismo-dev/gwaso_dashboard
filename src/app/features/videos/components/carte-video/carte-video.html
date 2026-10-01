@@ -1,0 +1,82 @@
+<article class="carte" [class.en-cours]="enCours()">
+  <a class="vignette" [routerLink]="['/videos', video().id]" [attr.aria-label]="'Ouvrir la vidéo ' + video().titre">
+    @if (video().miniatureUrl | fichier; as miniature) {
+      <img [src]="miniature" alt="" />
+    } @else if (video().videoUrl | fichier; as source) {
+      <!-- Pas de miniature : la première image de la vidéo en tient lieu -->
+      <video [src]="source + '#t=0.5'" preload="metadata" muted playsinline tabindex="-1"></video>
+    } @else {
+      <span class="vignette-vide">
+        <ng-icon name="lucideVideoOff" size="2rem" aria-hidden="true" />
+        Pas encore de fichier
+      </span>
+    }
+    <span class="lecture" aria-hidden="true"><ng-icon name="lucidePlay" size="1.5rem" /></span>
+    <span class="haut">
+      <app-status-badge [statut]="video().statut" />
+    </span>
+    @if (duree()) {
+      <span class="duree gw-chiffres">{{ duree() }}</span>
+    }
+  </a>
+
+  <div class="corps">
+    <p class="type">
+      {{ type() }}
+      @if (video().recetteNom) {
+        · <span class="recette">{{ video().recetteNom }}</span>
+      }
+    </p>
+    <h3 class="titre">
+      <a [routerLink]="['/videos', video().id]">{{ video().titre }}</a>
+    </h3>
+
+    <div class="auteur">
+      <app-avatar
+        [prenom]="video().auteurPrenom"
+        [nom]="video().auteurNom"
+        [photo]="video().auteurPhotoProfil"
+        taille="sm"
+      />
+      <span class="auteur-nom">{{ video().auteurPrenom }} {{ video().auteurNom }}</span>
+      <span class="date">{{ video().dateSoumission ?? video().dateCreation | depuis }}</span>
+    </div>
+
+    @if (video().statut === 'PUBLIEE' || video().statut === 'DESACTIVEE') {
+      <ul class="chiffres" aria-label="Statistiques">
+        <li title="Vues">
+          <ng-icon name="lucideEye" size="0.875rem" aria-hidden="true" />
+          <span class="gw-chiffres">{{ video().nbVues | number: '1.0-0' : 'fr' }}</span>
+          <span class="sr-only">vues</span>
+        </li>
+        <li title="J'aime">
+          <ng-icon name="lucideHeart" size="0.875rem" aria-hidden="true" />
+          <span class="gw-chiffres">{{ video().nbJaime | number: '1.0-0' : 'fr' }}</span>
+          <span class="sr-only">j'aime</span>
+        </li>
+        <li title="Commentaires">
+          <ng-icon name="lucideMessageCircle" size="0.875rem" aria-hidden="true" />
+          <span class="gw-chiffres">{{ video().nbCommentaires | number: '1.0-0' : 'fr' }}</span>
+          <span class="sr-only">commentaires</span>
+        </li>
+      </ul>
+    }
+
+    @if (video().statut === 'EN_ATTENTE_VALIDATION') {
+      <div class="decision">
+        <button
+          matButton="outlined"
+          type="button"
+          class="bouton-refuser"
+          [disabled]="enCours()"
+          (click)="refuser.emit(video())"
+        >
+          Refuser…
+        </button>
+        <button matButton="filled" type="button" [disabled]="enCours()" (click)="publier.emit(video())">
+          Publier
+        </button>
+      </div>
+    }
+  </div>
+</article>

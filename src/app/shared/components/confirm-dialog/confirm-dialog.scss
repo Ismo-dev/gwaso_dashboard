@@ -1,0 +1,25 @@
+.titre {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+}
+
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+}
+
+.pastille-danger {
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.message {
+  color: var(--gw-texte-doux);
+}

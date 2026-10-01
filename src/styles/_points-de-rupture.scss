@@ -1,0 +1,33 @@
+// Points de rupture (breakpoints) du dashboard.
+// Mêmes valeurs que core/services/ecran.service.ts (côté TypeScript).
+//
+// Utilisation dans un composant :
+//   @use 'points-de-rupture' as ecran;
+//   .grille { @include ecran.mobile { grid-template-columns: 1fr; } }
+
+$mobile-max: 767.98px; // téléphone
+$tablette-max: 1199.98px; // tablette et petits portables
+
+@mixin mobile {
+  @media (max-width: $mobile-max) {
+    @content;
+  }
+}
+
+@mixin tablette-et-moins {
+  @media (max-width: $tablette-max) {
+    @content;
+  }
+}
+
+@mixin tablette {
+  @media (min-width: $mobile-max + 0.02px) and (max-width: $tablette-max) {
+    @content;
+  }
+}
+
+@mixin bureau {
+  @media (min-width: $tablette-max + 0.02px) {
+    @content;
+  }
+}

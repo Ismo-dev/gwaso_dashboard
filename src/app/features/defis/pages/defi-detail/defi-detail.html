@@ -1,0 +1,300 @@
+@if (chargement()) {
+  <div class="squelette" aria-busy="true" aria-label="Chargement du défi">
+    <div class="gw-squelette sq-entete"></div>
+    <div class="gw-squelette sq-bloc"></div>
+  </div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state titre="Défi introuvable" message="Il a peut-être été supprimé, ou l'adresse est incorrecte." icone="lucideFileQuestion">
+      <a matButton="filled" routerLink="/defis">Voir tous les défis</a>
+    </app-empty-state>
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state titre="Impossible de charger le défi" message="Vérifiez que le serveur est lancé." icone="lucideCircleAlert" ton="erreur">
+      <button matButton="filled" type="button" (click)="charger(id())">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (defi(); as defi) {
+  <!-- ===================== En-tête ===================== -->
+  <header class="entete">
+    <div class="entete-fond" aria-hidden="true"></div>
+    <span class="trophee" aria-hidden="true"><ng-icon name="lucideTrophy" size="2rem" /></span>
+    <div class="entete-textes">
+      <div class="entete-haut">
+        <app-status-badge [statut]="defi.statut" />
+        @if (defi.classementPublie) {
+          <span class="pastille-classement">
+            <ng-icon name="lucideMedal" size="0.875rem" aria-hidden="true" /> Classement publié
+          </span>
+        }
+      </div>
+      <h1>{{ defi.nom }}</h1>
+      <ul class="faits">
+        <li>
+          <ng-icon name="lucideCalendar" size="1rem" aria-hidden="true" />
+          Du {{ defi.dateDebut | date: 'd MMMM' }} au {{ defi.dateFin | date: 'd MMMM y' }}
+          @if (defi.statut === 'VALIDE' || defi.statut === 'EN_COURS') {
+            <strong>· {{ echeance(defi) }}</strong>
+          }
+        </li>
+        @if (defi.recetteId) {
+          <li>
+            <ng-icon name="lucideBookOpen" size="1rem" aria-hidden="true" />
+            <a [routerLink]="['/recettes', defi.recetteId]">{{ defi.recetteNom }}</a>
+          </li>
+        }
+        <li>
+          <ng-icon [name]="defi.chefCuisinierNom ? 'lucideChefHat' : 'lucideShieldCheck'" size="1rem" aria-hidden="true" />
+          {{ defi.chefCuisinierNom ? 'Proposé par le chef ' + defi.chefCuisinierNom : 'Créé par l’administration' }}
+        </li>
+      </ul>
+    </div>
+    <div class="entete-actions">
+      @if (modifiable()) {
+        <a matButton="outlined" [routerLink]="['/defis', defi.id, 'modifier']" class="bouton-clair">
+          <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+          Modifier
+        </a>
+      }
+    </div>
+  </header>
+
+  <!-- ===================== Décision / étape suivante ===================== -->
+  @switch (defi.statut) {
+    @case ('PROPOSE') {
+      <section class="decision" aria-labelledby="titre-decision">
+        <div>
+          <h2 id="titre-decision">Ce défi attend votre décision</h2>
+          <p>Relisez la présentation et les règles. Le chef est prévenu de votre choix.</p>
+        </div>
+        <div class="decision-boutons">
+          <button matButton="outlined" type="button" class="bouton-refuser" [disabled]="actionEnCours()" (click)="refuser(defi)">
+            Refuser…
+          </button>
+          <button matButton="filled" type="button" [disabled]="actionEnCours()" (click)="valider(defi)">
+            <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+            Valider le défi
+          </button>
+        </div>
+      </section>
+    }
+    @case ('REJETE') {
+      <section class="bandeau bandeau-danger">
+        <ng-icon name="lucideCircleX" size="1.25rem" aria-hidden="true" />
+        <div>
+          <p class="bandeau-titre">Défi refusé</p>
+          @if (defi.motifRejet) {
+            <p>Motif : « {{ defi.motifRejet }} »</p>
+          }
+        </div>
+      </section>
+    }
+    @case ('VALIDE') {
+      <section class="bandeau">
+        <ng-icon name="lucideFlag" size="1.25rem" aria-hidden="true" />
+        <div>
+          <p class="bandeau-titre">Validé · {{ echeance(defi) }}</p>
+          <p>Les cuisiniers peuvent déjà s'inscrire. Démarrez-le quand vous voulez.</p>
+        </div>
+        <button matButton="filled" type="button" [disabled]="actionEnCours()" (click)="changerStatut(defi, 'EN_COURS')">
+          <ng-icon name="lucideCirclePlay" size="1.125rem" aria-hidden="true" />
+          Démarrer
+        </button>
+      </section>
+    }
+    @case ('EN_COURS') {
+      <section class="bandeau bandeau-succes">
+        <ng-icon name="lucideCirclePlay" size="1.25rem" aria-hidden="true" />
+        <div>
+          <p class="bandeau-titre">En cours · {{ echeance(defi) }}</p>
+          <p>Notez les participants au fil de l'eau, puis terminez le défi et publiez le classement.</p>
+        </div>
+        <button matButton="outlined" type="button" [disabled]="actionEnCours()" (click)="changerStatut(defi, 'TERMINE')">
+          Terminer le défi
+        </button>
+      </section>
+    }
+    @case ('ANNULE') {
+      <section class="bandeau">
+        <ng-icon name="lucideBan" size="1.25rem" aria-hidden="true" />
+        <div>
+          <p class="bandeau-titre">Défi annulé</p>
+          <p>Il n'est plus proposé aux cuisiniers.</p>
+        </div>
+      </section>
+    }
+  }
+
+  <div class="disposition">
+    <!-- ===================== Contenu du défi ===================== -->
+    <div class="colonne-contenu">
+      <section class="gw-carte bloc" aria-labelledby="titre-presentation">
+        <h2 id="titre-presentation" class="bloc-titre">Présentation</h2>
+        <app-texte-riche [html]="defi.description" />
+      </section>
+
+      @if (defi.regles) {
+        <section class="gw-carte bloc" aria-labelledby="titre-regles">
+          <h2 id="titre-regles" class="bloc-titre">
+            <ng-icon name="lucideScale" size="1.125rem" aria-hidden="true" /> Règles
+          </h2>
+          <app-texte-riche [html]="defi.regles" />
+        </section>
+      }
+      @if (defi.conditionsParticipation) {
+        <section class="gw-carte bloc" aria-labelledby="titre-conditions">
+          <h2 id="titre-conditions" class="bloc-titre">
+            <ng-icon name="lucideListChecks" size="1.125rem" aria-hidden="true" /> Conditions de participation
+          </h2>
+          <app-texte-riche [html]="defi.conditionsParticipation" />
+        </section>
+      }
+      @if (defi.criteresClassement) {
+        <section class="gw-carte bloc" aria-labelledby="titre-criteres">
+          <h2 id="titre-criteres" class="bloc-titre">
+            <ng-icon name="lucideAward" size="1.125rem" aria-hidden="true" /> Critères de classement
+          </h2>
+          <app-texte-riche [html]="defi.criteresClassement" />
+        </section>
+      }
+
+      <!-- Actions secondaires, à l'écart -->
+      <section class="zone-secondaire">
+        @if (defi.statut === 'VALIDE' || defi.statut === 'EN_COURS' || defi.statut === 'PROPOSE') {
+          <button matButton type="button" [disabled]="actionEnCours()" (click)="changerStatut(defi, 'ANNULE')">
+            <ng-icon name="lucideBan" size="1rem" aria-hidden="true" />
+            Annuler le défi
+          </button>
+        }
+        <button matButton type="button" class="texte-danger" [disabled]="actionEnCours()" (click)="supprimer(defi)">
+          <ng-icon name="lucideTrash2" size="1rem" aria-hidden="true" />
+          Supprimer le défi
+        </button>
+      </section>
+    </div>
+
+    <!-- ===================== Participants et classement ===================== -->
+    <section class="gw-carte classement" aria-labelledby="titre-classement">
+      <header class="classement-entete">
+        <h2 id="titre-classement" class="bloc-titre">
+          <ng-icon name="lucideUsers" size="1.125rem" aria-hidden="true" />
+          Participants <span class="compte gw-chiffres">{{ participants().length }}</span>
+        </h2>
+        @if (defi.classementPublie) {
+          <p class="classement-info">Publié {{ defi.datePublicationClassement | depuis }}</p>
+        } @else if (peutNoter() && participants().length > 0) {
+          <p class="classement-info">Notez sur {{ noteMax }} · rang provisoire</p>
+        }
+      </header>
+
+      <!-- Podium : les trois premiers -->
+      @if (podium().length > 0 && nbNotes() > 0) {
+        <ol class="podium" aria-label="Podium">
+          @for (ligne of podium(); track ligne.participation.id; let place = $index) {
+            <!-- place : position sur le podium (1er au centre) ; rang : hauteur et couleur (ex æquo possibles) -->
+            <li [class]="'marche place-' + place + ' rang-' + ligne.rang">
+              <app-avatar
+                [prenom]="ligne.participation.cuisinierPrenom ?? ''"
+                [nom]="ligne.participation.cuisinierNom"
+                [photo]="ligne.participation.cuisinierPhotoProfil"
+                taille="md"
+              />
+              <span class="marche-nom">{{ ligne.participation.cuisinierPrenom }}</span>
+              <span class="marche-rang gw-chiffres">{{ ligne.rang }}</span>
+            </li>
+          }
+        </ol>
+      }
+
+      @if (participants().length === 0) {
+        <p class="vide">
+          @if (defi.statut === 'PROPOSE' || defi.statut === 'REJETE') {
+            Les participations s'ouvriront une fois le défi validé.
+          } @else {
+            Personne n'a encore participé.
+          }
+        </p>
+      } @else {
+        <ol class="participants">
+          @for (ligne of classement(); track ligne.participation.id) {
+            <li class="participant">
+              <span class="rang gw-chiffres" [class.rang-vide]="ligne.rang === null" [attr.aria-label]="ligne.rang ? 'Rang ' + ligne.rang : 'Pas encore classé'">
+                {{ ligne.rang ?? '–' }}
+              </span>
+              <app-avatar
+                [prenom]="ligne.participation.cuisinierPrenom ?? ''"
+                [nom]="ligne.participation.cuisinierNom"
+                [photo]="ligne.participation.cuisinierPhotoProfil"
+                taille="sm"
+              />
+              <div class="participant-textes">
+                <span class="participant-nom">
+                  {{ ligne.participation.cuisinierPrenom }} {{ ligne.participation.cuisinierNom }}
+                </span>
+                <span class="participant-meta">Inscrit {{ ligne.participation.dateParticipation | depuis }}</span>
+              </div>
+
+              @if (ligne.participation.preuveUrl | fichier; as preuve) {
+                <a class="preuve" [href]="preuve" target="_blank" rel="noopener" matTooltip="Voir la preuve envoyée" [attr.aria-label]="'Voir la preuve de ' + ligne.participation.cuisinierNom">
+                  @if (estVideo(ligne.participation.preuveUrl)) {
+                    <ng-icon name="lucidePlay" size="1rem" aria-hidden="true" />
+                  } @else {
+                    <img [src]="preuve" alt="" loading="lazy" />
+                  }
+                </a>
+              } @else {
+                <span class="preuve preuve-vide" matTooltip="Pas de preuve envoyée">
+                  <ng-icon name="lucideImageOff" size="1rem" aria-hidden="true" />
+                </span>
+              }
+
+              @if (peutNoter()) {
+                <label class="note">
+                  <span class="sr-only">Note de {{ ligne.participation.cuisinierNom }} sur {{ noteMax }}</span>
+                  <input
+                    #champNote
+                    type="number"
+                    inputmode="decimal"
+                    min="0"
+                    [max]="noteMax"
+                    step="0.5"
+                    placeholder="–"
+                    class="gw-chiffres"
+                    [value]="ligne.participation.score ?? ''"
+                    [disabled]="noteEnCours() === ligne.participation.id"
+                    (blur)="enregistrerNote(ligne.participation, champNote)"
+                    (keydown.enter)="champNote.blur()"
+                  />
+                  <span class="sur" aria-hidden="true">/{{ noteMax }}</span>
+                  @if (noteEnCours() === ligne.participation.id) {
+                    <mat-progress-spinner mode="indeterminate" diameter="14" aria-hidden="true" />
+                  }
+                </label>
+              } @else if (ligne.participation.score !== null) {
+                <span class="note-lecture gw-chiffres">{{ ligne.participation.score | number: '1.0-1' : 'fr' }}</span>
+              }
+            </li>
+          }
+        </ol>
+
+        @if (peutNoter()) {
+          <div class="publier">
+            <p>
+              <strong class="gw-chiffres">{{ nbNotes() }}</strong> / {{ participants().length }} participants notés
+            </p>
+            <button
+              matButton="filled"
+              type="button"
+              [disabled]="actionEnCours() || nbNotes() === 0"
+              (click)="publierClassement(defi)"
+            >
+              <ng-icon name="lucideSend" size="1.125rem" aria-hidden="true" />
+              {{ defi.classementPublie ? 'Mettre à jour le classement' : 'Publier le classement' }}
+            </button>
+          </div>
+        }
+      }
+    </section>
+  </div>
+}

@@ -1,0 +1,370 @@
+<app-page-header
+  surtitre="Communauté"
+  titre="Utilisateurs"
+  description="Validez les demandes de statut des chefs et des producteurs, et gérez les comptes des membres."
+>
+  <button matButton="filled" type="button" (click)="nouvelUtilisateur()">
+    <ng-icon name="lucideUserPlus" size="1.125rem" aria-hidden="true" />
+    Nouvel utilisateur
+  </button>
+</app-page-header>
+
+<mat-button-toggle-group
+  class="onglets"
+  name="onglet"
+  aria-label="Choisir la liste"
+  [value]="ongletActif()"
+  (change)="changerOnglet($event.value)"
+  hideSingleSelectionIndicator
+>
+  <mat-button-toggle value="demandes">
+    Demandes à valider
+    @if (!chargementDemandes()) {
+      <span
+        class="onglet-compteur gw-chiffres"
+        [class.onglet-compteur-actif]="demandes().length > 0"
+      >
+        {{ demandes().length }}
+      </span>
+    }
+  </mat-button-toggle>
+  <mat-button-toggle value="membres">Tous les membres</mat-button-toggle>
+</mat-button-toggle-group>
+
+@if (ongletActif() === 'demandes') {
+  <!-- ===================== Demandes de statut ===================== -->
+  <section aria-labelledby="titre-demandes">
+    <h2 id="titre-demandes" class="sr-only">Demandes de statut en attente</h2>
+
+    @if (chargementDemandes()) {
+      <div class="grille-demandes" aria-busy="true" aria-label="Chargement des demandes">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="gw-squelette sq-demande"></div>
+        }
+      </div>
+    } @else if (erreurDemandes()) {
+      <div class="gw-carte">
+        <app-empty-state
+          titre="Impossible de charger les demandes"
+          message="Vérifiez que le serveur est lancé, puis réessayez."
+          icone="lucideCircleAlert"
+          ton="erreur"
+        >
+          <button matButton="filled" type="button" (click)="chargerDemandes()">
+            <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+            Réessayer
+          </button>
+        </app-empty-state>
+      </div>
+    } @else if (demandes().length === 0) {
+      <div class="gw-carte">
+        <app-empty-state
+          titre="Aucune demande en attente"
+          message="Les nouvelles demandes de chefs cuisiniers et de producteurs apparaîtront ici."
+          icone="lucideUserCheck"
+          ton="succes"
+        >
+          <button matButton="outlined" type="button" (click)="changerOnglet('membres')">
+            Voir tous les membres
+          </button>
+        </app-empty-state>
+      </div>
+    } @else {
+      <p class="consigne">
+        <ng-icon name="lucideBadgeCheck" size="1rem" aria-hidden="true" />
+        Vérifiez le justificatif avant de valider. Les demandes les plus anciennes sont en premier.
+      </p>
+      <ul class="grille-demandes">
+        @for (demande of demandes(); track demande.id) {
+          <li>
+            <app-carte-demande
+              [demande]="demande"
+              [enCours]="demandeEnCours() === demande.id"
+              (valider)="validerDemande($event)"
+              (refuser)="refuserDemande($event)"
+            />
+          </li>
+        }
+      </ul>
+    }
+  </section>
+} @else {
+  <!-- ===================== Tous les membres ===================== -->
+  <section class="gw-carte liste" aria-labelledby="titre-membres">
+    <h2 id="titre-membres" class="sr-only">Tous les membres</h2>
+
+    <!-- Filtre par profil : une pastille par profil, avec son nombre de comptes -->
+    <div class="profils-filtre" role="group" aria-label="Filtrer par profil">
+      <button
+        type="button"
+        class="pastille-profil"
+        [class.pastille-active]="!roleActif()"
+        [attr.aria-pressed]="!roleActif()"
+        (click)="changerRole(null)"
+      >
+        Tous les profils
+      </button>
+      @for (profil of profilsFiltre(); track profil.id) {
+        <button
+          type="button"
+          class="pastille-profil"
+          [class.pastille-active]="roleActif() === profil.role"
+          [attr.aria-pressed]="roleActif() === profil.role"
+          (click)="changerRole(profil.role)"
+        >
+          <ng-icon [name]="iconeRole(profil.role!)" size="1rem" aria-hidden="true" />
+          {{ profil.nom }}
+          <span class="pastille-nombre gw-chiffres">{{ profil.nbUtilisateurs }}</span>
+        </button>
+      }
+    </div>
+
+    <div class="outils">
+      <mat-form-field class="champ-recherche" subscriptSizing="dynamic">
+        <mat-label>Rechercher</mat-label>
+        <ng-icon
+          matPrefix
+          class="icone-champ"
+          name="lucideSearch"
+          size="1.125rem"
+          aria-hidden="true"
+        />
+        <input
+          matInput
+          type="search"
+          [formControl]="champRecherche"
+          placeholder="Nom, email ou téléphone"
+        />
+        @if (champRecherche.value) {
+          <button
+            matIconButton
+            matSuffix
+            type="button"
+            aria-label="Effacer la recherche"
+            (click)="champRecherche.setValue('')"
+          >
+            <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+          </button>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="champ-filtre" subscriptSizing="dynamic">
+        <mat-label>Statut du compte</mat-label>
+        <mat-select [value]="statutActif() ?? null" (selectionChange)="changerStatut($event.value)">
+          <mat-option [value]="null">Tous les statuts</mat-option>
+          @for (s of statuts; track s.valeur) {
+            <mat-option [value]="s.valeur">{{ s.libelle }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <p class="resume" aria-live="polite">
+      @if (!membres().chargement && membres().page; as page) {
+        <strong class="gw-chiffres">{{ page.totalElements.toLocaleString('fr-FR') }}</strong>
+        {{ page.totalElements > 1 ? 'membres' : 'membre' }}
+        @if (filtresActifs()) {
+          <button matButton type="button" (click)="effacerFiltres()">Effacer les filtres</button>
+        }
+      }
+    </p>
+
+    @if (membres().chargement && !membres().page) {
+      <div class="squelette" aria-busy="true" aria-label="Chargement des membres">
+        @for (ligne of lignesSquelette; track ligne) {
+          <div class="squelette-ligne">
+            <span class="gw-squelette sq-avatar"></span>
+            <span class="sq-textes">
+              <span class="gw-squelette sq-titre"></span>
+              <span class="gw-squelette sq-sous-titre"></span>
+            </span>
+          </div>
+        }
+      </div>
+    } @else if (membres().erreur) {
+      <app-empty-state
+        titre="Impossible de charger les membres"
+        message="Vérifiez que le serveur est lancé, puis réessayez."
+        icone="lucideCircleAlert"
+        ton="erreur"
+      >
+        <button matButton="filled" type="button" (click)="recharger()">Réessayer</button>
+      </app-empty-state>
+    } @else if ((membres().page?.contenu ?? []).length === 0) {
+      <app-empty-state
+        titre="Aucun membre ne correspond"
+        message="Essayez un autre nom, ou retirez un filtre."
+        icone="lucideUsers"
+      >
+        @if (filtresActifs()) {
+          <button matButton="outlined" type="button" (click)="effacerFiltres()">
+            Effacer les filtres
+          </button>
+        }
+      </app-empty-state>
+    } @else {
+      <div class="resultats" [class.rechargement]="membres().chargement">
+        @if (ecran.mobile()) {
+          <!-- Téléphone : une carte par membre -->
+          <ul class="membres">
+            @for (membre of membres().page?.contenu ?? []; track membre.id) {
+              <li class="membre">
+                <app-avatar
+                  [prenom]="membre.prenom"
+                  [nom]="membre.nom"
+                  [photo]="membre.photoProfil"
+                />
+                <ng-container *ngTemplateOutlet="identite; context: { $implicit: membre }" />
+                <span class="membre-role">
+                  <ng-icon [name]="iconeRole(membre.role)" size="1rem" aria-hidden="true" />
+                  {{ membre.profilNom ?? nomProfil(membre.role) }}
+                </span>
+                <app-status-badge class="membre-statut" [statut]="membre.statutCompte" />
+                <div class="membre-actions">
+                  <ng-container *ngTemplateOutlet="actionsMembre; context: { $implicit: membre }" />
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <!-- Ordinateur et tablette : tableau, titres et contenus alignés -->
+          <div class="gw-tableau-conteneur">
+            <table mat-table [dataSource]="membres().page?.contenu ?? []" class="gw-tableau">
+              <caption class="sr-only">
+                Membres, page
+                {{
+                  pageActive() + 1
+                }}
+              </caption>
+
+              <ng-container matColumnDef="membre">
+                <th mat-header-cell *matHeaderCellDef scope="col">Membre</th>
+                <td mat-cell *matCellDef="let membre">
+                  <div class="cellule-membre">
+                    <app-avatar
+                      [prenom]="membre.prenom"
+                      [nom]="membre.nom"
+                      [photo]="membre.photoProfil"
+                    />
+                    <ng-container *ngTemplateOutlet="identite; context: { $implicit: membre }" />
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="role">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Profil</th>
+                <td mat-cell *matCellDef="let membre" class="gw-col-centre">
+                  <span class="membre-role">
+                    <ng-icon [name]="iconeRole(membre.role)" size="1rem" aria-hidden="true" />
+                    {{ membre.profilNom ?? nomProfil(membre.role) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="inscription">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">
+                  Inscription
+                </th>
+                <td mat-cell *matCellDef="let membre" class="gw-col-centre membre-date">
+                  <span [title]="membre.dateInscription | date: 'd MMMM y'">{{
+                    membre.dateInscription | depuis
+                  }}</span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="statut">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Statut</th>
+                <td mat-cell *matCellDef="let membre" class="gw-col-centre">
+                  <app-status-badge [statut]="membre.statutCompte" />
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-actions">
+                  <span class="sr-only">Actions</span>
+                </th>
+                <td mat-cell *matCellDef="let membre" class="gw-col-actions">
+                  <div class="membre-actions">
+                    <ng-container
+                      *ngTemplateOutlet="actionsMembre; context: { $implicit: membre }"
+                    />
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="colonnes()"></tr>
+              <tr mat-row *matRowDef="let membre; columns: colonnes()"></tr>
+            </table>
+          </div>
+        }
+
+        <mat-paginator
+          class="gw-pagination"
+          [length]="membres().page?.totalElements ?? 0"
+          [pageIndex]="pageActive()"
+          [pageSize]="tailleActive()"
+          [pageSizeOptions]="[10, 20, 50]"
+          [hidePageSize]="ecran.mobile()"
+          aria-label="Pagination des membres"
+          (page)="changerPage($event)"
+        />
+      </div>
+    }
+  </section>
+}
+
+<!-- Nom et contact d'un membre (réutilisé par le tableau et les cartes) -->
+<ng-template #identite let-membre>
+  <div class="membre-identite">
+    <a class="membre-nom" [routerLink]="[membre.id]" [queryParams]="{ role: membre.role }">
+      {{ membre.prenom }} {{ membre.nom }}
+      @if (estMoi(membre)) {
+        <span class="moi">(vous)</span>
+      }
+    </a>
+    <span class="membre-contact">{{ membre.email ?? membre.telephone }}</span>
+  </div>
+</ng-template>
+
+<!-- Actions d'un membre : Voir, et le menu (suspendre / réactiver) -->
+<ng-template #actionsMembre let-membre>
+  @if (!ecran.mobile()) {
+    <a matButton [routerLink]="[membre.id]" [queryParams]="{ role: membre.role }">
+      <ng-icon name="lucideEye" size="1rem" aria-hidden="true" />
+      Voir
+    </a>
+  }
+  <button
+    matIconButton
+    type="button"
+    [matMenuTriggerFor]="menuMembre"
+    [disabled]="membreEnCours() === membre.id"
+    [attr.aria-label]="'Autres actions pour ' + membre.prenom + ' ' + membre.nom"
+    matTooltip="Autres actions"
+  >
+    <ng-icon name="lucideEllipsis" size="1.25rem" aria-hidden="true" />
+  </button>
+  <mat-menu #menuMembre="matMenu" xPosition="before">
+    <a mat-menu-item [routerLink]="[membre.id]" [queryParams]="{ role: membre.role }">
+      <ng-icon name="lucideEye" size="1.125rem" aria-hidden="true" />
+      <span>Voir la fiche</span>
+    </a>
+    @if (estMoi(membre)) {
+      <!-- Son propre compte : on le modifie depuis « Mon profil », on ne peut pas se suspendre -->
+      <a mat-menu-item routerLink="/mon-profil">
+        <ng-icon name="lucideUserPen" size="1.125rem" aria-hidden="true" />
+        <span>Modifier mon profil</span>
+      </a>
+    } @else if (membre.statutCompte === 'ACTIF') {
+      <button mat-menu-item type="button" class="item-danger" (click)="suspendre(membre)">
+        <ng-icon name="lucideCircleX" size="1.125rem" aria-hidden="true" />
+        <span>Suspendre le compte…</span>
+      </button>
+    } @else {
+      <button mat-menu-item type="button" (click)="reactiver(membre)">
+        <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+        <span>Réactiver le compte</span>
+      </button>
+    }
+  </mat-menu>
+</ng-template>

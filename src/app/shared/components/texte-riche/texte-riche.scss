@@ -1,0 +1,55 @@
+:host {
+  display: block;
+}
+
+// Le HTML est injecté (innerHTML) : on le cible avec ::ng-deep, limité à ce composant par :host
+:host ::ng-deep .texte-riche {
+  color: var(--gw-texte);
+  line-height: 1.65;
+
+  p {
+    margin: 0 0 var(--gw-espace-2);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul,
+  ol {
+    margin: 0 0 var(--gw-espace-2);
+    padding-left: var(--gw-espace-6);
+  }
+
+  li {
+    margin-bottom: 2px;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  // Puces aux couleurs de la charte
+  ul li::marker {
+    color: var(--gw-terre-cuite);
+  }
+
+  ol li::marker {
+    color: var(--gw-karite);
+    font-weight: 600;
+  }
+
+  strong,
+  b {
+    font-weight: 600;
+    color: var(--gw-cacao);
+  }
+}
+
+// Aperçu raccourci : le texte s'arrête après N lignes
+:host ::ng-deep .tronque {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lignes-max);
+}

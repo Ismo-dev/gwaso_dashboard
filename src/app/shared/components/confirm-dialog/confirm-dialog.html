@@ -1,0 +1,20 @@
+<h2 mat-dialog-title class="titre">
+  <span class="pastille" [class.pastille-danger]="demande.danger" aria-hidden="true">
+    <ng-icon [name]="demande.danger ? 'lucideTriangleAlert' : 'lucideCircleHelp'" size="1.25rem" />
+  </span>
+  {{ demande.titre }}
+</h2>
+
+<mat-dialog-content>
+  <p class="message">{{ demande.message }}</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <!-- Focus par défaut sur « Annuler » : on ne valide pas une suppression en appuyant sur Entrée par erreur -->
+  <button matButton="outlined" [mat-dialog-close]="false" cdkFocusInitial>
+    {{ demande.texteAnnuler ?? 'Annuler' }}
+  </button>
+  <button matButton="filled" [class.gw-bouton-danger]="demande.danger" [mat-dialog-close]="true">
+    {{ demande.texteConfirmer ?? 'Confirmer' }}
+  </button>
+</mat-dialog-actions>

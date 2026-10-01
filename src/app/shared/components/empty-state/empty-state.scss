@@ -1,0 +1,49 @@
+.vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-12) var(--gw-espace-6);
+  text-align: center;
+}
+
+.icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: var(--gw-espace-2);
+  border-radius: 50%;
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+}
+
+.ton-succes .icone {
+  background: var(--gw-succes-fond);
+  color: var(--gw-succes);
+}
+
+.ton-erreur .icone {
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.titre {
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-titre-carte);
+  font-weight: 600;
+}
+
+.message {
+  max-width: 46ch;
+  color: var(--gw-texte-doux);
+}
+
+.actions {
+  margin-top: var(--gw-espace-3);
+
+  &:empty {
+    display: none;
+  }
+}

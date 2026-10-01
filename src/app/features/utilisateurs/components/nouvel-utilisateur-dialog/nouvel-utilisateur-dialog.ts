@@ -1,0 +1,267 @@
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatCheckbox } from '@angular/material/checkbox';
+import {
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle,
+} from '@angular/material/dialog';
+import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatOption, MatSelect } from '@angular/material/select';
+import { MatTooltip } from '@angular/material/tooltip';
+import { RouterLink } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
+import { map, Observable, of, switchMap } from 'rxjs';
+import { Role } from '../../../../core/models/enums.model';
+import { messageErreur } from '../../../../core/utils/erreurs';
+import {
+  ACCES_PROFIL,
+  ORDRE_ACCES,
+  ProfilDroitsResponse,
+  ProfilResponse,
+} from '../../../profils/models/profil.model';
+import { ProfilService } from '../../../profils/services/profil.service';
+import { LIBELLES_NIVEAU, NiveauCuisine } from '../../models/utilisateur.model';
+import { UtilisateurService } from '../../services/utilisateur.service';
+
+/** Il faut un email ou un téléphone pour se connecter ; l'email est obligatoire pour un administrateur. */
+function contactValide(groupe: AbstractControl): ValidationErrors | null {
+  const email = (groupe.get('email')?.value ?? '').trim();
+  const telephone = (groupe.get('telephone')?.value ?? '').trim();
+  if (groupe.get('role')?.value === 'ADMIN') {
+    return email ? null : { emailAdmin: true };
+  }
+  return email || telephone ? null : { contact: true };
+}
+
+/** Ce que la fenêtre renvoie : le message à afficher, et s'il reste quelque chose à faire. */
+export interface ResultatNouvelUtilisateur {
+  message: string;
+  aVerifier: boolean;
+}
+
+/**
+ * Création d'un compte par l'administrateur. On choisit UN profil (Administrateur, Cuisinier, Chef cuisinier,
+ * Producteur...) : le compte reçoit ses droits, et les champs demandés suivent l'accès donné par ce profil.
+ * Un chef ou un producteur créé ici peut être validé tout de suite (case cochée par défaut).
+ * Renvoie un ResultatNouvelUtilisateur, ou undefined si l'admin annule.
+ */
+@Component({
+  imports: [
+    ReactiveFormsModule,
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose,
+    MatButton,
+    MatIconButton,
+    MatCheckbox,
+    MatFormField,
+    MatLabel,
+    MatHint,
+    MatError,
+    MatSuffix,
+    MatInput,
+    MatSelect,
+    MatOption,
+    MatProgressSpinner,
+    MatTooltip,
+    NgIcon,
+    RouterLink,
+  ],
+  selector: 'app-nouvel-utilisateur-dialog',
+  styleUrl: './nouvel-utilisateur-dialog.scss',
+  templateUrl: './nouvel-utilisateur-dialog.html',
+})
+export class NouvelUtilisateurDialog implements OnInit {
+  private utilisateurService = inject(UtilisateurService);
+  private profilService = inject(ProfilService);
+  private fenetre = inject(MatDialogRef<NouvelUtilisateurDialog, ResultatNouvelUtilisateur>);
+
+  protected readonly acces = ACCES_PROFIL;
+  protected readonly niveaux = Object.entries(LIBELLES_NIVEAU) as [NiveauCuisine, string][];
+
+  protected formulaire = inject(FormBuilder).nonNullable.group(
+    {
+      /** Profil choisi : c'est le seul choix à faire. */
+      profilId: ['', Validators.required],
+      /** Accès donné par le profil choisi (rempli automatiquement, sert aux contrôles). */
+      role: [null as Role | null],
+      prenom: ['', [Validators.required, Validators.maxLength(60)]],
+      nom: ['', [Validators.required, Validators.maxLength(60)]],
+      email: ['', [Validators.email, Validators.maxLength(120)]],
+      telephone: ['', [Validators.pattern(/^\+?[0-9 ]{8,20}$/)]],
+      motDePasse: ['', [Validators.required, Validators.minLength(8)]],
+      niveau: ['DEBUTANT' as NiveauCuisine],
+      localite: [''],
+      validerDirectement: [true],
+    },
+    { validators: contactValide },
+  );
+
+  /** Profils utilisables pour un compte (ceux dont l'accès est défini), dans l'ordre des accès. */
+  protected profils = signal<ProfilResponse[]>([]);
+  protected chargementProfils = signal(true);
+  protected profilChoisi = toSignal(
+    this.formulaire.controls.profilId.valueChanges.pipe(
+      map((id) => this.profils().find((p) => p.id === id) ?? null),
+    ),
+    { initialValue: null },
+  );
+  /** Droits du profil choisi, affichés pour que l'admin sache ce qu'il donne. */
+  protected droitsProfil = signal<ProfilDroitsResponse[]>([]);
+  protected motDePasseVisible = signal(false);
+  protected enCours = signal(false);
+  protected erreur = signal('');
+
+  protected role = computed(() => this.profilChoisi()?.role ?? null);
+  /** Chef et producteur : statut à valider (on propose de le faire tout de suite). */
+  protected aValider = computed(() => this.role() === 'CHEF' || this.role() === 'PRODUCTEUR');
+
+  constructor() {
+    this.formulaire.controls.profilId.valueChanges.subscribe((profilId) => {
+      const role = this.profils().find((p) => p.id === profilId)?.role ?? null;
+      this.formulaire.controls.role.setValue(role);
+      // La localité n'est obligatoire que pour un producteur
+      const localite = this.formulaire.controls.localite;
+      localite.setValidators(role === 'PRODUCTEUR' ? [Validators.required] : []);
+      localite.updateValueAndValidity();
+      this.formulaire.updateValueAndValidity();
+      if (!profilId) {
+        this.droitsProfil.set([]);
+        return;
+      }
+      this.profilService.getDroitsDuProfil(profilId).subscribe({
+        next: (droits) => this.droitsProfil.set(droits),
+        error: () => this.droitsProfil.set([]),
+      });
+    });
+  }
+
+  ngOnInit(): void {
+    this.profilService.getAll().subscribe({
+      next: (profils) => {
+        const utilisables = profils
+          .filter((p) => p.role !== null)
+          .sort((a, b) => ORDRE_ACCES.indexOf(a.role!) - ORDRE_ACCES.indexOf(b.role!));
+        this.profils.set(utilisables);
+        this.chargementProfils.set(false);
+        // Le profil des cuisiniers est le plus fréquent : il est choisi d'avance
+        const parDefaut = utilisables.find((p) => p.role === 'CUISINIER') ?? utilisables[0];
+        if (parDefaut) {
+          this.formulaire.controls.profilId.setValue(parDefaut.id);
+        }
+      },
+      error: () => this.chargementProfils.set(false),
+    });
+  }
+
+  /** Propose un mot de passe solide, affiché pour que l'admin puisse le transmettre. */
+  genererMotDePasse(): void {
+    const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const valeurs = crypto.getRandomValues(new Uint32Array(12));
+    const motDePasse = Array.from(valeurs, (v) => caracteres[v % caracteres.length]).join('');
+    this.formulaire.controls.motDePasse.setValue(motDePasse);
+    this.formulaire.controls.motDePasse.markAsDirty();
+    this.motDePasseVisible.set(true);
+  }
+
+  enregistrer(): void {
+    if (this.formulaire.invalid) {
+      this.formulaire.markAllAsTouched();
+      this.erreur.set(
+        this.formulaire.controls.profilId.invalid
+          ? 'Choisissez le profil du compte.'
+          : this.formulaire.hasError('emailAdmin')
+          ? "L'email est obligatoire pour ce profil (il sert à se connecter au dashboard)."
+          : this.formulaire.hasError('contact')
+            ? 'Indiquez un email ou un numéro de téléphone : il sert à se connecter.'
+            : 'Certains champs sont à compléter. Ils sont signalés en rouge.',
+      );
+      return;
+    }
+    this.enCours.set(true);
+    this.erreur.set('');
+
+    const v = this.formulaire.getRawValue();
+    const commun = {
+      prenom: v.prenom.trim(),
+      nom: v.nom.trim(),
+      email: v.email.trim() || undefined,
+      telephone: v.telephone.replace(/\s/g, '') || undefined,
+      motDePasse: v.motDePasse,
+    };
+
+    const personne = `${commun.prenom} ${commun.nom}`;
+    // Pour un chef ou un producteur, la création et la validation sont deux appels distincts
+    let compteCree = false;
+    const valider = <T>(appel: Observable<T>): Observable<T> => {
+      compteCree = true;
+      return appel;
+    };
+
+    let creation: Observable<unknown>;
+    switch (v.role) {
+      case 'ADMIN':
+        creation = this.utilisateurService.creerAdmin(commun);
+        break;
+      case 'CHEF':
+        creation = this.utilisateurService
+          .creerChef(commun)
+          .pipe(
+            switchMap((chef) =>
+              v.validerDirectement ? valider(this.utilisateurService.validerChef(chef.id)) : of(chef),
+            ),
+          );
+        break;
+      case 'PRODUCTEUR':
+        creation = this.utilisateurService
+          .creerProducteur({ ...commun, localite: v.localite.trim() })
+          .pipe(
+            switchMap((producteur) =>
+              v.validerDirectement
+                ? valider(this.utilisateurService.validerProducteur(producteur.id))
+                : of(producteur),
+            ),
+          );
+        break;
+      default:
+        creation = this.utilisateurService.creerCuisinier({ ...commun, niveau: v.niveau });
+    }
+
+    creation.subscribe({
+      next: () =>
+        this.fenetre.close({
+          message:
+            this.aValider() && !v.validerDirectement
+              ? `Le compte de ${personne} est créé. Son statut attend votre validation.`
+              : `Le compte de ${personne} est créé.`,
+          aVerifier: false,
+        }),
+      error: (erreur: unknown) => {
+        if (compteCree) {
+          // Le compte existe déjà : on ferme, la demande reste dans « Demandes à valider »
+          this.fenetre.close({
+            message: `Le compte de ${personne} est créé, mais son statut n'a pas pu être validé. Validez-le depuis « Demandes à valider ».`,
+            aVerifier: true,
+          });
+          return;
+        }
+        this.enCours.set(false);
+        this.erreur.set(messageErreur(erreur, "Le compte n'a pas pu être créé."));
+      },
+    });
+  }
+}

@@ -1,0 +1,164 @@
+<div
+  class="editeur"
+  [class.focus]="aLeFocus()"
+  [class.invalide]="invalide() || tropLong()"
+  [class.desactive]="desactive()"
+>
+  <p class="libelle" [id]="id + '-libelle'">
+    {{ libelle() }}
+    @if (obligatoire()) {
+      <span aria-hidden="true">*</span>
+    }
+  </p>
+
+  <!-- Barre d'outils : les boutons indiquent leur état (aria-pressed) aux lecteurs d'écran -->
+  <div class="barre" role="toolbar" [attr.aria-label]="'Mise en forme : ' + libelle()">
+    <div class="groupe">
+      <button
+        type="button"
+        class="outil"
+        [class.outil-actif]="actif('bold')"
+        [attr.aria-pressed]="actif('bold')"
+        aria-label="Gras"
+        matTooltip="Gras (Ctrl+B)"
+        [disabled]="desactive()"
+        (click)="basculerGras()"
+      >
+        <ng-icon name="lucideBold" size="1rem" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="outil"
+        [class.outil-actif]="actif('italic')"
+        [attr.aria-pressed]="actif('italic')"
+        aria-label="Italique"
+        matTooltip="Italique (Ctrl+I)"
+        [disabled]="desactive()"
+        (click)="basculerItalique()"
+      >
+        <ng-icon name="lucideItalic" size="1rem" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="outil"
+        [class.outil-actif]="actif('underline')"
+        [attr.aria-pressed]="actif('underline')"
+        aria-label="Souligné"
+        matTooltip="Souligné (Ctrl+U)"
+        [disabled]="desactive()"
+        (click)="basculerSouligne()"
+      >
+        <ng-icon name="lucideUnderline" size="1rem" aria-hidden="true" />
+      </button>
+    </div>
+
+    <span class="separateur" aria-hidden="true"></span>
+
+    <div class="groupe">
+      <button
+        type="button"
+        class="outil"
+        [class.outil-actif]="actif('bulletList')"
+        [attr.aria-pressed]="actif('bulletList')"
+        aria-label="Liste à puces"
+        matTooltip="Liste à puces"
+        [disabled]="desactive()"
+        (click)="basculerListe()"
+      >
+        <ng-icon name="lucideList" size="1rem" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="outil"
+        [class.outil-actif]="actif('orderedList')"
+        [attr.aria-pressed]="actif('orderedList')"
+        aria-label="Liste numérotée"
+        matTooltip="Liste numérotée"
+        [disabled]="desactive()"
+        (click)="basculerListeNumerotee()"
+      >
+        <ng-icon name="lucideListOrdered" size="1rem" aria-hidden="true" />
+      </button>
+    </div>
+
+    <span class="separateur" aria-hidden="true"></span>
+
+    <div class="groupe">
+      <button
+        type="button"
+        class="outil outil-couleur"
+        [class.outil-actif]="actif('couleur')"
+        aria-label="Couleur du texte"
+        matTooltip="Couleur du texte"
+        [matMenuTriggerFor]="menuCouleurs"
+        [disabled]="desactive()"
+      >
+        <ng-icon name="lucidePalette" size="1rem" aria-hidden="true" />
+        <ng-icon name="lucideChevronDown" size="0.75rem" aria-hidden="true" />
+      </button>
+      <mat-menu #menuCouleurs="matMenu">
+        @for (couleur of couleurs; track couleur.classe) {
+          <button mat-menu-item type="button" (click)="appliquerCouleur(couleur.classe)">
+            <span [class]="'pastille pastille-' + couleur.classe" aria-hidden="true"></span>
+            <span>{{ couleur.libelle }}</span>
+          </button>
+        }
+        <button mat-menu-item type="button" (click)="appliquerCouleur(null)">
+          <span class="pastille pastille-aucune" aria-hidden="true"></span>
+          <span>Couleur normale</span>
+        </button>
+      </mat-menu>
+      <button
+        type="button"
+        class="outil"
+        aria-label="Effacer la mise en forme"
+        matTooltip="Effacer la mise en forme"
+        [disabled]="desactive()"
+        (click)="effacerMiseEnForme()"
+      >
+        <ng-icon name="lucideRemoveFormatting" size="1rem" aria-hidden="true" />
+      </button>
+    </div>
+
+    <div class="groupe groupe-droite">
+      <button
+        type="button"
+        class="outil"
+        aria-label="Annuler"
+        matTooltip="Annuler (Ctrl+Z)"
+        [disabled]="desactive() || !peutAnnuler()"
+        (click)="annuler()"
+      >
+        <ng-icon name="lucideUndo2" size="1rem" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        class="outil"
+        aria-label="Rétablir"
+        matTooltip="Rétablir (Ctrl+Y)"
+        [disabled]="desactive() || !peutRetablir()"
+        (click)="retablir()"
+      >
+        <ng-icon name="lucideRedo2" size="1rem" aria-hidden="true" />
+      </button>
+    </div>
+  </div>
+
+  <!-- Zone de saisie (gérée par l'éditeur TipTap) -->
+  <div #zone class="zone" [style.--hauteur-min]="hauteurMin()"></div>
+
+  <div class="pied">
+    @if (messageErreur()) {
+      <p class="erreur" role="alert">{{ messageErreur() }}</p>
+    } @else if (tropLong()) {
+      <p class="erreur" role="alert">
+        Le texte est trop long : raccourcissez-le ou retirez de la mise en forme.
+      </p>
+    } @else {
+      <p class="aide" [id]="id + '-aide'">{{ aide() }}</p>
+    }
+    <p class="compteur gw-chiffres" aria-live="polite">
+      {{ nbCaracteres() }} caractère{{ nbCaracteres() > 1 ? 's' : '' }}
+    </p>
+  </div>
+</div>

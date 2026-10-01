@@ -1,0 +1,108 @@
+<app-page-header
+  surtitre="Catalogue"
+  titre="Catégories"
+  description="Les catégories organisent les recettes sur l'application et le site. Une belle image aide les membres à s'y retrouver."
+>
+  <button matButton="filled" type="button" (click)="nouvelle()">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+    Nouvelle catégorie
+  </button>
+</app-page-header>
+
+@if (chargement()) {
+  <div class="grille" aria-busy="true" aria-label="Chargement des catégories">
+    @for (i of cartesSquelette; track i) {
+      <div class="gw-squelette sq-carte"></div>
+    }
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger les catégories"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (categories().length === 0) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Aucune catégorie pour le moment"
+      message="Créez les grandes familles de recettes : plats traditionnels, sauces, boissons, desserts…"
+      icone="lucideLayoutGrid"
+    >
+      <button matButton="filled" type="button" (click)="nouvelle()">Créer une catégorie</button>
+    </app-empty-state>
+  </div>
+} @else {
+  <div class="barre-outils">
+    <mat-form-field class="recherche" subscriptSizing="dynamic">
+      <mat-label>Rechercher une catégorie</mat-label>
+      <ng-icon
+        matPrefix
+        class="icone-champ"
+        name="lucideSearch"
+        size="1.125rem"
+        aria-hidden="true"
+      />
+      <input matInput type="search" [ngModel]="recherche()" (ngModelChange)="rechercher($event)" />
+      @if (recherche()) {
+        <button
+          matIconButton
+          matSuffix
+          type="button"
+          aria-label="Effacer la recherche"
+          (click)="rechercher('')"
+        >
+          <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+        </button>
+      }
+    </mat-form-field>
+    <p class="compte" aria-live="polite">
+      <strong class="gw-chiffres">{{ categoriesFiltrees().length }}</strong>
+      {{ categoriesFiltrees().length > 1 ? 'catégories' : 'catégorie' }}
+    </p>
+  </div>
+
+  @if (categoriesFiltrees().length === 0) {
+    <div class="gw-carte">
+      <app-empty-state
+        titre="Aucune catégorie ne correspond"
+        [message]="'Aucun résultat pour « ' + recherche() + ' ».'"
+        icone="lucideSearch"
+      >
+        <button matButton="outlined" type="button" (click)="rechercher('')">
+          Effacer la recherche
+        </button>
+      </app-empty-state>
+    </div>
+  } @else {
+    <ul class="grille">
+      @for (categorie of elementsPage(); track categorie.id) {
+        <li>
+          <app-carte-catalogue
+            [titre]="categorie.nom"
+            [description]="categorie.description"
+            [image]="categorie.imageUrl"
+            iconeVide="lucideLayoutGrid"
+            (modifier)="modifier(categorie)"
+            (supprimer)="supprimer(categorie)"
+          />
+        </li>
+      }
+    </ul>
+
+    <mat-paginator
+      class="gw-pagination pagination-grille"
+      [length]="categoriesFiltrees().length"
+      [pageIndex]="page()"
+      [pageSize]="taille()"
+      [pageSizeOptions]="taillesPage"
+      [hidePageSize]="ecran.mobile()"
+      aria-label="Pagination des catégories"
+      (page)="changerPage($event)"
+    />
+  }
+}

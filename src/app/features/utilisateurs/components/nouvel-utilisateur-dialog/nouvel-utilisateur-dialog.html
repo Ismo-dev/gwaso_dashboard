@@ -1,0 +1,183 @@
+<h2 mat-dialog-title>Nouvel utilisateur</h2>
+
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  <mat-dialog-content>
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <!-- 1. Profil : le seul choix. Il donne les droits et décide des champs demandés plus bas -->
+    <fieldset class="groupe">
+      <legend>Profil</legend>
+      @if (chargementProfils()) {
+        <div class="gw-choix-grille" aria-busy="true">
+          <span class="gw-squelette sq-choix"></span>
+          <span class="gw-squelette sq-choix"></span>
+        </div>
+      } @else if (profils().length === 0) {
+        <div class="aucun-profil" role="alert">
+          <ng-icon name="lucideCircleAlert" size="1.25rem" aria-hidden="true" />
+          <p>
+            Aucun profil n'est prêt. Créez d'abord vos profils (Administrateur, Cuisinier…) dans
+            <a routerLink="/profils" mat-dialog-close>Profils et droits</a>.
+          </p>
+        </div>
+      } @else {
+        <div class="gw-choix-grille" role="radiogroup" aria-label="Profil du compte">
+          @for (profil of profils(); track profil.id) {
+            <label class="gw-choix" [class.gw-choix-actif]="profilChoisi()?.id === profil.id">
+              <input type="radio" formControlName="profilId" [value]="profil.id" class="sr-only" />
+              <span class="gw-choix-icone" aria-hidden="true">
+                <ng-icon [name]="acces[profil.role!].icone" size="1.125rem" />
+              </span>
+              <span class="gw-choix-textes">
+                <span class="gw-choix-titre">{{ profil.nom }}</span>
+                <span class="gw-choix-aide gw-chiffres">
+                  {{ profil.nbDroits }} droit{{ profil.nbDroits > 1 ? 's' : '' }} ·
+                  {{ acces[profil.role!].libelle }}
+                </span>
+              </span>
+            </label>
+          }
+        </div>
+      }
+    </fieldset>
+
+    <!-- 2. Identité -->
+    <div class="ligne">
+      <mat-form-field>
+        <mat-label>Prénom</mat-label>
+        <input matInput formControlName="prenom" maxlength="60" autocomplete="off" cdkFocusInitial />
+        <mat-error>Le prénom est obligatoire.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="nom" maxlength="60" autocomplete="off" />
+        <mat-error>Le nom est obligatoire.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- 3. Connexion -->
+    <div class="ligne">
+      <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="off" />
+        @if (role() === 'ADMIN') {
+          <mat-hint>Obligatoire pour ce profil (connexion au dashboard)</mat-hint>
+        }
+        <mat-error>Adresse email invalide.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Téléphone</mat-label>
+        <input
+          matInput
+          type="tel"
+          inputmode="tel"
+          formControlName="telephone"
+          placeholder="+223 70 00 00 00"
+          autocomplete="off"
+        />
+        <mat-error>Numéro invalide (8 chiffres minimum).</mat-error>
+      </mat-form-field>
+    </div>
+    @if (role() !== 'ADMIN') {
+      <p
+        class="aide"
+        [class.aide-erreur]="formulaire.hasError('contact') && formulaire.controls.email.touched"
+      >
+        L'email ou le téléphone sert d'identifiant : au moins l'un des deux.
+      </p>
+    }
+
+    <mat-form-field class="champ-large champ-mot-de-passe" subscriptSizing="dynamic">
+      <mat-label>Mot de passe provisoire</mat-label>
+      <input
+        matInput
+        [type]="motDePasseVisible() ? 'text' : 'password'"
+        formControlName="motDePasse"
+        autocomplete="new-password"
+        class="gw-chiffres"
+      />
+      <button
+        matIconButton
+        matSuffix
+        type="button"
+        [attr.aria-label]="motDePasseVisible() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+        (click)="motDePasseVisible.set(!motDePasseVisible())"
+      >
+        <ng-icon [name]="motDePasseVisible() ? 'lucideEyeOff' : 'lucideEye'" size="1.125rem" />
+      </button>
+      <button
+        matIconButton
+        matSuffix
+        type="button"
+        aria-label="Générer un mot de passe"
+        matTooltip="Générer un mot de passe"
+        (click)="genererMotDePasse()"
+      >
+        <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+      </button>
+      <mat-hint>8 caractères minimum · à transmettre à la personne</mat-hint>
+      <mat-error>8 caractères minimum.</mat-error>
+    </mat-form-field>
+
+    <!-- 4. Selon le rôle -->
+    @switch (role()) {
+      @case ('CUISINIER') {
+        <mat-form-field class="champ-large">
+          <mat-label>Niveau en cuisine</mat-label>
+          <mat-select formControlName="niveau">
+            @for (niveau of niveaux; track niveau[0]) {
+              <mat-option [value]="niveau[0]">{{ niveau[1] }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+      @case ('PRODUCTEUR') {
+        <mat-form-field class="champ-large">
+          <mat-label>Localité</mat-label>
+          <input matInput formControlName="localite" placeholder="Ex. Ségou" maxlength="100" />
+          <mat-error>La localité est obligatoire pour un producteur.</mat-error>
+        </mat-form-field>
+      }
+    }
+
+    <!-- Droits donnés par le profil choisi : l'admin sait ce qu'il accorde -->
+    @if (profilChoisi(); as profil) {
+      <details class="droits-profil">
+        <summary>
+          Droits du profil « {{ profil.nom }} »
+          <span class="gw-chiffres">({{ droitsProfil().length }})</span>
+        </summary>
+        @if (droitsProfil().length > 0) {
+          <ul class="droits">
+            @for (droit of droitsProfil(); track droit.id) {
+              <li [title]="droit.droitDescription ?? ''">{{ droit.droitAction }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="aide">Ce profil n'a encore aucun droit.</p>
+        }
+      </details>
+    }
+
+    @if (aValider()) {
+      <mat-checkbox formControlName="validerDirectement" class="validation">
+        Valider directement ce compte (justificatif déjà vérifié)
+      </mat-checkbox>
+      <p class="aide aide-case">
+        Sinon, le compte apparaîtra dans « Demandes à valider ».
+      </p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" mat-dialog-close>Annuler</button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      Créer le compte
+    </button>
+  </mat-dialog-actions>
+</form>

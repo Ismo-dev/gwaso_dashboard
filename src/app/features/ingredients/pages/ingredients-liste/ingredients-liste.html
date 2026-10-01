@@ -1,0 +1,257 @@
+<app-page-header
+  surtitre="Catalogue"
+  titre="Ingrédients"
+  description="Les ingrédients proposés aux auteurs de recettes, avec leur prix indicatif au marché pour estimer le budget d'un plat."
+>
+  <button matButton="filled" type="button" (click)="nouveau()">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+    Nouvel ingrédient
+  </button>
+</app-page-header>
+
+@if (chargement()) {
+  <div class="gw-carte squelette" aria-busy="true" aria-label="Chargement des ingrédients">
+    @for (i of lignesSquelette; track i) {
+      <div class="squelette-ligne">
+        <span class="gw-squelette sq-photo"></span>
+        <span class="gw-squelette sq-texte"></span>
+      </div>
+    }
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger les ingrédients"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (ingredients().length === 0) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Aucun ingrédient pour le moment"
+      message="Ajoutez les ingrédients de base : farine de mil, gombo, soumbala, pâte d'arachide…"
+      icone="lucideCarrot"
+    >
+      <button matButton="filled" type="button" (click)="nouveau()">Ajouter un ingrédient</button>
+    </app-empty-state>
+  </div>
+} @else {
+  @if (sansPrix() > 0) {
+    <p class="conseil">
+      <ng-icon name="lucideCoins" size="1.125rem" aria-hidden="true" />
+      <span>
+        <strong class="gw-chiffres">{{ sansPrix() }}</strong> ingrédient(s) sans prix :
+        complétez-les pour que le budget des recettes soit bien estimé.
+      </span>
+    </p>
+  }
+
+  <section class="gw-carte liste" aria-labelledby="titre-ingredients">
+    <h2 id="titre-ingredients" class="sr-only">Liste des ingrédients</h2>
+
+    <div class="outils">
+      <mat-form-field class="recherche" subscriptSizing="dynamic">
+        <mat-label>Rechercher un ingrédient</mat-label>
+        <ng-icon
+          matPrefix
+          class="icone-champ"
+          name="lucideSearch"
+          size="1.125rem"
+          aria-hidden="true"
+        />
+        <input
+          matInput
+          type="search"
+          [ngModel]="recherche()"
+          (ngModelChange)="rechercher($event)"
+        />
+        @if (recherche()) {
+          <button
+            matIconButton
+            matSuffix
+            type="button"
+            aria-label="Effacer la recherche"
+            (click)="rechercher('')"
+          >
+            <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+          </button>
+        }
+      </mat-form-field>
+      <mat-form-field class="filtre" subscriptSizing="dynamic">
+        <mat-label>Unité</mat-label>
+        <mat-select [value]="uniteFiltre()" (selectionChange)="filtrerUnite($event.value)">
+          <mat-option [value]="null">Toutes les unités</mat-option>
+          @for (unite of unites; track unite.valeur) {
+            <mat-option [value]="unite.valeur">{{ unite.libelle }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <p class="resume" aria-live="polite">
+      <strong class="gw-chiffres">{{ ingredientsFiltres().length }}</strong>
+      {{ ingredientsFiltres().length > 1 ? 'ingrédients' : 'ingrédient' }}
+      @if (filtresActifs()) {
+        <button matButton type="button" (click)="effacerFiltres()">Effacer les filtres</button>
+      }
+    </p>
+
+    @if (ingredientsFiltres().length === 0) {
+      <app-empty-state
+        titre="Aucun ingrédient ne correspond"
+        message="Essayez un autre nom ou une autre unité."
+        icone="lucideSearch"
+      >
+        <button matButton="outlined" type="button" (click)="effacerFiltres()">
+          Effacer les filtres
+        </button>
+      </app-empty-state>
+    } @else {
+      @if (ecran.mobile()) {
+        <!-- Téléphone : une ligne compacte par ingrédient -->
+        <ul class="cartes">
+          @for (ingredient of elementsPage(); track ingredient.id) {
+            <li class="carte">
+              <ng-container *ngTemplateOutlet="photo; context: { $implicit: ingredient }" />
+              <div class="carte-textes">
+                <span class="nom">{{ ingredient.nom }}</span>
+                <span class="carte-prix">
+                  <ng-container *ngTemplateOutlet="prix; context: { $implicit: ingredient }" />
+                </span>
+              </div>
+              <ng-container *ngTemplateOutlet="actions; context: { $implicit: ingredient }" />
+            </li>
+          }
+        </ul>
+      } @else {
+        <!-- Ordinateur et tablette : vrai tableau, titres et contenus alignés colonne par colonne -->
+        <div class="gw-tableau-conteneur">
+          <table mat-table [dataSource]="elementsPage()" class="gw-tableau">
+            <caption class="sr-only">
+              Ingrédients, page
+              {{
+                page() + 1
+              }}
+            </caption>
+
+            <ng-container matColumnDef="ingredient">
+              <th mat-header-cell *matHeaderCellDef scope="col">Ingrédient</th>
+              <td mat-cell *matCellDef="let ingredient">
+                <div class="cellule-nom">
+                  <ng-container *ngTemplateOutlet="photo; context: { $implicit: ingredient }" />
+                  <span class="nom">{{ ingredient.nom }}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="unite">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Unité</th>
+              <td mat-cell *matCellDef="let ingredient" class="gw-col-centre unite">
+                {{ ingredient.unite ? (ingredient.unite | unite) : '—' }}
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="prix">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">
+                Prix indicatif
+              </th>
+              <td mat-cell *matCellDef="let ingredient" class="gw-col-centre">
+                <ng-container *ngTemplateOutlet="prix; context: { $implicit: ingredient }" />
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-actions">
+                <span class="sr-only">Actions</span>
+              </th>
+              <td mat-cell *matCellDef="let ingredient" class="gw-col-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: ingredient }" />
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="colonnes"></tr>
+            <tr mat-row *matRowDef="let ingredient; columns: colonnes"></tr>
+          </table>
+        </div>
+      }
+
+      <mat-paginator
+        class="gw-pagination"
+        [length]="ingredientsFiltres().length"
+        [pageIndex]="page()"
+        [pageSize]="taille()"
+        [pageSizeOptions]="taillesPage"
+        [hidePageSize]="ecran.mobile()"
+        aria-label="Pagination des ingrédients"
+        (page)="changerPage($event)"
+      />
+    }
+  </section>
+}
+
+<!-- Vignette de l'ingrédient -->
+<ng-template #photo let-ingredient>
+  @if (ingredient.photoUrl | fichier; as url) {
+    <img class="photo" [src]="url" alt="" loading="lazy" width="44" height="44" />
+  } @else {
+    <span class="photo photo-vide" aria-hidden="true"
+      ><ng-icon name="lucideCarrot" size="1.125rem"
+    /></span>
+  }
+</ng-template>
+
+<!-- Prix : fourchette ou prix unique, en FCFA -->
+<ng-template #prix let-ingredient>
+  <span class="prix gw-chiffres">
+    @if (ingredient.prixMin !== null || ingredient.prixMax !== null) {
+      @if (
+        ingredient.prixMin !== null &&
+        ingredient.prixMax !== null &&
+        ingredient.prixMin !== ingredient.prixMax
+      ) {
+        {{ ingredient.prixMin | number: '1.0-0' : 'fr' }} –
+        {{ ingredient.prixMax | number: '1.0-0' : 'fr' }}
+      } @else {
+        {{ ingredient.prixMin ?? ingredient.prixMax | number: '1.0-0' : 'fr' }}
+      }
+      <span class="devise">FCFA</span>
+    } @else {
+      <span class="sans-prix">Non renseigné</span>
+    }
+  </span>
+</ng-template>
+
+<!-- Actions : Modifier (texte sur ordinateur, icône sur téléphone) et Supprimer -->
+<ng-template #actions let-ingredient>
+  <span class="actions">
+    @if (ecran.mobile()) {
+      <button
+        matIconButton
+        type="button"
+        class="modifier-icone"
+        [attr.aria-label]="'Modifier ' + ingredient.nom"
+        (click)="modifier(ingredient)"
+      >
+        <ng-icon name="lucidePencil" size="1.125rem" aria-hidden="true" />
+      </button>
+    } @else {
+      <button matButton type="button" (click)="modifier(ingredient)">
+        Modifier<span class="sr-only"> {{ ingredient.nom }}</span>
+      </button>
+    }
+    <button
+      matIconButton
+      type="button"
+      class="bouton-supprimer"
+      [attr.aria-label]="'Supprimer ' + ingredient.nom"
+      matTooltip="Supprimer"
+      (click)="supprimer(ingredient)"
+    >
+      <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+    </button>
+  </span>
+</ng-template>

@@ -1,0 +1,85 @@
+.carte {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  transition:
+    box-shadow var(--gw-duree) var(--gw-courbe),
+    border-color var(--gw-duree) var(--gw-courbe);
+
+  &:hover {
+    border-color: var(--gw-terre-cuite-pale-2);
+    box-shadow: var(--gw-ombre-2);
+
+    img {
+      transform: scale(1.03);
+    }
+  }
+}
+
+.visuel {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--gw-terre-cuite-pale);
+
+  .carre & {
+    aspect-ratio: 4 / 3;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--gw-duree-lente) var(--gw-courbe);
+  }
+}
+
+// Sans image : un fond terre cuite pâle et une icône, pour garder une grille régulière
+.visuel-vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--gw-karite);
+  opacity: 0.8;
+}
+
+.corps {
+  flex: 1;
+  padding: var(--gw-espace-4) var(--gw-espace-5) var(--gw-espace-2);
+
+  h3 {
+    font-size: var(--gw-taille-titre-carte);
+    font-weight: 600;
+  }
+}
+
+.description {
+  display: -webkit-box;
+  margin-top: var(--gw-espace-1);
+  overflow: hidden;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-label);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.description-vide {
+  color: var(--gw-texte-discret);
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gw-espace-1) var(--gw-espace-2) var(--gw-espace-2) var(--gw-espace-3);
+}
+
+.bouton-supprimer {
+  color: var(--gw-texte-doux);
+
+  &:hover {
+    color: var(--gw-danger);
+  }
+}

@@ -1,0 +1,275 @@
+@use 'points-de-rupture' as ecran;
+
+// ----- Onglets de statut -----
+.onglets-conteneur {
+  margin-bottom: var(--gw-espace-5);
+
+  // Téléphone : les onglets défilent horizontalement au lieu de se tasser
+  @include ecran.mobile {
+    margin-inline: calc(var(--gw-espace-4) * -1);
+    padding-inline: var(--gw-espace-4);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
+
+.onglets {
+  --mat-button-toggle-selected-state-background-color: var(--gw-cacao);
+  --mat-button-toggle-selected-state-text-color: var(--gw-blanc);
+  --mat-button-toggle-text-color: var(--gw-texte-doux);
+  --mat-button-toggle-label-text-weight: 500;
+  --mat-button-toggle-height: 40px;
+  --mat-button-toggle-divider-color: var(--gw-bordure);
+  border-color: var(--gw-bordure);
+  background: var(--gw-surface);
+}
+
+.onglet-compteur {
+  margin-left: var(--gw-espace-2);
+  padding: 0 0.4375rem;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+
+  .mat-button-toggle-checked & {
+    background: rgb(255 255 255 / 0.18);
+    color: var(--gw-blanc);
+  }
+}
+
+// ----- Carte de la liste -----
+.liste {
+  overflow: hidden;
+}
+
+.outils {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-5) var(--gw-espace-5) 0;
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4) var(--gw-espace-4) 0;
+  }
+}
+
+.champ-recherche {
+  flex: 1 1 280px;
+}
+
+.champ-filtre {
+  flex: 0 1 220px;
+
+  @include ecran.mobile {
+    flex: 1 1 100%;
+  }
+}
+
+.icone-champ {
+  margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+}
+
+.resume {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 44px;
+  padding: var(--gw-espace-2) var(--gw-espace-5);
+  color: var(--gw-texte-doux);
+
+  strong {
+    color: var(--gw-cacao);
+  }
+
+  @include ecran.mobile {
+    padding-inline: var(--gw-espace-4);
+  }
+}
+
+// ----- Squelette -----
+.squelette {
+  padding: 0 var(--gw-espace-5) var(--gw-espace-5);
+}
+
+.squelette-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-4) 0;
+  border-top: 1px solid var(--gw-bordure);
+}
+
+.sq-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--gw-rayon);
+}
+
+.sq-textes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+}
+
+.sq-titre {
+  width: 40%;
+}
+
+.sq-sous-titre {
+  width: 25%;
+  height: 0.75rem;
+}
+
+.sq-badge {
+  width: 88px;
+  height: 1.5rem;
+  border-radius: var(--gw-rayon-pilule);
+}
+
+// ----- Résultats -----
+.resultats {
+  transition: opacity var(--gw-duree) var(--gw-courbe);
+}
+
+// Rechargement : on garde l'ancienne liste en transparence plutôt que de tout effacer
+.rechargement {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+// ----- Tableau (présentation commune : .gw-tableau dans styles.scss) -----
+.tableau {
+  --mat-table-row-item-container-height: 72px;
+}
+
+.cellule-recette {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  min-width: 220px;
+}
+
+.cellule-textes {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nom {
+  color: var(--gw-cacao);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--gw-action);
+    text-decoration: underline;
+  }
+}
+
+.sous-texte {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.details {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start; // icônes alignées l'une sous l'autre
+  gap: 4px;
+  color: var(--gw-texte-doux);
+  white-space: nowrap;
+}
+
+// Icône collée à son texte ; hauteur de ligne suffisante pour ne rien couper
+.detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.4;
+
+  ng-icon {
+    flex-shrink: 0;
+    color: var(--gw-karite);
+  }
+}
+
+.photo {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--gw-rayon);
+  object-fit: cover;
+}
+
+.photo-vide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+}
+
+.cellule-date {
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--gw-espace-1);
+}
+
+.bouton-principal {
+  --mat-button-outlined-container-height: 36px;
+  --mat-button-text-container-height: 36px;
+}
+
+.item-danger {
+  --mat-menu-item-label-text-color: var(--gw-danger);
+  --mat-menu-item-icon-color: var(--gw-danger);
+  color: var(--gw-danger);
+}
+
+// ----- Cartes (téléphone) -----
+.cartes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-4);
+  border-top: 1px solid var(--gw-bordure);
+}
+
+.carte-haut {
+  display: flex;
+  gap: var(--gw-espace-3);
+}
+
+.carte-infos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gw-espace-1);
+  min-width: 0;
+}
+
+.meta {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.carte-actions .actions {
+  justify-content: flex-start;
+}
+
+// ----- Pagination -----

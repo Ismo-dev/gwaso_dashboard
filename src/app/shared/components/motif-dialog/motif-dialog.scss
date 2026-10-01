@@ -1,0 +1,22 @@
+.formulaire {
+  display: contents;
+}
+
+.message {
+  margin-bottom: var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+}
+
+.champ {
+  width: 100%;
+}
+
+.aide {
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-left: 3px solid var(--gw-terre-cuite);
+  border-radius: 0 var(--gw-rayon-sm) var(--gw-rayon-sm) 0;
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-label);
+}

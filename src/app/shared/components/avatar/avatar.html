@@ -1,0 +1,7 @@
+@if (photo() | fichier; as url) {
+  <img [class]="'avatar taille-' + taille()" [src]="url" alt="" aria-hidden="true" loading="lazy" />
+} @else {
+  <span [class]="'avatar taille-' + taille() + ' ' + teinte()" aria-hidden="true">{{
+    initiales()
+  }}</span>
+}

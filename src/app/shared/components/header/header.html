@@ -1,0 +1,112 @@
+<header class="topbar">
+  @if (mobile()) {
+    <button
+      matIconButton
+      type="button"
+      class="bouton-menu"
+      aria-label="Ouvrir le menu"
+      aria-controls="menu-principal"
+      [attr.aria-expanded]="menuOuvert()"
+      (click)="ouvrirMenu.emit()"
+    >
+      <ng-icon name="lucideMenu" size="1.375rem" aria-hidden="true" />
+    </button>
+  }
+
+  <!-- Fil d'Ariane : où suis-je ? -->
+  <nav class="fil-ariane" aria-label="Fil d'Ariane">
+    <ol>
+      @for (element of filAriane.elements(); track $index; let dernier = $last) {
+        <li [class.masque-mobile]="!dernier">
+          @if (element.lien) {
+            <a [routerLink]="element.lien">{{ element.libelle }}</a>
+            <ng-icon class="chevron" name="lucideChevronRight" size="0.875rem" aria-hidden="true" />
+          } @else {
+            <span aria-current="page">{{ element.libelle }}</span>
+          }
+        </li>
+      }
+    </ol>
+  </nav>
+
+  <div class="actions">
+    <!-- Éléments en attente de décision -->
+    <button
+      matIconButton
+      type="button"
+      class="bouton-cloche"
+      [matMenuTriggerFor]="menuAValider"
+      [attr.aria-label]="
+        aValider.total() > 0 ? aValider.total() + ' éléments à valider' : 'Aucun élément à valider'
+      "
+    >
+      <ng-icon name="lucideBell" size="1.25rem" aria-hidden="true" />
+      @if (aValider.total() > 0) {
+        <span class="pastille gw-chiffres" aria-hidden="true">{{
+          aValider.total() > 99 ? '99+' : aValider.total()
+        }}</span>
+      }
+    </button>
+
+    <mat-menu #menuAValider="matMenu" xPosition="before" class="gw-menu-a-valider">
+      <div class="menu-entete" role="presentation">
+        <p class="menu-titre">À valider</p>
+        <p class="menu-sous-titre">Contenus et comptes qui attendent votre décision</p>
+      </div>
+      @for (element of elementsAValider(); track element.libelle) {
+        <a mat-menu-item [routerLink]="element.lien" [queryParams]="element.parametres">
+          <ng-icon [name]="element.icone" size="1.125rem" aria-hidden="true" />
+          <span class="menu-libelle">{{ element.libelle }}</span>
+          <span class="menu-nombre gw-chiffres">{{ element.nombre }}</span>
+        </a>
+      } @empty {
+        <div class="menu-vide" role="presentation">
+          <ng-icon name="lucideCircleCheck" size="1.5rem" aria-hidden="true" />
+          <p>Tout est à jour. Rien n'attend votre validation.</p>
+        </div>
+      }
+    </mat-menu>
+
+    <!-- Compte de l'administrateur -->
+    @if (session.utilisateur(); as utilisateur) {
+      <button
+        matButton
+        type="button"
+        class="bouton-compte"
+        [matMenuTriggerFor]="menuCompte"
+        aria-label="Mon compte"
+      >
+        <app-avatar
+          class="avatar-compte"
+          [prenom]="utilisateur.prenom"
+          [nom]="utilisateur.nom"
+          [photo]="utilisateur.photoProfil"
+          taille="sm"
+        />
+        @if (!mobile()) {
+          <span class="identite">
+            <span class="nom">{{ utilisateur.prenom }} {{ utilisateur.nom }}</span>
+            <span class="role">{{ utilisateur.profilNom ?? 'Administrateur' }}</span>
+          </span>
+          <ng-icon name="lucideChevronDown" size="1rem" aria-hidden="true" />
+        }
+      </button>
+
+      <mat-menu #menuCompte="matMenu" xPosition="before">
+        <div class="menu-entete" role="presentation">
+          <p class="menu-titre">{{ utilisateur.prenom }} {{ utilisateur.nom }}</p>
+          <p class="menu-sous-titre">{{ utilisateur.email ?? utilisateur.telephone }}</p>
+        </div>
+        <mat-divider />
+        <a mat-menu-item routerLink="/mon-profil">
+          <ng-icon name="lucideUserPen" size="1.125rem" aria-hidden="true" />
+          <span>Mon profil</span>
+        </a>
+        <button mat-menu-item type="button" (click)="deconnecter()">
+          <ng-icon name="lucideLogOut" size="1.125rem" aria-hidden="true" />
+          <span>Se déconnecter</span>
+        </button>
+      </mat-menu>
+    }
+  </div>
+</header>

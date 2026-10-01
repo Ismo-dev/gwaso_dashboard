@@ -1,0 +1,37 @@
+<!-- Lien caché, visible au clavier : permet d'aller directement au contenu (accessibilité) -->
+<a class="lien-evitement" href="#contenu">Aller au contenu</a>
+
+<!-- autosize : le contenu suit la largeur du menu quand on le réduit -->
+<mat-sidenav-container class="conteneur" autosize>
+  <mat-sidenav
+    id="menu-principal"
+    class="menu"
+    [class.menu-compact]="compact()"
+    [mode]="ecran.mobile() ? 'over' : 'side'"
+    [opened]="!ecran.mobile() || menuMobileOuvert()"
+    [disableClose]="!ecran.mobile()"
+    [fixedInViewport]="ecran.mobile()"
+    (closed)="fermerMenuMobile()"
+  >
+    <app-sidebar
+      [compact]="compact()"
+      [mobile]="ecran.mobile()"
+      [peutReduire]="ecran.bureau()"
+      (fermer)="fermerMenuMobile()"
+      (basculerCompact)="basculerCompact()"
+    />
+  </mat-sidenav>
+
+  <!-- Seule cette zone défile -->
+  <mat-sidenav-content class="zone-principale">
+    <app-header
+      [mobile]="ecran.mobile()"
+      [menuOuvert]="menuMobileOuvert()"
+      (ouvrirMenu)="ouvrirMenuMobile()"
+    />
+
+    <main id="contenu" class="contenu" tabindex="-1">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
