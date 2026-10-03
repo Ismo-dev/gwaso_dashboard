@@ -15,7 +15,7 @@ import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import { DefiService } from '../../../defis/services/defi.service';
 import { RecetteService } from '../../../recettes/services/recette.service';
-import { LIBELLES_ROLE } from '../../../utilisateurs/models/utilisateur.model';
+import { LIBELLES_TYPE_COMPTE } from '../../../utilisateurs/models/utilisateur.model';
 import { UtilisateurService } from '../../../utilisateurs/services/utilisateur.service';
 import { formaterDuree } from '../../../videos/models/video.model';
 import { VideoService } from '../../../videos/services/video.service';
@@ -84,7 +84,7 @@ export class Notifications implements OnInit {
   readonly id = input<string>();
 
   protected readonly infos = INFOS_TYPES;
-  protected readonly libellesRole = LIBELLES_ROLE;
+  protected readonly libellesRole = LIBELLES_TYPE_COMPTE;
 
   protected filtre = signal<'toutes' | 'nonLues'>('toutes');
   protected notifications = signal<NotificationResponse[]>([]);
@@ -257,11 +257,20 @@ export class Notifications implements OnInit {
           })),
         );
       case 'DEMANDE_CHEF':
-        return this.utilisateurService.getChef(id).pipe(
-          map((c) => this.apercuCompte(`${c.prenom} ${c.nom}`, c.email ?? c.telephone, c.photoProfil, c.statutRole, ['Chef cuisinier'])),
-        );
       case 'DEMANDE_PRODUCTEUR':
-        return this.utilisateurService.getProducteur(id).pipe(
+        if (n.acteurRole === 'CUISINIER') {
+          // Cuisinier qui demande à devenir chef / producteur
+          return this.utilisateurService.getCuisinier(id).pipe(
+            map((c) =>
+              this.apercuCompte(`${c.prenom} ${c.nom}`, c.email ?? c.telephone, c.photoProfil, 'EN_ATTENTE', [
+                n.type === 'DEMANDE_CHEF' ? 'Cuisinier → chef cuisinier' : 'Cuisinier → producteur',
+              ]),
+            ),
+          );
+        }
+        return n.type === 'DEMANDE_CHEF' ? this.utilisateurService.getChef(id).pipe(
+          map((c) => this.apercuCompte(`${c.prenom} ${c.nom}`, c.email ?? c.telephone, c.photoProfil, c.statutRole, ['Chef cuisinier'])),
+        ) : this.utilisateurService.getProducteur(id).pipe(
           map((p) =>
             this.apercuCompte(`${p.prenom} ${p.nom}`, p.email ?? p.telephone, p.photoProfil, p.statutRole, [
               'Producteur',

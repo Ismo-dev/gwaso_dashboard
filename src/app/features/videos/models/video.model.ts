@@ -1,4 +1,4 @@
-import { Role, StatutCompte } from '../../../core/models/enums.model';
+import { TypeCompte, StatutCompte } from '../../../core/models/enums.model';
 import { Pagination } from '../../../core/models/page-response.model';
 
 export type StatutVideo =
@@ -45,7 +45,7 @@ export interface AuteurVideo {
   email: string | null;
   telephone: string | null;
   photoProfil: string | null;
-  role: Role;
+  role: TypeCompte;
   statutCompte: StatutCompte;
   dateInscription: string;
   nbVideosTotal: number;

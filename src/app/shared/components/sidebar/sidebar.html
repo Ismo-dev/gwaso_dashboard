@@ -29,7 +29,7 @@
   </div>
 
   <nav class="navigation" aria-label="Menu principal">
-    @for (section of sections; track section.titre) {
+    @for (section of sections(); track section.titre) {
       @if (compact()) {
         <hr class="separateur" aria-hidden="true" />
       } @else {

@@ -1,0 +1,65 @@
+<h2 mat-dialog-title>Modifier le compte de {{ fiche.prenom }} {{ fiche.nom }}</h2>
+
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  <mat-dialog-content>
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <div class="ligne">
+      <mat-form-field>
+        <mat-label>Prénom</mat-label>
+        <input matInput formControlName="prenom" maxlength="60" />
+        <mat-error>Le prénom est obligatoire.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="nom" maxlength="60" />
+        <mat-error>Le nom est obligatoire.</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="ligne">
+      <mat-form-field>
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" maxlength="120" />
+        <mat-error>Adresse email invalide.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Téléphone</mat-label>
+        <input matInput type="tel" formControlName="telephone" placeholder="+223 70 00 00 00" />
+        <mat-error>Numéro invalide.</mat-error>
+      </mat-form-field>
+    </div>
+
+    @switch (fiche.role) {
+      @case ('CUISINIER') {
+        <mat-form-field class="large">
+          <mat-label>Niveau en cuisine</mat-label>
+          <mat-select formControlName="niveau">
+            @for (niveau of niveaux; track niveau[0]) {
+              <mat-option [value]="niveau[0]">{{ niveau[1] }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      }
+      @case ('PRODUCTEUR') {
+        <mat-form-field class="large">
+          <mat-label>Localité</mat-label>
+          <input matInput formControlName="localite" maxlength="100" placeholder="Ex. Ségou" />
+          <mat-error>La localité est obligatoire pour un producteur.</mat-error>
+        </mat-form-field>
+      }
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" mat-dialog-close>Annuler</button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      Enregistrer
+    </button>
+  </mat-dialog-actions>
+</form>

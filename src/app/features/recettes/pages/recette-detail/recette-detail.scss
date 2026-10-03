@@ -292,7 +292,9 @@ h1 {
 }
 
 .compte {
+  flex-shrink: 0;
   padding: 0.125rem 0.625rem;
+  white-space: nowrap;
   border-radius: var(--gw-rayon-pilule);
   background: var(--gw-fond);
   color: var(--gw-texte-doux);
@@ -461,6 +463,12 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--gw-espace-3);
   margin-top: var(--gw-espace-3);
+
+  // Téléphone : photo et vidéo prennent toute la largeur de la carte (sous le numéro de l'étape aussi),
+  // sinon elles restaient décalées à droite
+  @include ecran.mobile {
+    margin-left: calc(-36px - var(--gw-espace-4));
+  }
 
   img,
   video {

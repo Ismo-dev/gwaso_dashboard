@@ -3,8 +3,8 @@
 <form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
   <mat-dialog-content>
     <p class="intro">
-      Chaque utilisateur a un seul profil, et ses droits sont ceux de ce profil. Exemples : Administrateur, Consultant,
-      Cuisinier, Chef cuisinier, Producteur.
+      Un profil regroupe des droits. Chaque utilisateur a un seul profil, et peut faire exactement ce que ses droits
+      permettent. Exemples : Administrateur, Consultant, Modérateur vidéos, Chef cuisinier.
     </p>
 
     @if (erreur()) {
@@ -17,50 +17,28 @@
       <mat-error>Le nom est obligatoire.</mat-error>
     </mat-form-field>
 
-    <fieldset class="groupe">
-      <legend>Type de compte</legend>
-      <p class="explication">
-        Où se connecte une personne qui a ce profil, et ce qu'on lui demande à la création du compte (niveau, localité,
-        justificatif…). Plusieurs profils peuvent avoir le même type : par exemple « Administrateur » et « Consultant »
-        pour le dashboard, avec des droits différents.
-      </p>
-      <div class="gw-choix-grille" role="radiogroup">
-        @for (role of ordreAcces; track role) {
-          <label class="gw-choix" [class.gw-choix-actif]="accesChoisi() === role">
-            <input type="radio" class="sr-only" formControlName="role" [value]="role" />
-            <span class="gw-choix-icone" aria-hidden="true">
-              <ng-icon [name]="acces[role].icone" size="1.125rem" />
-            </span>
-            <span class="gw-choix-textes">
-              <span class="gw-choix-titre">{{ acces[role].libelle }}</span>
-              <span class="gw-choix-aide">{{ acces[role].aide }}</span>
-            </span>
-          </label>
-        }
-      </div>
-    </fieldset>
-
-    @if (accesChoisi(); as role) {
-      @if (role !== 'ADMIN') {
-        @let actuel = profilDesInscriptions(role);
-        <mat-checkbox formControlName="parDefaut" class="par-defaut">
-          Profil donné aux personnes qui s'inscrivent elles-mêmes dans l'application
-        </mat-checkbox>
-        <p class="explication explication-case">
-          @if (actuel) {
-            Aujourd'hui, c'est « {{ actuel.nom }} ». En cochant, ce profil le remplace.
-          } @else {
-            Aucun profil de ce type n'a encore ce rôle : celui-ci le prendra automatiquement.
-          }
-        </p>
-      }
-    }
-
     <mat-form-field class="champ">
       <mat-label>Description</mat-label>
       <textarea matInput formControlName="description" rows="3" maxlength="255"></textarea>
-      <mat-hint>Facultatif · ce que les membres de ce profil peuvent faire</mat-hint>
+      <mat-hint>Facultatif · à quoi sert ce profil</mat-hint>
     </mat-form-field>
+
+    <div class="inscription">
+      <mat-checkbox formControlName="inscription">
+        Profil des inscriptions
+      </mat-checkbox>
+      <p class="explication">
+        @if (inscriptionVerrouillee) {
+          C'est le profil que reçoivent les personnes qui s'inscrivent dans l'application. Pour changer, cochez cette
+          case sur un autre profil.
+        } @else if (inscriptionActuelle) {
+          Les personnes qui s'inscrivent dans l'application reçoivent aujourd'hui « {{ inscriptionActuelle.nom }} ». En
+          cochant, ce profil le remplace.
+        } @else {
+          Les personnes qui s'inscrivent dans l'application recevront ce profil.
+        }
+      </p>
+    </div>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">

@@ -59,9 +59,9 @@ export class Login {
     this.authService.connecter(this.formulaire.getRawValue()).subscribe({
       next: (reponse) => {
         this.enCours.set(false);
-        // Le dashboard est réservé aux administrateurs
-        if (reponse.utilisateur.role !== 'ADMIN') {
-          this.erreur.set('Cet espace est réservé aux administrateurs.');
+        // Le dashboard s'ouvre avec le droit ACCES_DASHBOARD du profil
+        if (!reponse.utilisateur.droits.includes('ACCES_DASHBOARD')) {
+          this.erreur.set("Votre profil ne donne pas accès au dashboard d'administration.");
           return;
         }
         this.session.enregistrer(reponse);

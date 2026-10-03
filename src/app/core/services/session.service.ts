@@ -67,8 +67,14 @@ export class SessionService {
     return !!session && new Date(session.refreshExpireLe).getTime() > Date.now();
   }
 
-  estAdmin(): boolean {
-    return this.estConnecte() && this.utilisateur()?.role === 'ADMIN';
+  /** Le profil de l'utilisateur connecté lui donne ce droit (codes : DROITS dans profil.model.ts). */
+  aLeDroit(droit: string): boolean {
+    return this.utilisateur()?.droits.includes(droit) ?? false;
+  }
+
+  /** Le dashboard s'ouvre avec le droit ACCES_DASHBOARD (quel que soit le type de compte). */
+  peutOuvrirLeDashboard(): boolean {
+    return this.estConnecte() && this.aLeDroit('ACCES_DASHBOARD');
   }
 
   /** Le jeton d'accès est expiré (ou va l'être dans quelques secondes) : il faut le renouveler. */

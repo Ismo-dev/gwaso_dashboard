@@ -139,11 +139,6 @@
   }
 }
 
-.profil-icone-vide {
-  background: var(--gw-danger-fond);
-  color: var(--gw-danger);
-}
-
 .profil-textes {
   display: flex;
   flex-direction: column;
@@ -184,6 +179,11 @@
 
   @include ecran.mobile {
     padding: var(--gw-espace-5) var(--gw-espace-4) var(--gw-espace-3);
+
+    // Téléphone : l'icône prendrait une colonne entière, le texte garde toute la largeur
+    .detail-icone {
+      display: none;
+    }
   }
 }
 
@@ -385,54 +385,30 @@
 
   .mat-column-code {
     width: 34%;
+
+    // Sur téléphone, le code prend la place laissée par l'interrupteur et les boutons
+    @include ecran.mobile {
+      width: auto;
+    }
+  }
+
+  .mat-column-statut {
+    @include ecran.mobile {
+      width: 76px;
+    }
   }
 
   .mat-column-actions {
     width: 170px;
     white-space: nowrap;
 
+    // Deux boutons-icônes (2 × 40px) sur une seule ligne, sans « … » de débordement
     @include ecran.mobile {
       width: 96px;
+      padding-inline: 4px 12px;
+      text-overflow: clip;
     }
   }
-}
-
-.liste-droits {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ligne-droit {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--gw-espace-4);
-  min-height: 64px;
-  padding: var(--gw-espace-3) var(--gw-espace-5);
-  border-top: 1px solid var(--gw-bordure);
-
-  &:first-child {
-    border-top: 0;
-  }
-
-  &:hover {
-    background: var(--gw-surface-2);
-  }
-
-  @include ecran.mobile {
-    padding: var(--gw-espace-3) var(--gw-espace-4);
-  }
-}
-
-.ligne-textes {
-  min-width: 0;
-}
-
-.ligne-actions {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
 }
 
 .bouton-supprimer {
@@ -473,7 +449,8 @@
     align-items: center;
     gap: 6px;
     padding: 2px var(--gw-espace-3);
-    border-radius: var(--gw-rayon-pilule);
+    // Arrondi modéré : une étiquette sur deux lignes reste propre
+    border-radius: var(--gw-rayon);
     background: var(--gw-fond);
     color: var(--gw-cacao);
     font-size: var(--gw-taille-petit);

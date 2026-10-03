@@ -20,19 +20,6 @@
   width: 100%;
 }
 
-.groupe {
-  min-width: 0;
-  margin: var(--gw-espace-2) 0 var(--gw-espace-5);
-  padding: 0;
-  border: 0;
-
-  legend {
-    margin-bottom: var(--gw-espace-1);
-    color: var(--gw-cacao);
-    font-size: var(--gw-taille-label);
-    font-weight: 600;
-  }
-}
 
 .explication {
   margin-bottom: var(--gw-espace-3);
@@ -40,10 +27,12 @@
   font-size: var(--gw-taille-petit);
 }
 
-.par-defaut {
-  margin-left: -8px;
+
+
+.inscription {
+  margin-top: var(--gw-espace-2);
 }
 
-.explication-case {
-  margin: 0 0 var(--gw-espace-4) 32px;
+.inscription .explication {
+  margin: 0 0 0 32px;
 }

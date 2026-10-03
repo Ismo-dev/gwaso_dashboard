@@ -1,46 +1,14 @@
-import { Role, StatutRole } from '../../../core/models/enums.model';
-
-/**
- * Type de compte créé avec un profil : où la personne se connecte (dashboard ou application)
- * et quelles informations demander à la création. Côté API, c'est le champ « role » du profil.
- * Chaque utilisateur a un seul profil ; plusieurs profils peuvent avoir le même type
- * (ex. « Administrateur » et « Consultant » pour le dashboard).
- */
-export const ACCES_PROFIL: Record<Role, { libelle: string; aide: string; icone: string }> = {
-  ADMIN: {
-    libelle: "Dashboard d'administration",
-    aide: 'Gère la plateforme depuis ce dashboard',
-    icone: 'lucideShieldCheck',
-  },
-  CUISINIER: {
-    libelle: 'Application · cuisinier',
-    aide: 'Suit les recettes, participe aux défis',
-    icone: 'lucideCookingPot',
-  },
-  CHEF: {
-    libelle: 'Application · chef cuisinier',
-    aide: 'Publie ses recettes, propose des défis',
-    icone: 'lucideChefHat',
-  },
-  PRODUCTEUR: {
-    libelle: 'Application · producteur',
-    aide: 'Vend ses produits locaux',
-    icone: 'lucideStore',
-  },
-};
-
-/** Ordre d'affichage des accès. */
-export const ORDRE_ACCES: Role[] = ['ADMIN', 'CHEF', 'CUISINIER', 'PRODUCTEUR'];
+import { StatutRole } from '../../../core/models/enums.model';
 
 /** ProfilResponseDTO côté backend. */
 export interface ProfilResponse {
   id: string;
   nom: string;
   description: string | null;
-  /** Type de compte créé avec ce profil (null pour un ancien profil pas encore relié). */
-  role: Role | null;
-  /** Profil donné aux inscriptions de ce type de compte (depuis l'application). */
-  parDefaut: boolean;
+  /** Profil donné aux personnes qui s'inscrivent dans l'application. */
+  inscription: boolean;
+  /** Profil des administrateurs : tous les droits, ni supprimable ni désactivable. */
+  systeme: boolean;
   /** false : désactivé (plus proposé, ses droits ne sont plus donnés). */
   actif: boolean;
   nbDroits: number;
@@ -51,8 +19,7 @@ export interface ProfilResponse {
 export interface ProfilRequest {
   nom: string;
   description?: string;
-  role: Role;
-  parDefaut?: boolean;
+  inscription?: boolean;
 }
 
 /** DroitResponseDTO côté backend. */
@@ -101,6 +68,8 @@ export interface GroupeDroits {
 
 /** Domaines connus : le préfixe du code (avant le premier « _ ») donne le domaine. */
 const DOMAINES: Record<string, { libelle: string; icone: string }> = {
+  ACCES: { libelle: 'Dashboard', icone: 'lucideLayoutDashboard' },
+  CATALOGUE: { libelle: 'Catalogue', icone: 'lucideLayoutGrid' },
   RECETTE: { libelle: 'Recettes', icone: 'lucideBookOpen' },
   VIDEO: { libelle: 'Vidéos', icone: 'lucideClapperboard' },
   DEFI: { libelle: 'Défis', icone: 'lucideTrophy' },
@@ -144,3 +113,20 @@ export function grouperDroits(droits: DroitAffiche[]): GroupeDroits[] {
     .map((g) => ({ ...g, droits: [...g.droits].sort((a, b) => libelleDroit(a).localeCompare(libelleDroit(b), 'fr')) }))
     .sort((a, b) => (a.cle === 'AUTRES' ? 1 : b.cle === 'AUTRES' ? -1 : a.libelle.localeCompare(b.libelle, 'fr')));
 }
+
+/** Codes des droits utilisés par le dashboard (CatalogueDroits côté API). */
+export const DROITS = {
+  ACCES_DASHBOARD: 'ACCES_DASHBOARD',
+  RECETTE_CREER: 'RECETTE_CREER',
+  RECETTE_VALIDER: 'RECETTE_VALIDER',
+  DEFI_PROPOSER: 'DEFI_PROPOSER',
+  DEFI_VALIDER: 'DEFI_VALIDER',
+  VIDEO_MODERER: 'VIDEO_MODERER',
+  CATALOGUE_GERER: 'CATALOGUE_GERER',
+  UTILISATEUR_GERER: 'UTILISATEUR_GERER',
+  PROFIL_GERER: 'PROFIL_GERER',
+  PRODUIT_GERER: 'PRODUIT_GERER',
+} as const;
+
+/** Droits que le profil système garde toujours (sinon plus personne ne pourrait administrer Gwaso). */
+export const DROITS_INDISPENSABLES: string[] = [DROITS.ACCES_DASHBOARD, DROITS.PROFIL_GERER];

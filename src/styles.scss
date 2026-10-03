@@ -186,6 +186,15 @@ ng-icon {
   }
 }
 
+// Boutons-icônes Material (⋯, ×, poubelle...) : Material les prévoit pour une icône de 24 px, posée dans
+// un bloc avec une marge fixe. Nos icônes font 16 à 20 px : on centre plutôt l'icône, quelle que soit sa taille.
+.mat-mdc-icon-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
 // =============================================================================
 // Classes partagées
 // =============================================================================
@@ -303,6 +312,17 @@ ng-icon {
 .gw-pagination {
   --mat-paginator-container-background-color: transparent;
   border-top: 1px solid var(--gw-bordure);
+
+  // Téléphone : pas de choix du nombre par page (il se tassait), le reste centré
+  @media (max-width: 767.98px) {
+    .mat-mdc-paginator-page-size {
+      display: none;
+    }
+
+    .mat-mdc-paginator-container {
+      justify-content: center;
+    }
+  }
 }
 
 // =============================================================================
@@ -333,6 +353,12 @@ ng-icon {
   --mat-snack-bar-supporting-text-color: inherit;
   margin-top: calc(var(--gw-hauteur-topbar) + var(--gw-espace-2)) !important;
   margin-right: var(--gw-espace-5) !important;
+
+  // Téléphone : centré, même marge des deux côtés
+  @media (max-width: 767.98px) {
+    margin-right: var(--gw-espace-4) !important;
+    margin-left: var(--gw-espace-4) !important;
+  }
 
   .mat-mdc-snackbar-surface {
     padding: 0 !important;

@@ -32,11 +32,12 @@ import {
   firstValueFrom,
   forkJoin,
   map,
+  Observable,
   of,
   switchMap,
   tap,
 } from 'rxjs';
-import { Role, StatutCompte } from '../../../../core/models/enums.model';
+import { TypeCompte, StatutCompte } from '../../../../core/models/enums.model';
 import { PageResponse } from '../../../../core/models/page-response.model';
 import { AValiderService } from '../../../../core/services/a-valider.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
@@ -48,6 +49,7 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
+import { choisirProfil } from '../../../profils/components/choix-profil-dialog/ouvrir-choix-profil';
 import { CarteDemande } from '../../components/carte-demande/carte-demande';
 import {
   NouvelUtilisateurDialog,
@@ -56,17 +58,16 @@ import {
 import {
   DemandeStatut,
   FiltresUtilisateurs,
-  ICONES_ROLE,
-  LIBELLES_ROLE,
+  ICONES_TYPE_COMPTE,
+  LIBELLES_TYPE_COMPTE,
+  ORDRE_TYPES_COMPTE,
   UtilisateurResume,
 } from '../../models/utilisateur.model';
-import { ORDRE_ACCES, ProfilResponse } from '../../../profils/models/profil.model';
-import { ProfilService } from '../../../profils/services/profil.service';
 import { UtilisateurService } from '../../services/utilisateur.service';
 
 type Onglet = 'demandes' | 'membres';
 
-const ROLES: Role[] = ['CUISINIER', 'CHEF', 'PRODUCTEUR', 'ADMIN'];
+const ROLES: TypeCompte[] = ['CUISINIER', 'CHEF', 'PRODUCTEUR', 'ADMIN'];
 const STATUTS: { valeur: StatutCompte; libelle: string }[] = [
   { valeur: 'ACTIF', libelle: 'Actif' },
   { valeur: 'SUSPENDU', libelle: 'Suspendu' },
@@ -84,7 +85,8 @@ interface EtatMembres {
 
 /**
  * Utilisateurs : deux usages bien séparés (loi de Hick).
- * 1. « Demandes à valider » : décider rapidement sur les chefs et producteurs en attente.
+ * 1. « Demandes à valider » : décider rapidement sur les chefs et producteurs en attente,
+ *    et sur les cuisiniers qui demandent à le devenir.
  * 2. « Tous les membres » : retrouver un compte et gérer son statut.
  * L'onglet et les filtres sont dans l'adresse (?onglet=membres&role=CHEF...).
  */
@@ -141,14 +143,14 @@ export class UtilisateursListe implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private dialog = inject(MatDialog);
-  private profilService = inject(ProfilService);
-  protected profils = signal<ProfilResponse[]>([]);
-  /** Profils reliés à un type de compte, dans l'ordre du dashboard (admin, chef, cuisinier, producteur). */
-  protected profilsFiltre = computed(() =>
-    this.profils()
-      .filter((p) => p.role !== null)
-      .sort((a, b) => ORDRE_ACCES.indexOf(a.role!) - ORDRE_ACCES.indexOf(b.role!)),
-  );
+  /** Filtre par type de compte (la classe du compte). */
+  protected readonly typesCompte = ORDRE_TYPES_COMPTE;
+  protected readonly libellesTypePluriel: Record<TypeCompte, string> = {
+    ADMIN: 'Administrateurs',
+    CUISINIER: 'Cuisiniers',
+    CHEF: 'Chefs cuisiniers',
+    PRODUCTEUR: 'Producteurs',
+  };
   protected ecran = inject(EcranService);
 
   // ----- Paramètres de l'adresse -----
@@ -161,8 +163,8 @@ export class UtilisateursListe implements OnInit {
 
   protected readonly roles = ROLES;
   protected readonly statuts = STATUTS;
-  protected readonly libellesRole = LIBELLES_ROLE;
-  protected readonly iconesRole = ICONES_ROLE;
+  protected readonly libellesRole = LIBELLES_TYPE_COMPTE;
+  protected readonly iconesRole = ICONES_TYPE_COMPTE;
 
   protected ongletActif = computed<Onglet>(() =>
     this.onglet() === 'membres' ? 'membres' : 'demandes',
@@ -202,14 +204,9 @@ export class UtilisateursListe implements OnInit {
   protected champRecherche = new FormControl('', { nonNullable: true });
   protected lignesSquelette = [1, 2, 3, 4, 5];
 
-  /** Libellé et icône d'un rôle (méthodes typées : la ligne d'un mat-table n'a pas de type). */
-  /** Nom du profil d'un type de compte (celui de la table profil), à défaut un libellé générique. */
-  protected nomProfil(role: Role): string {
-    return this.profils().find((p) => p.role === role)?.nom ?? LIBELLES_ROLE[role];
-  }
-
-  protected iconeRole(role: Role): string {
-    return ICONES_ROLE[role];
+  /** Icône d'un type de compte (méthode typée : la ligne d'un mat-table n'a pas de type). */
+  protected iconeRole(role: TypeCompte): string {
+    return ICONES_TYPE_COMPTE[role];
   }
 
   /** Colonnes du tableau des membres : la date d'inscription est masquée sur tablette. */
@@ -248,7 +245,6 @@ export class UtilisateursListe implements OnInit {
 
   ngOnInit(): void {
     this.chargerDemandes();
-    this.profilService.getAll().subscribe({ next: (profils) => this.profils.set(profils) });
   }
 
   // ----- Navigation et filtres -----
@@ -264,7 +260,7 @@ export class UtilisateursListe implements OnInit {
     });
   }
 
-  changerRole(role: Role | null): void {
+  changerRole(role: TypeCompte | null): void {
     this.naviguer({ role, page: null });
   }
 
@@ -324,11 +320,29 @@ export class UtilisateursListe implements OnInit {
     forkJoin({
       chefs: this.utilisateurService.getChefs(filtres),
       producteurs: this.utilisateurService.getProducteurs(filtres),
+      cuisiniers: this.utilisateurService.getDemandesStatut('EN_ATTENTE'),
     }).subscribe({
-      next: ({ chefs, producteurs }) => {
+      next: ({ chefs, producteurs, cuisiniers }) => {
+        const sansDemande = { origine: 'compte' as const, demandeId: null, motivation: null };
         const demandes: DemandeStatut[] = [
-          ...chefs.contenu.map((c) => ({ ...c, type: 'CHEF' as const, localite: null })),
-          ...producteurs.contenu.map((p) => ({ ...p, type: 'PRODUCTEUR' as const })),
+          ...chefs.contenu.map((c) => ({ ...c, ...sansDemande, type: 'CHEF' as const, localite: null })),
+          ...producteurs.contenu.map((p) => ({ ...p, ...sansDemande, type: 'PRODUCTEUR' as const })),
+          // Cuisiniers qui demandent à devenir chef ou producteur
+          ...cuisiniers.map((d) => ({
+            id: d.demandeurId,
+            origine: 'cuisinier' as const,
+            demandeId: d.id,
+            motivation: d.motivation,
+            type: d.type,
+            nom: d.demandeurNom,
+            prenom: d.demandeurPrenom,
+            email: d.demandeurEmail,
+            telephone: d.demandeurTelephone,
+            photoProfil: d.demandeurPhotoProfil,
+            preuveUrl: d.preuveUrl,
+            localite: d.localite,
+            dateInscription: d.dateDemande,
+          })),
         ];
         // Les plus anciennes d'abord : elles attendent depuis le plus longtemps
         demandes.sort(
@@ -345,18 +359,35 @@ export class UtilisateursListe implements OnInit {
   }
 
   async validerDemande(demande: DemandeStatut): Promise<void> {
-    const role = LIBELLES_ROLE[demande.type].toLowerCase();
+    const role = LIBELLES_TYPE_COMPTE[demande.type].toLowerCase();
+    if (demande.demandeId) {
+      // Cuisinier qui devient chef / producteur : on choisit le profil qui lui donne ses droits
+      const profilId = await choisirProfil(this.dialog, {
+        titre: `${demande.prenom} ${demande.nom} devient ${role} ?`,
+        message: `Son compte passe de cuisinier à ${role}. Il garde ses favoris, commentaires et contenus.`,
+        texteConfirmer: 'Valider la demande',
+        suggestion: demande.type === 'CHEF' ? 'chef' : 'producteur',
+      });
+      if (!profilId) {
+        return;
+      }
+      this.demandeEnCours.set(demande.id);
+      this.utilisateurService.validerDemande(demande.demandeId, profilId).subscribe({
+        next: () => this.apresDecision(`${demande.prenom} ${demande.nom} est maintenant ${role}.`),
+        error: () => this.demandeEnCours.set(null),
+      });
+      return;
+    }
     const confirme = await this.confirmation.demander({
       titre: `Valider ${demande.prenom} ${demande.nom} ?`,
-      message: `Son compte obtiendra le statut ${role} et les droits associés.`,
+      message: `Son compte obtiendra le statut ${role}.`,
       texteConfirmer: 'Valider la demande',
     });
     if (!confirme) {
       return;
     }
     this.demandeEnCours.set(demande.id);
-    const requete =
-      demande.type === 'CHEF'
+    const requete: Observable<unknown> = demande.type === 'CHEF'
         ? this.utilisateurService.validerChef(demande.id)
         : this.utilisateurService.validerProducteur(demande.id);
     requete.subscribe({
@@ -378,8 +409,9 @@ export class UtilisateursListe implements OnInit {
       return;
     }
     this.demandeEnCours.set(demande.id);
-    const requete =
-      demande.type === 'CHEF'
+    const requete: Observable<unknown> = demande.demandeId
+      ? this.utilisateurService.refuserDemande(demande.demandeId, motif)
+      : demande.type === 'CHEF'
         ? this.utilisateurService.rejeterChef(demande.id, motif)
         : this.utilisateurService.rejeterProducteur(demande.id, motif);
     requete.subscribe({

@@ -1,4 +1,4 @@
-import { Role } from '../../../core/models/enums.model';
+import { TypeCompte } from '../../../core/models/enums.model';
 import { Pagination } from '../../../core/models/page-response.model';
 
 /** Ce qui s'est passé (TypeNotification côté backend). */
@@ -23,7 +23,7 @@ export interface NotificationResponse {
   acteurNom: string | null;
   acteurPrenom: string | null;
   acteurPhotoProfil: string | null;
-  acteurRole: Role | null;
+  acteurRole: TypeCompte | null;
   /** Élément concerné : recette, vidéo, défi ou compte selon le type. */
   cibleId: string | null;
   dateCreation: string;
@@ -72,10 +72,12 @@ export function lienCible(n: NotificationResponse): { lien: string[]; parametres
     case 'PARTICIPATION_DEFI':
     case 'DEFI_TERMINE':
       return { lien: ['/defis', n.cibleId] };
+    // Un cuisinier qui demande à devenir chef / producteur reste cuisinier tant que ce n'est pas validé :
+    // on ouvre la fiche avec son type actuel
     case 'DEMANDE_CHEF':
-      return { lien: ['/utilisateurs', n.cibleId], parametres: { role: 'CHEF' } };
+      return { lien: ['/utilisateurs', n.cibleId], parametres: { role: n.acteurRole ?? 'CHEF' } };
     case 'DEMANDE_PRODUCTEUR':
-      return { lien: ['/utilisateurs', n.cibleId], parametres: { role: 'PRODUCTEUR' } };
+      return { lien: ['/utilisateurs', n.cibleId], parametres: { role: n.acteurRole ?? 'PRODUCTEUR' } };
     case 'ADMIN_AJOUTE':
       return { lien: ['/utilisateurs', n.cibleId], parametres: { role: 'ADMIN' } };
     case 'INSCRIPTION':

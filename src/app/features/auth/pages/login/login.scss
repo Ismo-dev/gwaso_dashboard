@@ -15,7 +15,7 @@
 }
 
 // =============================================================================
-// Panneau de marque : cacao, motif bogolan qui glisse, lueurs, éléments flottants
+// Panneau de marque : cacao, motif bogolan qui glisse, éléments flottants
 // =============================================================================
 .panneau-marque {
   position: relative;
@@ -52,42 +52,6 @@
   @include ecran.tablette-et-moins {
     display: none;
   }
-}
-
-.lueur {
-  position: absolute;
-  z-index: -1;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.45;
-  animation: gw-respire 9s ease-in-out infinite;
-}
-
-.lueur-1 {
-  top: 12%;
-  left: 18%;
-  width: 280px;
-  height: 280px;
-  background: var(--gw-terre-cuite);
-}
-
-.lueur-2 {
-  right: 8%;
-  bottom: 14%;
-  width: 320px;
-  height: 320px;
-  background: var(--gw-karite);
-  animation-delay: -3s;
-}
-
-.lueur-3 {
-  bottom: 38%;
-  left: 52%;
-  width: 180px;
-  height: 180px;
-  background: #f0a262;
-  opacity: 0.25;
-  animation-delay: -6s;
 }
 
 .flottant {
@@ -210,9 +174,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--gw-espace-10) var(--gw-espace-6);
-  background:
-    radial-gradient(60% 40% at 100% 0%, var(--gw-terre-cuite-pale) 0%, transparent 70%),
-    var(--gw-surface);
+  background: var(--gw-surface);
 
   @include ecran.mobile {
     padding: var(--gw-espace-8) var(--gw-espace-5);
@@ -366,16 +328,6 @@ form .champ:nth-child(2) { animation-delay: 490ms; }
 @keyframes gw-motif {
   to {
     transform: translate(56px, 56px);
-  }
-}
-
-@keyframes gw-respire {
-  0%,
-  100% {
-    transform: scale(1) translate(0, 0);
-  }
-  50% {
-    transform: scale(1.15) translate(12px, -10px);
   }
 }
 

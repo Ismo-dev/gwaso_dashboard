@@ -7,5 +7,5 @@ export const inviteGuard: CanActivateFn = () => {
   const session = inject(SessionService);
   const router = inject(Router);
 
-  return session.estAdmin() ? router.createUrlTree(['/']) : true;
+  return session.peutOuvrirLeDashboard() ? router.createUrlTree(['/']) : true;
 };

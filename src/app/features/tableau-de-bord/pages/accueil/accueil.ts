@@ -16,6 +16,8 @@ import { StatistiquesService } from '../../services/statistiques.service';
 
 /** Une file de travail « à traiter » (recettes, vidéos, défis, comptes). */
 interface FileATraiter {
+  /** Droit nécessaire pour ouvrir la page de la file. */
+  droit: string;
   libelle: string;
   description: string;
   nombre: number;
@@ -77,7 +79,7 @@ export class Accueil implements OnInit {
 
   protected totalATraiter = computed(() => {
     const s = this.statistiques();
-    return s ? Object.values(s.aValider).reduce((total, nombre) => total + nombre, 0) : 0;
+    return s ? this.files().reduce((total, file) => total + file.nombre, 0) : 0;
   });
 
   /** Files de travail, les plus chargées en premier. */
@@ -88,6 +90,7 @@ export class Accueil implements OnInit {
     }
     const files: FileATraiter[] = [
       {
+        droit: 'RECETTE_VALIDER',
         libelle: 'Recettes',
         description: 'Proposées par la communauté',
         nombre: s.aValider.recettes,
@@ -96,6 +99,7 @@ export class Accueil implements OnInit {
         parametres: { statut: 'EN_ATTENTE_VALIDATION' },
       },
       {
+        droit: 'VIDEO_MODERER',
         libelle: 'Vidéos',
         description: 'Tutoriels et astuces',
         nombre: s.aValider.videos,
@@ -104,6 +108,7 @@ export class Accueil implements OnInit {
         parametres: {},
       },
       {
+        droit: 'UTILISATEUR_GERER',
         libelle: 'Chefs cuisiniers',
         description: 'Demandes de statut',
         nombre: s.aValider.chefs,
@@ -112,6 +117,7 @@ export class Accueil implements OnInit {
         parametres: {},
       },
       {
+        droit: 'UTILISATEUR_GERER',
         libelle: 'Producteurs',
         description: 'Demandes de statut',
         nombre: s.aValider.producteurs,
@@ -120,6 +126,7 @@ export class Accueil implements OnInit {
         parametres: {},
       },
       {
+        droit: 'DEFI_VALIDER',
         libelle: 'Défis',
         description: 'Proposés par les chefs',
         nombre: s.aValider.defis,
@@ -128,7 +135,8 @@ export class Accueil implements OnInit {
         parametres: {},
       },
     ];
-    return files.sort((a, b) => b.nombre - a.nombre);
+    // Seulement ce que le profil permet de traiter
+    return files.filter((f) => this.session.aLeDroit(f.droit)).sort((a, b) => b.nombre - a.nombre);
   });
 
   /** Répartition des recettes par statut (barre empilée + légende chiffrée). */
@@ -176,6 +184,9 @@ export class Accueil implements OnInit {
       },
     });
 
+    if (!this.session.aLeDroit('RECETTE_VALIDER')) {
+      return;
+    }
     this.recetteService.getEnAttente().subscribe({
       // Les plus anciennes d'abord : elles attendent depuis le plus longtemps
       next: (recettes) =>

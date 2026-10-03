@@ -1,0 +1,19 @@
+<h2 mat-dialog-title>{{ donnees.titre }}</h2>
+
+<mat-dialog-content>
+  <p class="message">{{ donnees.message }}</p>
+  <mat-form-field class="champ">
+    <mat-label>Profil à lui donner (ses droits)</mat-label>
+    <mat-select [formControl]="profil">
+      @for (p of profils(); track p.id) {
+        <mat-option [value]="p.id">{{ p.nom }} · {{ p.nbDroits }} droit{{ p.nbDroits > 1 ? 's' : '' }}</mat-option>
+      }
+    </mat-select>
+    <mat-error>Choisissez un profil.</mat-error>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton="outlined" type="button" mat-dialog-close>Annuler</button>
+  <button matButton="filled" type="button" (click)="confirmer()">{{ donnees.texteConfirmer }}</button>
+</mat-dialog-actions>

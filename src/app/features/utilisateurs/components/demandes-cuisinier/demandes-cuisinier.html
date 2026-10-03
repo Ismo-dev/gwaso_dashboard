@@ -1,0 +1,48 @@
+@if (enAttente(); as d) {
+  <section class="gw-carte panneau panneau-attente" aria-labelledby="titre-demande">
+    <h2 id="titre-demande">Veut devenir {{ libellesRole[d.type] | lowercase }}</h2>
+    <p class="explication">
+      Demande envoyée le {{ d.dateDemande | date: "d MMMM y 'à' HH:mm" }}. Vérifiez le justificatif avant de décider.
+    </p>
+    @if (d.motivation) {
+      <blockquote class="motivation">« {{ d.motivation }} »</blockquote>
+    }
+    @if (d.localite) {
+      <p class="localite"><ng-icon name="lucideStore" size="1rem" aria-hidden="true" /> Produit à {{ d.localite }}</p>
+    }
+    <button type="button" class="justificatif" (click)="voirJustificatif(d)">
+      <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
+      <strong>Voir le justificatif</strong>
+      <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
+    </button>
+    <div class="decision">
+      <button matButton="outlined" type="button" class="gw-bouton-danger" [disabled]="enCours()" (click)="refuser(d)">Refuser…</button>
+      <button matButton="filled" type="button" [disabled]="enCours()" (click)="valider(d)">
+        <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+        Valider : devient {{ libellesRole[d.type] | lowercase }}
+      </button>
+    </div>
+  </section>
+}
+
+@if (anciennes().length > 0) {
+  <section class="gw-carte panneau" aria-labelledby="titre-historique">
+    <h2 id="titre-historique">Demandes précédentes</h2>
+    <ul class="historique">
+      @for (d of anciennes(); track d.id) {
+        <li>
+          <div class="historique-haut">
+            <span>{{ libellesRole[d.type] }} · {{ d.dateDemande | date: 'd MMM y' }}</span>
+            <app-status-badge [statut]="d.statut" />
+          </div>
+          @if (d.motifRejet) {
+            <p class="motif">Motif : « {{ d.motifRejet }} »</p>
+          }
+          @if (d.decideParNom) {
+            <p class="decide">Décidé par {{ d.decideParNom }}</p>
+          }
+        </li>
+      }
+    </ul>
+  </section>
+}

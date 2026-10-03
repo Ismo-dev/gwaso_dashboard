@@ -30,26 +30,47 @@
   </nav>
 
   <div class="actions">
-    <!-- Notifications : ce qui s'est passé, dont ce qui attend une décision -->
-    <button
-      matIconButton
-      type="button"
-      class="bouton-cloche"
-      [matMenuTriggerFor]="menuNotifications"
-      (menuOpened)="chargerDernieres()"
-      [attr.aria-label]="
-        notifications.nombreNonLues() > 0
-          ? notifications.nombreNonLues() + ' notifications non lues'
-          : 'Notifications'
-      "
-    >
-      <ng-icon name="lucideBell" size="1.25rem" aria-hidden="true" />
-      @if (notifications.nombreNonLues() > 0) {
-        <span class="pastille gw-chiffres" aria-hidden="true">{{
-          notifications.nombreNonLues() > 99 ? '99+' : notifications.nombreNonLues()
-        }}</span>
-      }
-    </button>
+    <!-- Notifications : ce qui s'est passé, dont ce qui attend une décision.
+         Téléphone : la cloche ouvre directement la page (un menu flottant y serait trop étroit) -->
+    @if (mobile()) {
+      <a
+        matIconButton
+        class="bouton-cloche"
+        routerLink="/notifications"
+        [attr.aria-label]="
+          notifications.nombreNonLues() > 0
+            ? notifications.nombreNonLues() + ' notifications non lues'
+            : 'Notifications'
+        "
+      >
+        <ng-icon name="lucideBell" size="1.25rem" aria-hidden="true" />
+        @if (notifications.nombreNonLues() > 0) {
+          <span class="pastille gw-chiffres" aria-hidden="true">{{
+            notifications.nombreNonLues() > 99 ? '99+' : notifications.nombreNonLues()
+          }}</span>
+        }
+      </a>
+    } @else {
+      <button
+        matIconButton
+        type="button"
+        class="bouton-cloche"
+        [matMenuTriggerFor]="menuNotifications"
+        (menuOpened)="chargerDernieres()"
+        [attr.aria-label]="
+          notifications.nombreNonLues() > 0
+            ? notifications.nombreNonLues() + ' notifications non lues'
+            : 'Notifications'
+        "
+      >
+        <ng-icon name="lucideBell" size="1.25rem" aria-hidden="true" />
+        @if (notifications.nombreNonLues() > 0) {
+          <span class="pastille gw-chiffres" aria-hidden="true">{{
+            notifications.nombreNonLues() > 99 ? '99+' : notifications.nombreNonLues()
+          }}</span>
+        }
+      </button>
+    }
 
     <mat-menu #menuNotifications="matMenu" xPosition="before" class="gw-menu-notifications">
       <div class="menu-entete" role="presentation">

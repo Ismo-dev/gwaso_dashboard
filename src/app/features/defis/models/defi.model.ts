@@ -1,4 +1,4 @@
-import { Role } from '../../../core/models/enums.model';
+import { TypeCompte } from '../../../core/models/enums.model';
 import { Pagination } from '../../../core/models/page-response.model';
 
 /**
@@ -126,7 +126,7 @@ export interface ParticipationDefiResponse {
   participantNom: string;
   participantPrenom: string | null;
   participantPhotoProfil: string | null;
-  participantRole: Role | null;
+  participantRole: TypeCompte | null;
   defiId: string;
   defiNom: string;
   dateParticipation: string;
@@ -143,6 +143,8 @@ export interface ParticipationDefiResponse {
 export interface FiltresDefis extends Pagination {
   recherche?: string;
   statut?: StatutDefi;
+  /** Défis proposés par ce chef. */
+  chefId?: string;
 }
 
 /** Une preuve vidéo se reconnaît à son extension (sinon c'est une photo). */

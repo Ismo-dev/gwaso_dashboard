@@ -3,7 +3,7 @@ import { inject, Service } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { StatutCompte } from '../../../core/models/enums.model';
+import { StatutCompte, StatutRole } from '../../../core/models/enums.model';
 import { PageResponse } from '../../../core/models/page-response.model';
 import { versParams } from '../../../core/utils/http-params';
 import {
@@ -13,10 +13,12 @@ import {
   ChefCuisinierResponse,
   CuisinierRequest,
   CuisinierResponse,
+  DemandeStatutResponse,
   FiltresComptesAValider,
   FiltresUtilisateurs,
   ProducteurRequest,
   ProducteurResponse,
+  ProduitProducteurResponse,
   UtilisateurResume,
 } from '../models/utilisateur.model';
 
@@ -39,6 +41,69 @@ export class UtilisateurService {
     return this.http
       .put<ApiResponse<UtilisateurResume>>(`${this.url}/${id}/statut-compte`, { statut })
       .pipe(map((reponse) => reponse.data));
+  }
+
+  // ----- Modification d'un compte par l'administrateur -----
+
+  modifierCuisinier(id: string, requete: CuisinierRequest): Observable<CuisinierResponse> {
+    return this.http
+      .put<ApiResponse<CuisinierResponse>>(`${this.url}/cuisiniers/${id}`, requete)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  modifierChef(id: string, requete: ChefCuisinierRequest): Observable<ChefCuisinierResponse> {
+    return this.http
+      .put<ApiResponse<ChefCuisinierResponse>>(`${this.url}/chefs/${id}`, requete)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  modifierProducteur(id: string, requete: ProducteurRequest): Observable<ProducteurResponse> {
+    return this.http
+      .put<ApiResponse<ProducteurResponse>>(`${this.url}/producteurs/${id}`, requete)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  // ----- Cuisiniers qui demandent à devenir chef ou producteur -----
+
+  getDemandesStatut(statut?: StatutRole): Observable<DemandeStatutResponse[]> {
+    return this.http
+      .get<ApiResponse<DemandeStatutResponse[]>>(`${environment.apiUrl}/demandes-statut`, { params: versParams({ statut }) })
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  getDemandesDe(utilisateurId: string): Observable<DemandeStatutResponse[]> {
+    return this.http
+      .get<ApiResponse<DemandeStatutResponse[]>>(`${environment.apiUrl}/demandes-statut/utilisateur/${utilisateurId}`)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  /** Le cuisinier devient chef cuisinier ou producteur (même compte). */
+  validerDemande(demandeId: string, profilId?: string): Observable<DemandeStatutResponse> {
+    return this.http
+      .put<ApiResponse<DemandeStatutResponse>>(`${environment.apiUrl}/demandes-statut/${demandeId}/valider`, {}, {
+        params: versParams({ profilId }),
+      })
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  refuserDemande(demandeId: string, motifRejet: string): Observable<DemandeStatutResponse> {
+    return this.http
+      .put<ApiResponse<DemandeStatutResponse>>(`${environment.apiUrl}/demandes-statut/${demandeId}/rejeter`, { motifRejet })
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  // ----- Produits d'un producteur -----
+
+  getProduits(producteurId: string): Observable<ProduitProducteurResponse[]> {
+    return this.http
+      .get<ApiResponse<ProduitProducteurResponse[]>>(`${environment.apiUrl}/producteurs/produits/producteur/${producteurId}`)
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  retirerProduit(produitId: string): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${environment.apiUrl}/producteurs/produits/${produitId}`)
+      .pipe(map(() => undefined));
   }
 
   /** Donne un autre profil (actif, du même type de compte) à un utilisateur. */

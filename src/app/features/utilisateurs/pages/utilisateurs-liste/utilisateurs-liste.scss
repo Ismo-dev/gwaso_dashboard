@@ -66,11 +66,22 @@
   gap: var(--gw-espace-2);
   padding: var(--gw-espace-5) var(--gw-espace-5) 0;
 
+  // Téléphone : les pastilles défilent jusqu'au bord de la carte, avec un fondu qui montre la suite
   @include ecran.mobile {
     flex-wrap: nowrap;
     overflow-x: auto;
-    padding: var(--gw-espace-4) var(--gw-espace-4) 0;
+    padding: var(--gw-espace-4) 0 0 var(--gw-espace-4);
     scrollbar-width: none;
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+
+    > * {
+      flex-shrink: 0;
+    }
+
+    &::after {
+      content: '';
+      flex: 0 0 var(--gw-espace-2);
+    }
   }
 }
 

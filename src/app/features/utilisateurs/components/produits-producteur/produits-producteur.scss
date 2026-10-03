@@ -1,0 +1,69 @@
+.produits {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--gw-espace-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.produit {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-2);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+}
+
+.vignette {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--gw-rayon);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.textes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nom {
+  color: var(--gw-cacao);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.retirer {
+  --mat-icon-button-icon-color: var(--gw-danger);
+  flex-shrink: 0;
+}
+
+.vide {
+  grid-column: 1 / -1;
+  color: var(--gw-texte-doux);
+}
+
+.sq-liste {
+  height: 120px;
+  border-radius: var(--gw-rayon);
+}

@@ -1,11 +1,13 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
+import { droitGuard } from './core/guards/droit.guard';
 import { inviteGuard } from './core/guards/invite.guard';
 
 /**
  * Plan du site.
  * - `title` devient le titre de l'onglet (voir TitrePageService).
  * - `data.filAriane` donne le libellé dans le fil d'Ariane (voir FilArianeService).
+ * - `data.droit` : droit du profil nécessaire pour ouvrir la page (voir droitGuard).
  * Les fonctionnalités sont chargées à la demande (loadChildren) pour alléger le premier chargement.
  */
 export const routes: Routes = [
@@ -31,41 +33,56 @@ export const routes: Routes = [
       },
       {
         path: 'recettes',
-        data: { filAriane: 'Recettes' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Recettes', droit: 'RECETTE_VALIDER' },
         loadChildren: () =>
           import('./features/recettes/recettes.routes').then((m) => m.RECETTES_ROUTES),
       },
       {
         path: 'videos',
-        data: { filAriane: 'Vidéos' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Vidéos', droit: 'VIDEO_MODERER' },
         loadChildren: () => import('./features/videos/videos.routes').then((m) => m.VIDEOS_ROUTES),
       },
       {
         path: 'utilisateurs',
-        data: { filAriane: 'Utilisateurs' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Utilisateurs', droit: 'UTILISATEUR_GERER' },
         loadChildren: () =>
           import('./features/utilisateurs/utilisateurs.routes').then((m) => m.UTILISATEURS_ROUTES),
       },
       {
         path: 'defis',
-        data: { filAriane: 'Défis' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Défis', droit: 'DEFI_VALIDER' },
         loadChildren: () => import('./features/defis/defis.routes').then((m) => m.DEFIS_ROUTES),
       },
       {
+        // Annuaire des producteurs : même liste que l'application (route publique côté API)
+        path: 'annuaire',
+        title: 'Annuaire des producteurs',
+        data: { filAriane: 'Annuaire des producteurs' },
+        loadComponent: () =>
+          import('./features/producteurs/pages/annuaire/annuaire').then((m) => m.Annuaire),
+      },
+      {
         path: 'categories',
-        data: { filAriane: 'Catégories' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Catégories', droit: 'CATALOGUE_GERER' },
         loadChildren: () =>
           import('./features/categories/categories.routes').then((m) => m.CATEGORIES_ROUTES),
       },
       {
         path: 'ingredients',
-        data: { filAriane: 'Ingrédients' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Ingrédients', droit: 'CATALOGUE_GERER' },
         loadChildren: () =>
           import('./features/ingredients/ingredients.routes').then((m) => m.INGREDIENTS_ROUTES),
       },
       {
         path: 'ustensiles',
-        data: { filAriane: 'Ustensiles' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Ustensiles', droit: 'CATALOGUE_GERER' },
         loadChildren: () =>
           import('./features/ustensiles/ustensiles.routes').then((m) => m.USTENSILES_ROUTES),
       },
@@ -87,7 +104,8 @@ export const routes: Routes = [
       },
       {
         path: 'profils',
-        data: { filAriane: 'Profils et droits' },
+        canActivate: [droitGuard],
+        data: { filAriane: 'Profils et droits', droit: 'PROFIL_GERER' },
         loadChildren: () =>
           import('./features/profils/profils.routes').then((m) => m.PROFILS_ROUTES),
       },

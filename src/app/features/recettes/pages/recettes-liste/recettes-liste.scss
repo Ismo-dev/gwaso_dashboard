@@ -4,12 +4,25 @@
 .onglets-conteneur {
   margin-bottom: var(--gw-espace-5);
 
-  // Téléphone : les onglets défilent horizontalement au lieu de se tasser
+  // Téléphone : les onglets défilent horizontalement, du bord gauche du contenu jusqu'au bord de l'écran.
+  // Un espace final (::after) laisse la même marge que les autres blocs quand on arrive au bout,
+  // et un fondu à droite montre qu'il y a la suite.
   @include ecran.mobile {
+    display: flex;
     margin-inline: calc(var(--gw-espace-4) * -1);
-    padding-inline: var(--gw-espace-4);
+    padding-left: var(--gw-espace-4);
     overflow-x: auto;
     scrollbar-width: none;
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+
+    > * {
+      flex-shrink: 0;
+    }
+
+    &::after {
+      content: '';
+      flex: 0 0 var(--gw-espace-4);
+    }
   }
 }
 

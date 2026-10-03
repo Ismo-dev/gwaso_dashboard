@@ -122,3 +122,13 @@
     flex: 1;
   }
 }
+
+.motivation {
+  margin: 0;
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-left: 3px solid var(--gw-terre-cuite);
+  color: var(--gw-texte);
+  font-size: var(--gw-taille-petit);
+  font-style: italic;
+  overflow-wrap: anywhere;
+}

@@ -34,7 +34,8 @@ export class NotificationService {
     this.snackBar.openFromComponent<Toast, DonneesToast>(Toast, {
       data: { type, message, duree: DUREES[type] },
       duration: DUREES[type],
-      horizontalPosition: 'end',
+      // Téléphone : centré en haut de l'écran ; ordinateur : en haut à droite, sous l'en-tête
+      horizontalPosition: matchMedia('(max-width: 767.98px)').matches ? 'center' : 'end',
       verticalPosition: 'top',
       panelClass: 'gw-toast',
       politeness: type === 'erreur' ? 'assertive' : 'polite',

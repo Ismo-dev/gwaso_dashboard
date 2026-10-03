@@ -57,7 +57,13 @@
         }
       </div>
     </div>
-    <p class="inscription">Membre depuis le {{ f.dateInscription | date: 'd MMMM y' }}</p>
+    <div class="entete-droite">
+      <button matButton="outlined" type="button" class="bouton-modifier" (click)="modifier()">
+        <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+        Modifier
+      </button>
+      <p class="inscription">Membre depuis le {{ f.dateInscription | date: 'd MMMM y' }}</p>
+    </div>
   </header>
 
   <div class="colonnes">
@@ -136,6 +142,27 @@
         </section>
       }
 
+      <!-- Cuisinier qui demande à devenir chef ou producteur -->
+      @if (f.role === 'CUISINIER') {
+        <app-demandes-cuisinier [utilisateurId]="f.id" (valide)="apresChangementDeType(f.id, $event)" />
+      }
+
+      <!-- Ce que le chef a proposé -->
+      @if (f.role === 'CHEF') {
+        <section class="gw-carte panneau" aria-labelledby="titre-activite">
+          <h2 id="titre-activite">Recettes et défis proposés</h2>
+          <app-activite-chef [chefId]="f.id" />
+        </section>
+      }
+
+      <!-- Ce que le producteur vend -->
+      @if (f.role === 'PRODUCTEUR') {
+        <section class="gw-carte panneau" aria-labelledby="titre-produits">
+          <h2 id="titre-produits">Produits proposés</h2>
+          <app-produits-producteur [producteurId]="f.id" />
+        </section>
+      }
+
       <!-- 3. Coordonnées -->
       <section class="gw-carte panneau" aria-labelledby="titre-coordonnees">
         <h2 id="titre-coordonnees">Coordonnées</h2>
@@ -198,10 +225,12 @@
       @if (droitsProfil().length > 0) {
         <app-droits-lecture class="profil-droits" [droits]="droitsAffiches()" [compact]="true" />
       }
+      @if (session.aLeDroit('PROFIL_GERER')) {
       <a matButton routerLink="/profils" class="profil-lien">
         Gérer les profils
         <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
       </a>
+      }
     </section>
 
     <!-- 5. Gestion du compte : actions sensibles, à part -->

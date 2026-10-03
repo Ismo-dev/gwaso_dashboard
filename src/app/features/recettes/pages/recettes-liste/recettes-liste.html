@@ -3,10 +3,13 @@
   titre="Recettes"
   description="Examinez les recettes proposées par la communauté, ou rédigez vos propres recettes."
 >
-  <a matButton="filled" routerLink="nouvelle">
-    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
-    Nouvelle recette
-  </a>
+  <!-- Proposer une recette demande le droit RECETTE_CREER -->
+  @if (session.aLeDroit('RECETTE_CREER')) {
+    <a matButton="filled" routerLink="nouvelle">
+      <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+      Nouvelle recette
+    </a>
+  }
 </app-page-header>
 
 <!-- Statuts : l'onglet « À valider » est le point de départ du travail -->

@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe } from '@angular/common';
 import { Component, computed, inject, input, output } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { Avatar } from '../../../../shared/components/avatar/avatar';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
-import { DemandeStatut, LIBELLES_ROLE } from '../../models/utilisateur.model';
+import { DemandeStatut, LIBELLES_TYPE_COMPTE } from '../../models/utilisateur.model';
 import { ouvrirJustificatif } from '../justificatif-dialog/ouvrir-justificatif';
 
 /**
@@ -14,7 +14,7 @@ import { ouvrirJustificatif } from '../justificatif-dialog/ouvrir-justificatif';
  * Tout ce qu'il faut pour décider est sur la carte : identité, contact, justificatif, décision.
  */
 @Component({
-  imports: [RouterLink, DatePipe, MatButton, NgIcon, Avatar, DepuisPipe],
+  imports: [RouterLink, DatePipe, LowerCasePipe, MatButton, NgIcon, Avatar, DepuisPipe],
   selector: 'app-carte-demande',
   styleUrl: './carte-demande.scss',
   templateUrl: './carte-demande.html',
@@ -29,7 +29,7 @@ export class CarteDemande {
   readonly valider = output<DemandeStatut>();
   readonly refuser = output<DemandeStatut>();
 
-  protected libelleRole = computed(() => LIBELLES_ROLE[this.demande().type]);
+  protected libelleRole = computed(() => LIBELLES_TYPE_COMPTE[this.demande().type]);
   protected icone = computed(() =>
     this.demande().type === 'CHEF' ? 'lucideChefHat' : 'lucideStore',
   );

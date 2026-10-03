@@ -1,0 +1,138 @@
+<app-page-header
+  surtitre="Communauté"
+  titre="Annuaire des producteurs"
+  description="Les producteurs validés et les ingrédients qu'ils vendent, avec leurs prix indicatifs. C'est la même liste que dans l'application."
+/>
+
+<section class="gw-carte filtres" aria-label="Rechercher dans l'annuaire">
+  <mat-form-field class="champ-recherche" subscriptSizing="dynamic">
+    <mat-label>Rechercher</mat-label>
+    <ng-icon matPrefix class="icone-champ" name="lucideSearch" size="1.125rem" aria-hidden="true" />
+    <input matInput type="search" [formControl]="recherche" placeholder="Nom, localité ou produit (ex. gombo)" />
+    @if (recherche.value) {
+      <button matIconButton matSuffix type="button" aria-label="Effacer la recherche" (click)="recherche.setValue('')">
+        <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+      </button>
+    }
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Ingrédient vendu</mat-label>
+    <mat-select [formControl]="ingredient">
+      <mat-option [value]="null">Tous les ingrédients</mat-option>
+      @for (i of ingredients(); track i.id) {
+        <mat-option [value]="i.id">{{ i.nom }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Localité</mat-label>
+    <mat-select [formControl]="localite">
+      <mat-option [value]="null">Toutes les localités</mat-option>
+      @for (l of localites(); track l) {
+        <mat-option [value]="l">{{ l }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</section>
+
+<p class="resume" aria-live="polite">
+  @if (!chargement() || producteurs().length > 0) {
+    <strong class="gw-chiffres">{{ total() }}</strong> producteur{{ total() > 1 ? 's' : '' }}
+    @if (filtresActifs()) {
+      <button matButton type="button" class="effacer" (click)="effacerFiltres()">Effacer les filtres</button>
+    }
+  }
+</p>
+
+@if (chargement() && producteurs().length === 0) {
+  <div class="grille" aria-busy="true" aria-label="Chargement de l'annuaire">
+    @for (i of [1, 2, 3]; track i) {
+      <div class="gw-squelette sq-carte"></div>
+    }
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state titre="Impossible de charger l'annuaire" icone="lucideCircleAlert" ton="erreur">
+      <button matButton="filled" type="button" (click)="charger(true)">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (producteurs().length === 0) {
+  <div class="gw-carte">
+    @if (filtresActifs()) {
+      <app-empty-state titre="Aucun producteur ne correspond" message="Essayez un autre ingrédient ou une autre localité." icone="lucideSearch" />
+    } @else {
+      <app-empty-state
+        titre="L'annuaire est vide"
+        message="Les producteurs apparaissent ici une fois leur statut validé."
+        icone="lucideStore"
+      />
+    }
+  </div>
+} @else {
+  <ul class="grille">
+    @for (p of producteurs(); track p.id) {
+      <li class="gw-carte producteur">
+        <header class="entete">
+          <app-avatar [prenom]="p.prenom" [nom]="p.nom" [photo]="p.photoProfil" taille="md" />
+          <div class="identite">
+            <h2>{{ p.prenom }} {{ p.nom }}</h2>
+            @if (p.localite) {
+              <p class="localite"><ng-icon name="lucideStore" size="0.875rem" aria-hidden="true" /> {{ p.localite }}</p>
+            }
+          </div>
+        </header>
+
+        <ul class="contacts">
+          @if (p.telephone) {
+            <li><a [href]="'tel:' + p.telephone" class="gw-chiffres">{{ p.telephone }}</a></li>
+          }
+          @if (p.email) {
+            <li><a [href]="'mailto:' + p.email">{{ p.email }}</a></li>
+          }
+        </ul>
+
+        <p class="produits-titre">
+          {{ p.produits.length }} produit{{ p.produits.length > 1 ? 's' : '' }}
+        </p>
+        <ul class="produits">
+          @for (prod of p.produits; track prod.id) {
+            <li class="produit" [class.produit-cherche]="prod.ingredientId === ingredient.value">
+              <span class="vignette">
+                @if ((prod.imageUrl ?? prod.ingredientPhotoUrl) | fichier; as photo) {
+                  <img [src]="photo" alt="" loading="lazy" />
+                } @else {
+                  <ng-icon name="lucideCarrot" size="1rem" aria-hidden="true" />
+                }
+              </span>
+              <span class="produit-nom">{{ prod.ingredientNom }}</span>
+              <span class="produit-prix gw-chiffres">
+                @if (prod.prixIndicatif !== null) {
+                  {{ prod.prixIndicatif | number: '1.0-0' : 'fr' }} FCFA<span class="unite"> / {{ prod.unite | unite }}</span>
+                } @else {
+                  Prix à demander
+                }
+              </span>
+            </li>
+          } @empty {
+            <li class="aucun-produit">Aucun produit pour le moment.</li>
+          }
+        </ul>
+
+        @if (session.aLeDroit('UTILISATEUR_GERER')) {
+          <a matButton class="fiche" [routerLink]="['/utilisateurs', p.id]" [queryParams]="{ role: 'PRODUCTEUR' }">
+            Voir la fiche
+            <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
+          </a>
+        }
+      </li>
+    }
+  </ul>
+
+  @if (!toutCharge()) {
+    <div class="plus">
+      <button matButton="outlined" type="button" [disabled]="chargement()" (click)="charger(false)">Voir plus de producteurs</button>
+    </div>
+  }
+}

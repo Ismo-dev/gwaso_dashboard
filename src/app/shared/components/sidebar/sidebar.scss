@@ -5,7 +5,14 @@
   height: 100%;
   color: var(--gw-sidebar-texte);
   background: var(--gw-sidebar-fond);
-  overflow: hidden;
+  // Écran peu haut (zoom du navigateur, petit portable) : toute la colonne défile d'un bloc,
+  // au lieu d'écraser le menu entre le logo et le compte
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  // Barre de défilement fine et sombre, assortie au menu
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+  scrollbar-width: thin;
 
   // Motif bogolan très discret en bas du menu : rappel de l'artisanat malien
   &::after {
@@ -73,8 +80,8 @@
 .navigation {
   position: relative;
   z-index: 1;
-  flex: 1;
-  overflow-y: auto;
+  // Prend la place libre (le compte reste en bas sur un grand écran), sans jamais rétrécir sous son contenu
+  flex: 1 0 auto;
   padding: var(--gw-espace-2) var(--gw-espace-3) var(--gw-espace-6);
 }
 
@@ -297,4 +304,27 @@ ul {
 .compte-fleche {
   flex-shrink: 0;
   color: var(--gw-sidebar-texte-doux);
+}
+
+// Logo, compte et bouton « Réduire » ne rétrécissent pas
+.marque,
+.compte-zone,
+.pied {
+  flex-shrink: 0;
+}
+
+// Écran peu haut : on resserre les espacements du menu
+@media (max-height: 640px) {
+  .marque {
+    min-height: 56px;
+    padding-block: var(--gw-espace-2);
+  }
+
+  .titre-section {
+    margin: var(--gw-espace-3) 0 var(--gw-espace-1);
+  }
+
+  .lien {
+    min-height: 40px;
+  }
 }

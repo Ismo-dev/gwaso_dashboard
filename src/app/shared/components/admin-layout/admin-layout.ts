@@ -3,6 +3,8 @@ import { MatSidenav, MatSidenavContainer, MatSidenavContent } from '@angular/mat
 import { RouterOutlet } from '@angular/router';
 import { AValiderService } from '../../../core/services/a-valider.service';
 import { EcranService } from '../../../core/services/ecran.service';
+import { SessionService } from '../../../core/services/session.service';
+import { AuthService } from '../../../features/auth/services/auth.service';
 import { Header } from '../header/header';
 import { Sidebar } from '../sidebar/sidebar';
 
@@ -24,6 +26,8 @@ const CLE_MENU_COMPACT = 'gw_menu_compact';
 export class AdminLayout implements OnInit {
   protected ecran = inject(EcranService);
   private aValider = inject(AValiderService);
+  private session = inject(SessionService);
+  private authService = inject(AuthService);
 
   /** Choix de l'utilisateur sur ordinateur (mémorisé dans le navigateur). */
   private prefereCompact = signal(this.lirePreference());
@@ -48,6 +52,16 @@ export class AdminLayout implements OnInit {
   ngOnInit(): void {
     // Compteurs « à valider » du menu et de la cloche
     this.aValider.rafraichir();
+    // Droits relus : le menu suit les changements faits dans « Profils et droits » depuis la connexion
+    this.authService.moi().subscribe({
+      next: (utilisateur) => {
+        this.session.mettreAJourUtilisateur(utilisateur);
+        if (!utilisateur.droits.includes('ACCES_DASHBOARD')) {
+          this.session.deconnecter();
+        }
+      },
+      error: () => undefined,
+    });
   }
 
   basculerCompact(): void {

@@ -93,8 +93,8 @@
   <section class="gw-carte liste" aria-labelledby="titre-membres">
     <h2 id="titre-membres" class="sr-only">Tous les membres</h2>
 
-    <!-- Filtre par profil : une pastille par profil, avec son nombre de comptes -->
-    <div class="profils-filtre" role="group" aria-label="Filtrer par profil">
+    <!-- Filtre par type de compte -->
+    <div class="profils-filtre" role="group" aria-label="Filtrer par type de compte">
       <button
         type="button"
         class="pastille-profil"
@@ -102,19 +102,18 @@
         [attr.aria-pressed]="!roleActif()"
         (click)="changerRole(null)"
       >
-        Tous les profils
+        Tous les comptes
       </button>
-      @for (profil of profilsFiltre(); track profil.id) {
+      @for (type of typesCompte; track type) {
         <button
           type="button"
           class="pastille-profil"
-          [class.pastille-active]="roleActif() === profil.role"
-          [attr.aria-pressed]="roleActif() === profil.role"
-          (click)="changerRole(profil.role)"
+          [class.pastille-active]="roleActif() === type"
+          [attr.aria-pressed]="roleActif() === type"
+          (click)="changerRole(type)"
         >
-          <ng-icon [name]="iconeRole(profil.role!)" size="1rem" aria-hidden="true" />
-          {{ profil.nom }}
-          <span class="pastille-nombre gw-chiffres">{{ profil.nbUtilisateurs }}</span>
+          <ng-icon [name]="iconeRole(type)" size="1rem" aria-hidden="true" />
+          {{ libellesTypePluriel[type] }}
         </button>
       }
     </div>
@@ -217,7 +216,7 @@
                 <ng-container *ngTemplateOutlet="identite; context: { $implicit: membre }" />
                 <span class="membre-role">
                   <ng-icon [name]="iconeRole(membre.role)" size="1rem" aria-hidden="true" />
-                  {{ membre.profilNom ?? nomProfil(membre.role) }}
+                  {{ membre.profilNom ?? 'Sans profil' }}
                 </span>
                 <app-status-badge class="membre-statut" [statut]="membre.statutCompte" />
                 <div class="membre-actions">
@@ -256,7 +255,7 @@
                 <td mat-cell *matCellDef="let membre" class="gw-col-centre">
                   <span class="membre-role">
                     <ng-icon [name]="iconeRole(membre.role)" size="1rem" aria-hidden="true" />
-                    {{ membre.profilNom ?? nomProfil(membre.role) }}
+                    {{ membre.profilNom ?? 'Sans profil' }}
                   </span>
                 </td>
               </ng-container>

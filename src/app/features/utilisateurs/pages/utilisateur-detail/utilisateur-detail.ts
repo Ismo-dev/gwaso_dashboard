@@ -5,10 +5,10 @@ import { MatButton } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
-import { map, Observable } from 'rxjs';
-import { Role, StatutCompte } from '../../../../core/models/enums.model';
+import { firstValueFrom, map, Observable } from 'rxjs';
+import { TypeCompte, StatutCompte } from '../../../../core/models/enums.model';
 import { AValiderService } from '../../../../core/services/a-valider.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { FilArianeService } from '../../../../core/services/fil-ariane.service';
@@ -20,17 +20,21 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
 import {
   FicheUtilisateur,
-  ICONES_ROLE,
+  ICONES_TYPE_COMPTE,
   LIBELLES_NIVEAU,
-  LIBELLES_ROLE,
+  LIBELLES_TYPE_COMPTE,
 } from '../../models/utilisateur.model';
 import { DroitsLecture } from '../../../profils/components/droits-lecture/droits-lecture';
 import { DroitAffiche, ProfilDroitsResponse, ProfilResponse } from '../../../profils/models/profil.model';
 import { ProfilService } from '../../../profils/services/profil.service';
 import { UtilisateurService } from '../../services/utilisateur.service';
+import { ActiviteChef } from '../../components/activite-chef/activite-chef';
+import { DemandesCuisinier } from '../../components/demandes-cuisinier/demandes-cuisinier';
 import { ouvrirJustificatif } from '../../components/justificatif-dialog/ouvrir-justificatif';
+import { ModifierUtilisateurDialog } from '../../components/modifier-utilisateur-dialog/modifier-utilisateur-dialog';
+import { ProduitsProducteur } from '../../components/produits-producteur/produits-producteur';
 
-const ROLES: Role[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
+const ROLES: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
 
 /**
  * Fiche d'un membre. Le rôle est passé dans l'adresse (?role=CHEF) car l'API
@@ -47,6 +51,9 @@ const ROLES: Role[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
     StatusBadge,
     EmptyState,
     DroitsLecture,
+    DemandesCuisinier,
+    ActiviteChef,
+    ProduitsProducteur,
     MatFormField,
     MatLabel,
     MatSelect,
@@ -62,15 +69,16 @@ export class UtilisateurDetail {
   private notification = inject(NotificationService);
   private aValider = inject(AValiderService);
   private filAriane = inject(FilArianeService);
-  private session = inject(SessionService);
+  protected session = inject(SessionService);
   private profilService = inject(ProfilService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   readonly id = input.required<string>();
   readonly role = input<string>();
 
-  protected readonly libellesRole = LIBELLES_ROLE;
-  protected readonly iconesRole = ICONES_ROLE;
+  protected readonly libellesRole = LIBELLES_TYPE_COMPTE;
+  protected readonly iconesRole = ICONES_TYPE_COMPTE;
   protected readonly libellesNiveau = LIBELLES_NIVEAU;
 
   protected fiche = signal<FicheUtilisateur | null>(null);
@@ -79,7 +87,7 @@ export class UtilisateurDetail {
   protected droitsAffiches = computed<DroitAffiche[]>(() =>
     this.droitsProfil().map((a) => ({ id: a.droitId, action: a.droitAction, description: a.droitDescription, actif: a.droitActif })),
   );
-  /** Profils qu'on peut donner à ce compte : actifs et du même type de compte. */
+  /** Profils qu'on peut donner à ce compte : tous les profils actifs. */
   protected profilsPossibles = signal<ProfilResponse[]>([]);
   protected changementProfil = signal(false);
   protected chargement = signal(true);
@@ -120,7 +128,7 @@ export class UtilisateurDetail {
         this.profilService.getAll().subscribe({
           next: (profils) =>
             this.profilsPossibles.set(
-              profils.filter((p) => p.actif && p.role === fiche.role).sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+              profils.filter((p) => p.actif).sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
             ),
         });
         this.filAriane.definirPageCourante(`${fiche.prenom} ${fiche.nom}`);
@@ -141,7 +149,7 @@ export class UtilisateurDetail {
     if (!fiche) {
       return;
     }
-    const role = LIBELLES_ROLE[fiche.role].toLowerCase();
+    const role = LIBELLES_TYPE_COMPTE[fiche.role].toLowerCase();
     const confirme = await this.confirmation.demander({
       titre: `Valider ${fiche.prenom} ${fiche.nom} ?`,
       message: `Son compte obtiendra le statut ${role} et les droits associés.`,
@@ -253,7 +261,7 @@ export class UtilisateurDetail {
   }
 
   /** Appelle la bonne route selon le rôle et ramène tout au même format. */
-  private lireFiche(id: string, role: Role): Observable<FicheUtilisateur> {
+  private lireFiche(id: string, role: TypeCompte): Observable<FicheUtilisateur> {
     switch (role) {
       case 'CHEF':
         return this.utilisateurService.getChef(id).pipe(map((c) => ({ ...c, role })));
@@ -300,6 +308,32 @@ export class UtilisateurDetail {
         this.notification.erreur(messageErreur(erreur, "Le profil n'a pas pu être changé."));
       },
     });
+  }
+
+  /** Identité, contact, niveau ou localité. */
+  async modifier(): Promise<void> {
+    const fiche = this.fiche();
+    if (!fiche) {
+      return;
+    }
+    const modifie = await firstValueFrom(
+      this.dialog
+        .open<ModifierUtilisateurDialog, FicheUtilisateur, boolean>(ModifierUtilisateurDialog, {
+          data: fiche,
+          width: '600px',
+          maxWidth: 'calc(100vw - 32px)',
+        })
+        .afterClosed(),
+    );
+    if (modifie) {
+      this.notification.succes('Le compte est modifié.');
+      this.charger();
+    }
+  }
+
+  /** Demande validée : le cuisinier est maintenant chef ou producteur, on rouvre sa fiche avec ce rôle. */
+  apresChangementDeType(id: string, role: 'CHEF' | 'PRODUCTEUR'): void {
+    this.router.navigate(['/utilisateurs', id], { queryParams: { role }, replaceUrl: true });
   }
 
   /** Le justificatif ne s'affiche qu'à la demande, dans une fenêtre. */

@@ -1,0 +1,60 @@
+<div class="onglets" role="tablist" aria-label="Contenus du chef">
+  <button type="button" role="tab" class="onglet" [class.actif]="onglet() === 'recettes'" [attr.aria-selected]="onglet() === 'recettes'" (click)="onglet.set('recettes')">
+    <ng-icon name="lucideBookOpen" size="1rem" aria-hidden="true" />
+    Recettes <span class="compte gw-chiffres">{{ nbRecettes() }}</span>
+  </button>
+  <button type="button" role="tab" class="onglet" [class.actif]="onglet() === 'defis'" [attr.aria-selected]="onglet() === 'defis'" (click)="onglet.set('defis')">
+    <ng-icon name="lucideTrophy" size="1rem" aria-hidden="true" />
+    Défis proposés <span class="compte gw-chiffres">{{ nbDefis() }}</span>
+  </button>
+</div>
+
+@if (chargement()) {
+  <div class="gw-squelette sq-liste" aria-busy="true"></div>
+} @else if (onglet() === 'recettes') {
+  <ul class="liste">
+    @for (r of recettes(); track r.id) {
+      <li>
+        <a class="ligne" [routerLink]="['/recettes', r.id]">
+          <span class="vignette">
+            @if (r.photoUrl | fichier; as photo) {
+              <img [src]="photo" alt="" loading="lazy" />
+            } @else {
+              <ng-icon name="lucideBookOpen" size="1.125rem" aria-hidden="true" />
+            }
+          </span>
+          <span class="textes">
+            <span class="nom">{{ r.nom }}</span>
+            <span class="meta">{{ r.categorieNom }} · créée le {{ r.dateCreation | date: 'd MMM y' }}</span>
+          </span>
+          <app-status-badge [statut]="r.statut" />
+        </a>
+      </li>
+    } @empty {
+      <li class="vide">Aucune recette proposée pour le moment.</li>
+    }
+  </ul>
+} @else {
+  <ul class="liste">
+    @for (d of defis(); track d.id) {
+      <li>
+        <a class="ligne" [routerLink]="['/defis', d.id]">
+          <span class="vignette">
+            @if (d.photoCouvertureUrl | fichier; as photo) {
+              <img [src]="photo" alt="" loading="lazy" />
+            } @else {
+              <ng-icon name="lucideTrophy" size="1.125rem" aria-hidden="true" />
+            }
+          </span>
+          <span class="textes">
+            <span class="nom">{{ d.nom }}</span>
+            <span class="meta">{{ d.typeDefiNom }} · du {{ d.dateDebut | date: 'd MMM' }} au {{ d.dateFin | date: 'd MMM y' }}</span>
+          </span>
+          <app-status-badge [statut]="d.statut" />
+        </a>
+      </li>
+    } @empty {
+      <li class="vide">Aucun défi proposé pour le moment.</li>
+    }
+  </ul>
+}

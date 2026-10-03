@@ -18,7 +18,7 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
 import { TexteRiche } from '../../../../shared/components/texte-riche/texte-riche';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
-import { LIBELLES_ROLE } from '../../../utilisateurs/models/utilisateur.model';
+import { LIBELLES_TYPE_COMPTE } from '../../../utilisateurs/models/utilisateur.model';
 import {
   DefiResponse,
   estVideo,
@@ -80,7 +80,7 @@ export class DefiDetail {
   protected readonly noteMax = NOTE_MAX;
   protected readonly estVideo = estVideo;
   protected readonly iconeType = iconeType;
-  protected readonly libellesRole = LIBELLES_ROLE;
+  protected readonly libellesRole = LIBELLES_TYPE_COMPTE;
 
   protected defi = signal<DefiResponse | null>(null);
   protected participants = signal<ParticipationDefiResponse[]>([]);

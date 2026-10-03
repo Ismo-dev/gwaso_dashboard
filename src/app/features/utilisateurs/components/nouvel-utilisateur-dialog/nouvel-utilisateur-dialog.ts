@@ -24,23 +24,28 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { map, Observable, of, switchMap } from 'rxjs';
-import { Role } from '../../../../core/models/enums.model';
+import { TypeCompte } from '../../../../core/models/enums.model';
 import { messageErreur } from '../../../../core/utils/erreurs';
 import {
-  ACCES_PROFIL,
-  ORDRE_ACCES,
   ProfilDroitsResponse,
   ProfilResponse,
 } from '../../../profils/models/profil.model';
 import { ProfilService } from '../../../profils/services/profil.service';
-import { LIBELLES_NIVEAU, NiveauCuisine } from '../../models/utilisateur.model';
+import {
+  AIDES_TYPE_COMPTE,
+  ICONES_TYPE_COMPTE,
+  LIBELLES_NIVEAU,
+  LIBELLES_TYPE_COMPTE,
+  NiveauCuisine,
+  ORDRE_TYPES_COMPTE,
+} from '../../models/utilisateur.model';
 import { UtilisateurService } from '../../services/utilisateur.service';
 
 /** Il faut un email ou un téléphone pour se connecter ; l'email est obligatoire pour un administrateur. */
 function contactValide(groupe: AbstractControl): ValidationErrors | null {
   const email = (groupe.get('email')?.value ?? '').trim();
   const telephone = (groupe.get('telephone')?.value ?? '').trim();
-  if (groupe.get('role')?.value === 'ADMIN') {
+  if (groupe.get('typeCompte')?.value === 'ADMIN') {
     return email ? null : { emailAdmin: true };
   }
   return email || telephone ? null : { contact: true };
@@ -90,15 +95,18 @@ export class NouvelUtilisateurDialog implements OnInit {
   private profilService = inject(ProfilService);
   private fenetre = inject(MatDialogRef<NouvelUtilisateurDialog, ResultatNouvelUtilisateur>);
 
-  protected readonly acces = ACCES_PROFIL;
+  protected readonly typesCompte = ORDRE_TYPES_COMPTE;
+  protected readonly libellesType = LIBELLES_TYPE_COMPTE;
+  protected readonly iconesType = ICONES_TYPE_COMPTE;
+  protected readonly aidesType = AIDES_TYPE_COMPTE;
   protected readonly niveaux = Object.entries(LIBELLES_NIVEAU) as [NiveauCuisine, string][];
 
   protected formulaire = inject(FormBuilder).nonNullable.group(
     {
-      /** Profil choisi : c'est le seul choix à faire. */
+      /** Classe du compte : décide des informations demandées (niveau, localité, justificatif). */
+      typeCompte: ['CUISINIER' as TypeCompte, Validators.required],
+      /** Profil : décide des droits. */
       profilId: ['', Validators.required],
-      /** Accès donné par le profil choisi (rempli automatiquement, sert aux contrôles). */
-      role: [null as Role | null],
       prenom: ['', [Validators.required, Validators.maxLength(60)]],
       nom: ['', [Validators.required, Validators.maxLength(60)]],
       email: ['', [Validators.email, Validators.maxLength(120)]],
@@ -111,7 +119,7 @@ export class NouvelUtilisateurDialog implements OnInit {
     { validators: contactValide },
   );
 
-  /** Tous les profils de la table (les profils sans accès renseigné ne peuvent pas encore être choisis). */
+  /** Profils actifs (n'importe lequel peut être donné, quel que soit le type de compte). */
   protected profils = signal<ProfilResponse[]>([]);
   protected chargementProfils = signal(true);
   protected profilChoisi = toSignal(
@@ -129,19 +137,22 @@ export class NouvelUtilisateurDialog implements OnInit {
   protected enCours = signal(false);
   protected erreur = signal('');
 
-  protected role = computed(() => this.profilChoisi()?.role ?? null);
+  protected role = toSignal(this.formulaire.controls.typeCompte.valueChanges, {
+    initialValue: this.formulaire.controls.typeCompte.value,
+  });
   /** Chef et producteur : statut à valider (on propose de le faire tout de suite). */
   protected aValider = computed(() => this.role() === 'CHEF' || this.role() === 'PRODUCTEUR');
 
   constructor() {
-    this.formulaire.controls.profilId.valueChanges.subscribe((profilId) => {
-      const role = this.profils().find((p) => p.id === profilId)?.role ?? null;
-      this.formulaire.controls.role.setValue(role);
+    this.formulaire.controls.typeCompte.valueChanges.subscribe((type) => {
       // La localité n'est obligatoire que pour un producteur
       const localite = this.formulaire.controls.localite;
-      localite.setValidators(role === 'PRODUCTEUR' ? [Validators.required] : []);
+      localite.setValidators(type === 'PRODUCTEUR' ? [Validators.required] : []);
       localite.updateValueAndValidity();
       this.formulaire.updateValueAndValidity();
+      this.proposerProfil(type);
+    });
+    this.formulaire.controls.profilId.valueChanges.subscribe((profilId) => {
       if (!profilId) {
         this.droitsProfil.set([]);
         return;
@@ -156,21 +167,30 @@ export class NouvelUtilisateurDialog implements OnInit {
   ngOnInit(): void {
     this.profilService.getAll().subscribe({
       next: (profils) => {
-        // Profils actifs ; ceux dont le type de compte n'est pas renseigné sont affichés à la fin, grisés
-        const rang = (p: ProfilResponse) => (p.role ? ORDRE_ACCES.indexOf(p.role) : ORDRE_ACCES.length);
-        this.profils.set(
-          profils.filter((p) => p.actif).sort((a, b) => rang(a) - rang(b) || a.nom.localeCompare(b.nom, 'fr')),
-        );
-        const utilisables = this.profils().filter((p) => p.role !== null);
+        this.profils.set(profils.filter((p) => p.actif).sort((a, b) => a.nom.localeCompare(b.nom, 'fr')));
         this.chargementProfils.set(false);
-        // Le profil des cuisiniers est le plus fréquent : il est choisi d'avance
-        const parDefaut = utilisables.find((p) => p.role === 'CUISINIER') ?? utilisables[0];
-        if (parDefaut) {
-          this.formulaire.controls.profilId.setValue(parDefaut.id);
-        }
+        this.proposerProfil(this.formulaire.controls.typeCompte.value);
       },
       error: () => this.chargementProfils.set(false),
     });
+  }
+
+  /**
+   * Profil proposé pour un type de compte (l'admin peut en choisir un autre) :
+   * administrateur → profil système ; cuisinier → profil des inscriptions ; chef / producteur → profil dont le nom l'évoque.
+   */
+  private proposerProfil(type: TypeCompte): void {
+    const profils = this.profils();
+    const normaliser = (t: string) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+    const propose =
+      type === 'ADMIN'
+        ? profils.find((p) => p.systeme)
+        : type === 'CUISINIER'
+          ? profils.find((p) => p.inscription)
+          : profils.find((p) => normaliser(p.nom).includes(type === 'CHEF' ? 'chef' : 'producteur'));
+    if (propose) {
+      this.formulaire.controls.profilId.setValue(propose.id);
+    }
   }
 
   /** Propose un mot de passe solide, affiché pour que l'admin puisse le transmettre. */
@@ -245,7 +265,7 @@ export class NouvelUtilisateurDialog implements OnInit {
       : of('');
 
     let creation: Observable<unknown>;
-    switch (v.role) {
+    switch (v.typeCompte) {
       case 'ADMIN':
         creation = this.utilisateurService.creerAdmin(commun);
         break;

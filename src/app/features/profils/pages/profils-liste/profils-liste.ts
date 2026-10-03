@@ -34,8 +34,9 @@ import { PageHeader } from '../../../../shared/components/page-header/page-heade
 import { DonneesDroitDialog, DroitDialog } from '../../components/droit-dialog/droit-dialog';
 import { DonneesProfilDialog, ProfilDialog } from '../../components/profil-dialog/profil-dialog';
 import {
-  ACCES_PROFIL,
+  DroitAffiche,
   DroitResponse,
+  DROITS_INDISPENSABLES,
   GroupeDroits,
   grouperDroits,
   libelleDroit,
@@ -103,7 +104,6 @@ export class ProfilsListe implements OnInit {
     this.onglet() === 'droits' ? 'droits' : 'profils',
   );
 
-  protected readonly acces = ACCES_PROFIL;
   protected readonly libelleDroit = libelleDroit;
   protected profils = signal<ProfilResponse[]>([]);
   protected droits = signal<DroitResponse[]>([]);
@@ -257,11 +257,28 @@ export class ProfilsListe implements OnInit {
     });
   }
 
+  protected iconeProfil(profil: ProfilResponse): string {
+    return profil.systeme ? 'lucideShieldCheck' : profil.inscription ? 'lucideUserPlus' : 'lucideKeyRound';
+  }
+
+  protected indispensable(droit: DroitAffiche): boolean {
+    return DROITS_INDISPENSABLES.includes(droit.action);
+  }
+
+  /** Droit indispensable du profil système : on ne peut pas le lui retirer. */
+  protected verrouille(profil: ProfilResponse, droit: DroitAffiche): boolean {
+    return profil.systeme && DROITS_INDISPENSABLES.includes(droit.action);
+  }
+
   /** Tout le domaine d'un coup (ex. tous les droits « Recettes »). */
   basculerGroupe(groupe: GroupeDroits, coche: boolean): void {
+    const profil = this.profilSelectionne();
     this.droitsCoches.update((ids) => {
       const copie = new Set(ids);
       for (const droit of groupe.droits) {
+        if (profil && !coche && this.verrouille(profil, droit)) {
+          continue;
+        }
         if (coche) {
           copie.add(droit.id);
         } else {

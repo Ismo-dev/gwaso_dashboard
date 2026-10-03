@@ -5,13 +5,18 @@
     <app-avatar [prenom]="d.prenom" [nom]="d.nom" [photo]="d.photoProfil" />
     <div class="identite">
       <h3 [id]="'demande-' + d.id">
-        <a [routerLink]="['/utilisateurs', d.id]" [queryParams]="{ role: d.type }"
+        <a [routerLink]="['/utilisateurs', d.id]" [queryParams]="{ role: d.origine === 'cuisinier' ? 'CUISINIER' : d.type }"
           >{{ d.prenom }} {{ d.nom }}</a
         >
       </h3>
       <p class="role">
         <ng-icon [name]="icone()" size="0.875rem" aria-hidden="true" />
-        <span class="sr-only">Demande de statut : </span>{{ libelleRole() }}
+        <span class="sr-only">Demande de statut : </span>
+        @if (d.origine === 'cuisinier') {
+          Cuisinier qui veut devenir {{ libelleRole() | lowercase }}
+        } @else {
+          {{ libelleRole() }}
+        }
       </p>
     </div>
     <span class="date" [title]="d.dateInscription | date: 'd MMMM y à HH:mm'">{{
@@ -43,6 +48,10 @@
       </div>
     }
   </dl>
+
+  @if (d.motivation) {
+    <blockquote class="motivation">« {{ d.motivation }} »</blockquote>
+  }
 
   <!-- Le justificatif est la pièce principale de la décision : il est mis en évidence -->
   @if (d.preuveUrl) {

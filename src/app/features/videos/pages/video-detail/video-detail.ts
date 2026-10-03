@@ -14,7 +14,7 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
-import { LIBELLES_ROLE } from '../../../utilisateurs/models/utilisateur.model';
+import { LIBELLES_TYPE_COMPTE } from '../../../utilisateurs/models/utilisateur.model';
 import {
   CommentaireResponse,
   formaterDuree,
@@ -67,7 +67,7 @@ export class VideoDetail {
   protected erreur = signal(false);
   protected actionEnCours = signal(false);
 
-  protected readonly libellesRole = LIBELLES_ROLE;
+  protected readonly libellesRole = LIBELLES_TYPE_COMPTE;
   protected video = computed(() => this.detail()?.video ?? null);
   protected auteur = computed(() => this.detail()?.auteur ?? null);
   protected type = computed(() => {

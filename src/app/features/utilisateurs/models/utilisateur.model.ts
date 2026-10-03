@@ -1,23 +1,34 @@
-import { Role, StatutCompte, StatutRole } from '../../../core/models/enums.model';
+import { TypeCompte, StatutCompte, StatutRole } from '../../../core/models/enums.model';
 import { Pagination } from '../../../core/models/page-response.model';
 
 export type NiveauCuisine = 'DEBUTANT' | 'INTERMEDIAIRE' | 'EXPERT';
 
-/** Libellés affichés pour chaque rôle. */
-export const LIBELLES_ROLE: Record<Role, string> = {
+/** Libellé de chaque type de compte. */
+export const LIBELLES_TYPE_COMPTE: Record<TypeCompte, string> = {
   ADMIN: 'Administrateur',
   CUISINIER: 'Cuisinier',
   CHEF: 'Chef cuisinier',
   PRODUCTEUR: 'Producteur',
 };
 
-/** Icône Lucide de chaque rôle. */
-export const ICONES_ROLE: Record<Role, string> = {
+/** Icône Lucide de chaque type de compte. */
+export const ICONES_TYPE_COMPTE: Record<TypeCompte, string> = {
   ADMIN: 'lucideShieldCheck',
   CUISINIER: 'lucideCookingPot',
   CHEF: 'lucideChefHat',
   PRODUCTEUR: 'lucideStore',
 };
+
+/** Ce que chaque type de compte demande à la création (le type ne donne aucun droit). */
+export const AIDES_TYPE_COMPTE: Record<TypeCompte, string> = {
+  ADMIN: "Équipe Gwaso : se connecte au dashboard selon les droits de son profil",
+  CUISINIER: 'Membre de la communauté (niveau en cuisine)',
+  CHEF: 'Chef cuisinier (justificatif obligatoire)',
+  PRODUCTEUR: 'Vend ses produits (localité et justificatif)',
+};
+
+/** Ordre d'affichage des types de compte. */
+export const ORDRE_TYPES_COMPTE: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
 
 export const LIBELLES_NIVEAU: Record<NiveauCuisine, string> = {
   DEBUTANT: 'Débutant',
@@ -27,7 +38,15 @@ export const LIBELLES_NIVEAU: Record<NiveauCuisine, string> = {
 
 /** Demande de statut (chef ou producteur) en attente de validation, affichée en carte. */
 export interface DemandeStatut {
+  /** Identifiant du compte concerné. */
   id: string;
+  /**
+   * compte : compte chef / producteur créé en attente (ancienne inscription ou création par un admin) ;
+   * cuisinier : un cuisinier demande à devenir chef / producteur (demandeId = la demande).
+   */
+  origine: 'compte' | 'cuisinier';
+  demandeId: string | null;
+  motivation: string | null;
   type: 'CHEF' | 'PRODUCTEUR';
   nom: string;
   prenom: string;
@@ -42,7 +61,7 @@ export interface DemandeStatut {
 /** Fiche d'un utilisateur, quel que soit son rôle (champs absents = sans objet pour ce rôle). */
 export interface FicheUtilisateur {
   id: string;
-  role: Role;
+  role: TypeCompte;
   nom: string;
   prenom: string;
   email: string | null;
@@ -69,7 +88,7 @@ export interface UtilisateurResume {
   email: string | null;
   telephone: string | null;
   photoProfil: string | null;
-  role: Role;
+  role: TypeCompte;
   statutCompte: StatutCompte;
   dateInscription: string;
   profilId: string | null;
@@ -162,7 +181,8 @@ export interface CuisinierRequest {
   prenom: string;
   email?: string;
   telephone?: string;
-  motDePasse: string;
+  /** Obligatoire à la création, facultatif en modification (inchangé s'il est absent). */
+  motDePasse?: string;
   niveau: NiveauCuisine;
 }
 
@@ -172,7 +192,8 @@ export interface ChefCuisinierRequest {
   prenom: string;
   email?: string;
   telephone?: string;
-  motDePasse: string;
+  /** Obligatoire à la création, facultatif en modification (inchangé s'il est absent). */
+  motDePasse?: string;
   /** Obligatoire : adresse renvoyée par POST /fichiers/justificatifs. */
   preuveUrl: string;
 }
@@ -183,7 +204,8 @@ export interface ProducteurRequest {
   prenom: string;
   email?: string;
   telephone?: string;
-  motDePasse: string;
+  /** Obligatoire à la création, facultatif en modification (inchangé s'il est absent). */
+  motDePasse?: string;
   localite: string;
   /** Obligatoire : adresse renvoyée par POST /fichiers/justificatifs. */
   preuveUrl: string;
@@ -197,7 +219,7 @@ export interface ValidationRoleRequest {
 /** Filtres de GET /utilisateurs. */
 export interface FiltresUtilisateurs extends Pagination {
   recherche?: string;
-  role?: Role;
+  role?: TypeCompte;
   statut?: StatutCompte;
 }
 
@@ -206,4 +228,36 @@ export interface FiltresComptesAValider extends Pagination {
   recherche?: string;
   statut?: StatutCompte;
   statutRole?: StatutRole;
+}
+
+/** DemandeStatutResponseDTO : un cuisinier demande à devenir chef cuisinier ou producteur. */
+export interface DemandeStatutResponse {
+  id: string;
+  type: 'CHEF' | 'PRODUCTEUR';
+  statut: StatutRole;
+  preuveUrl: string;
+  localite: string | null;
+  motivation: string | null;
+  motifRejet: string | null;
+  dateDemande: string;
+  dateDecision: string | null;
+  decideParNom: string | null;
+  demandeurId: string;
+  demandeurNom: string;
+  demandeurPrenom: string;
+  demandeurEmail: string | null;
+  demandeurTelephone: string | null;
+  demandeurPhotoProfil: string | null;
+}
+
+/** ProduitProducteurResponseDTO : un ingrédient que le producteur vend. */
+export interface ProduitProducteurResponse {
+  id: string;
+  producteurId: string;
+  ingredientId: string;
+  ingredientNom: string;
+  prixIndicatif: number | null;
+  quantite: number | null;
+  unite: string;
+  imageUrl: string | null;
 }

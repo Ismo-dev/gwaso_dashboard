@@ -31,6 +31,7 @@ import { AValiderService } from '../../../../core/services/a-valider.service';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { EcranService } from '../../../../core/services/ecran.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { SessionService } from '../../../../core/services/session.service';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
@@ -141,6 +142,7 @@ interface EtatListe {
   templateUrl: './recettes-liste.html',
 })
 export class RecettesListe implements OnInit {
+  protected session = inject(SessionService);
   private recetteService = inject(RecetteService);
   private categorieService = inject(CategorieService);
   private statistiquesService = inject(StatistiquesService);

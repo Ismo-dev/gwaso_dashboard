@@ -1,4 +1,4 @@
-import { Role, StatutCompte, StatutRole } from './enums.model';
+import { TypeCompte, StatutCompte, StatutRole } from './enums.model';
 
 /** Utilisateur connecté (UtilisateurConnecteDTO côté backend). */
 export interface UtilisateurConnecte {
@@ -8,7 +8,7 @@ export interface UtilisateurConnecte {
   email: string | null;
   telephone: string | null;
   photoProfil: string | null;
-  role: Role;
+  role: TypeCompte;
   statutCompte: StatutCompte;
   statutRole: StatutRole | null;
   profilId: string | null;

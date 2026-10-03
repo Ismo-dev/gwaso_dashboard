@@ -6,58 +6,50 @@
       <p class="erreur" role="alert">{{ erreur() }}</p>
     }
 
-    <!-- 1. Profil : le seul choix. Il donne les droits et décide des champs demandés plus bas -->
+    <!-- 1. Type de compte : la classe du compte, elle décide des informations demandées plus bas -->
     <fieldset class="groupe">
-      <legend>Profil</legend>
-      @if (chargementProfils()) {
-        <div class="gw-choix-grille" aria-busy="true">
-          <span class="gw-squelette sq-choix"></span>
-          <span class="gw-squelette sq-choix"></span>
-        </div>
-      } @else if (profils().length === 0) {
-        <div class="aucun-profil" role="alert">
-          <ng-icon name="lucideCircleAlert" size="1.25rem" aria-hidden="true" />
-          <p>
-            Aucun profil n'est prêt. Créez d'abord vos profils (Administrateur, Cuisinier…) dans
-            <a routerLink="/profils" mat-dialog-close>Profils et droits</a>.
-          </p>
-        </div>
-      } @else {
-        <div class="gw-choix-grille" role="radiogroup" aria-label="Profil du compte">
-          @for (profil of profils(); track profil.id) {
-            <label
-              class="gw-choix"
-              [class.gw-choix-actif]="profilChoisi()?.id === profil.id"
-              [class.gw-choix-desactive]="!profil.role"
-            >
-              <input
-                type="radio"
-                formControlName="profilId"
-                [value]="profil.id"
-                class="sr-only"
-                [attr.disabled]="profil.role ? null : ''"
-              />
-              <span class="gw-choix-icone" aria-hidden="true">
-                <ng-icon [name]="profil.role ? acces[profil.role].icone : 'lucideCircleAlert'" size="1.125rem" />
-              </span>
-              <span class="gw-choix-textes">
-                <span class="gw-choix-titre">{{ profil.nom }}</span>
-                <span class="gw-choix-aide gw-chiffres">
-                  @if (profil.role) {
-                    {{ profil.nbDroits }} droit{{ profil.nbDroits > 1 ? 's' : '' }} ·
-                    {{ acces[profil.role].libelle }}
-                  } @else {
-                    Type de compte à choisir dans Profils et droits
-                  }
-                </span>
-              </span>
-            </label>
-          }
-        </div>
-      }
+      <legend>Type de compte</legend>
+      <div class="gw-choix-grille" role="radiogroup" aria-label="Type de compte">
+        @for (type of typesCompte; track type) {
+          <label class="gw-choix" [class.gw-choix-actif]="role() === type">
+            <input type="radio" formControlName="typeCompte" [value]="type" class="sr-only" />
+            <span class="gw-choix-icone" aria-hidden="true">
+              <ng-icon [name]="iconesType[type]" size="1.125rem" />
+            </span>
+            <span class="gw-choix-textes">
+              <span class="gw-choix-titre">{{ libellesType[type] }}</span>
+              <span class="gw-choix-aide">{{ aidesType[type] }}</span>
+            </span>
+          </label>
+        }
+      </div>
     </fieldset>
 
-    <!-- 2. Identité -->
+    <!-- 2. Profil : il décide des droits. N'importe quel profil, le plus logique est proposé -->
+    @if (chargementProfils()) {
+      <div class="gw-squelette sq-choix"></div>
+    } @else if (profils().length === 0) {
+      <div class="aucun-profil" role="alert">
+        <ng-icon name="lucideCircleAlert" size="1.25rem" aria-hidden="true" />
+        <p>
+          Aucun profil actif. Créez-en un dans <a routerLink="/profils" mat-dialog-close>Profils et droits</a>.
+        </p>
+      </div>
+    } @else {
+      <mat-form-field class="champ-large">
+        <mat-label>Profil (ses droits)</mat-label>
+        <mat-select formControlName="profilId">
+          @for (profil of profils(); track profil.id) {
+            <mat-option [value]="profil.id">
+              {{ profil.nom }} · {{ profil.nbDroits }} droit{{ profil.nbDroits > 1 ? 's' : '' }}
+            </mat-option>
+          }
+        </mat-select>
+        <mat-error>Choisissez le profil du compte.</mat-error>
+      </mat-form-field>
+    }
+
+    <!-- 3. Identité -->
     <div class="ligne">
       <mat-form-field>
         <mat-label>Prénom</mat-label>
@@ -77,7 +69,7 @@
         <mat-label>Email</mat-label>
         <input matInput type="email" formControlName="email" autocomplete="off" />
         @if (role() === 'ADMIN') {
-          <mat-hint>Obligatoire pour ce profil (connexion au dashboard)</mat-hint>
+          <mat-hint>Obligatoire pour un administrateur</mat-hint>
         }
         <mat-error>Adresse email invalide.</mat-error>
       </mat-form-field>

@@ -1,0 +1,37 @@
+@if (chargement()) {
+  <div class="gw-squelette sq-liste" aria-busy="true"></div>
+} @else {
+  <ul class="produits">
+    @for (p of produits(); track p.id) {
+      <li class="produit">
+        <span class="vignette">
+          @if (p.imageUrl | fichier; as photo) {
+            <img [src]="photo" alt="" loading="lazy" />
+          } @else {
+            <ng-icon name="lucideCarrot" size="1.25rem" aria-hidden="true" />
+          }
+        </span>
+        <span class="textes">
+          <span class="nom">{{ p.ingredientNom }}</span>
+          <span class="meta gw-chiffres">
+            @if (p.prixIndicatif !== null) {
+              {{ p.prixIndicatif | number: '1.0-0' : 'fr' }} FCFA
+            } @else {
+              Prix non indiqué
+            }
+            @if (p.quantite !== null) {
+              · {{ p.quantite | number: '1.0-2' : 'fr' }} {{ p.unite | unite }} disponibles
+            } @else {
+              · par {{ p.unite | unite }}
+            }
+          </span>
+        </span>
+        <button matIconButton type="button" class="retirer" matTooltip="Retirer ce produit" [attr.aria-label]="'Retirer ' + p.ingredientNom" (click)="retirer(p)">
+          <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+        </button>
+      </li>
+    } @empty {
+      <li class="vide">Ce producteur ne propose encore aucun produit.</li>
+    }
+  </ul>
+}
