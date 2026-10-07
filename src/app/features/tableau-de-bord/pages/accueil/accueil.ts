@@ -82,6 +82,14 @@ export class Accueil implements OnInit {
     return s ? this.files().reduce((total, file) => total + file.nombre, 0) : 0;
   });
 
+  /** Files qui ont du travail, pour la barre de répartition. */
+  protected filesNonVides = computed(() => this.files().filter((f) => f.nombre > 0));
+
+  /** Ce que dit la barre, pour les lecteurs d'écran. */
+  protected resumeRepartition = computed(
+    () => 'Répartition : ' + this.filesNonVides().map((f) => `${f.nombre} ${f.libelle.toLowerCase()}`).join(', '),
+  );
+
   /** Files de travail, les plus chargées en premier. */
   protected files = computed<FileATraiter[]>(() => {
     const s = this.statistiques();

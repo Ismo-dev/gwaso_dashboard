@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { Avatar } from '../../../../shared/components/avatar/avatar';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
-import { DemandeStatut, LIBELLES_TYPE_COMPTE } from '../../models/utilisateur.model';
+import { DemandeStatut, JUSTIFICATIFS_ATTENDUS, LIBELLES_TYPE_COMPTE } from '../../models/utilisateur.model';
 import { ouvrirJustificatif } from '../justificatif-dialog/ouvrir-justificatif';
 
 /**
@@ -30,6 +30,8 @@ export class CarteDemande {
   readonly refuser = output<DemandeStatut>();
 
   protected libelleRole = computed(() => LIBELLES_TYPE_COMPTE[this.demande().type]);
+  /** Ce que l'administrateur doit s'attendre à voir dans le justificatif. */
+  protected justificatifAttendu = computed(() => JUSTIFICATIFS_ATTENDUS[this.demande().type === 'CHEF' ? 'CHEF' : 'PRODUCTEUR']);
   protected icone = computed(() =>
     this.demande().type === 'CHEF' ? 'lucideChefHat' : 'lucideStore',
   );

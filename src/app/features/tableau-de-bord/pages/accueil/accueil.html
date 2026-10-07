@@ -1,5 +1,5 @@
 @if (chargement()) {
-  <!-- Squelette : la mise en page apparaît tout de suite, sans « saut » à l'arrivée des données -->
+ 
   <div class="squelette" aria-busy="true" aria-label="Chargement du tableau de bord">
     <div class="gw-squelette sq-bandeau"></div>
     <div class="grille-files">
@@ -28,29 +28,48 @@
     </app-empty-state>
   </div>
 } @else if (statistiques(); as stats) {
-  <!-- 1. Accueil : la phrase clé dit tout de suite s'il y a du travail -->
+  
   <section class="bienvenue" aria-labelledby="titre-bienvenue">
-    <div class="bienvenue-texte">
-      <p class="date">{{ aujourdhui | date: 'EEEE d MMMM y' }}</p>
-      <h1 id="titre-bienvenue">{{ salutation() }}, {{ session.utilisateur()?.prenom }}</h1>
-      @if (totalATraiter() > 0) {
-        <p class="resume">
-          <strong class="gw-chiffres">{{ totalATraiter() }}</strong>
-          {{ totalATraiter() > 1 ? 'éléments attendent' : 'élément attend' }} votre décision.
-        </p>
-      } @else {
-        <p class="resume">Tout est à jour : aucun contenu n'attend votre validation.</p>
+    <div class="bienvenue-ligne">
+      <div>
+        <p class="date">{{ aujourdhui | date: 'EEEE d MMMM y' }}</p>
+        <h1 id="titre-bienvenue">{{ salutation() }}, {{ session.utilisateur()?.prenom }}.</h1>
+      </div>
+      @if (files()[0]; as premiere) {
+        @if (premiere.nombre > 0) {
+          <a matButton="filled" class="bouton-revue" [routerLink]="premiere.lien" [queryParams]="premiere.parametres">
+            Commencer par les {{ premiere.libelle | lowercase }}
+            <ng-icon name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
+          </a>
+        }
       }
     </div>
-    @if (files()[0]; as premiere) {
-      @if (premiere.nombre > 0) {
-        <a class="bouton-revue" [routerLink]="premiere.lien" [queryParams]="premiere.parametres">
-          Commencer par les {{ premiere.libelle | lowercase }}
-          <ng-icon name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
-        </a>
-      }
+
+    @if (totalATraiter() > 0) {
+      
+      <p class="resume">
+        <strong class="total gw-chiffres">{{ totalATraiter() }}</strong>
+        <span>{{ totalATraiter() > 1 ? 'éléments attendent' : 'élément attend' }} votre décision</span>
+      </p>
+      <div class="repartition" role="img" [attr.aria-label]="resumeRepartition()">
+        @for (file of filesNonVides(); track file.libelle; let i = $index) {
+          <span class="segment" [class]="'segment-' + (i % 4)" [style.flex-grow]="file.nombre"></span>
+        }
+      </div>
+      <ul class="legende">
+        @for (file of filesNonVides(); track file.libelle; let i = $index) {
+          <li>
+            <span class="pastille" [class]="'segment-' + (i % 4)" aria-hidden="true"></span>
+            <span class="gw-chiffres">{{ file.nombre }}</span> {{ file.libelle | lowercase }}
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="resume resume-calme">
+        <ng-icon name="lucideCircleCheck" size="1.25rem" aria-hidden="true" />
+        Tout est à jour : aucun contenu n'attend votre validation.
+      </p>
     }
-    <img class="bienvenue-embleme" src="images/embleme-gwaso-clair.png" alt="" aria-hidden="true" />
   </section>
 
   <!-- 2. À traiter -->

@@ -106,6 +106,13 @@
   }
 }
 
+.attendu {
+  margin: calc(var(--gw-espace-2) * -1) 0 0;
+  color: var(--gw-texte-doux);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
 .justificatif-absent {
   background: var(--gw-attention-fond);
   color: var(--gw-attention);

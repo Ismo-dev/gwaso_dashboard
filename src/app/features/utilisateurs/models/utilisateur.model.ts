@@ -4,6 +4,15 @@ import { Pagination } from '../../../core/models/page-response.model';
 export type NiveauCuisine = 'DEBUTANT' | 'INTERMEDIAIRE' | 'EXPERT';
 
 /** Libellé de chaque type de compte. */
+/**
+ * Justificatifs attendus pour chaque statut : affichés au demandeur (application)
+ * et à l'administrateur (création de compte, carte de demande), pour parler de la même chose.
+ */
+export const JUSTIFICATIFS_ATTENDUS: Record<'CHEF' | 'PRODUCTEUR', string> = {
+  CHEF: 'diplôme, attestation de formation, carte professionnelle…',
+  PRODUCTEUR: 'photo du jardin, du champ, de l’étal ou de la boutique, carte de coopérative, registre de commerce…',
+};
+
 export const LIBELLES_TYPE_COMPTE: Record<TypeCompte, string> = {
   ADMIN: 'Administrateur',
   CUISINIER: 'Cuisinier',

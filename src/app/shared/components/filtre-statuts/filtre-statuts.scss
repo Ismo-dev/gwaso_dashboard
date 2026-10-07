@@ -1,0 +1,138 @@
+@use 'points-de-rupture' as ecran;
+
+:host {
+  display: block;
+  margin-bottom: var(--gw-espace-5);
+}
+
+// Ordinateur : autant de colonnes que de statuts. Téléphone : bande qui défile.
+.tuiles {
+  display: grid;
+  grid-auto-columns: minmax(140px, 1fr);
+  grid-auto-flow: column;
+  gap: var(--gw-espace-3);
+
+  @include ecran.tablette-et-moins {
+    grid-auto-columns: minmax(150px, 180px);
+    margin-inline: calc(var(--gw-espace-4) * -1);
+    padding: 2px var(--gw-espace-4) var(--gw-espace-2);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+}
+
+.tuile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gw-espace-1);
+  min-height: 108px;
+  padding: var(--gw-espace-4);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-lg);
+  background: var(--gw-surface);
+  color: var(--gw-texte);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition:
+    border-color var(--gw-duree) var(--gw-courbe),
+    box-shadow var(--gw-duree) var(--gw-courbe),
+    transform var(--gw-duree) var(--gw-courbe);
+
+  &:hover {
+    border-color: var(--gw-contour-champ);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--gw-action);
+    outline-offset: 2px;
+  }
+}
+
+// Tuile choisie : bordure pleine couleur d'action, légère ombre (pas de fond coloré)
+.tuile-active {
+  border-color: var(--gw-action);
+  box-shadow:
+    inset 0 0 0 1px var(--gw-action),
+    var(--gw-ombre-1);
+
+  &:hover {
+    border-color: var(--gw-action);
+    transform: none;
+  }
+
+  .tuile-libelle {
+    color: var(--gw-cacao);
+  }
+}
+
+.tuile-haut {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+}
+
+.tuile-libelle {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}
+
+.tuile-nombre {
+  color: var(--gw-cacao);
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+// Du travail en attente : le nombre ressort
+.tuile-prioritaire .tuile-nombre {
+  color: var(--gw-action);
+}
+
+.tuile-aide {
+  color: var(--gw-texte-doux);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+.pastille {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.pastille-attente {
+  background: var(--gw-attention);
+}
+
+.pastille-succes {
+  background: var(--gw-succes);
+}
+
+.pastille-erreur {
+  background: var(--gw-danger);
+}
+
+.pastille-info {
+  background: var(--gw-info);
+}
+
+.pastille-neutre {
+  background: var(--gw-neutre);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tuile {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

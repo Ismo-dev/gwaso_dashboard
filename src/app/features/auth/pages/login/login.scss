@@ -1,209 +1,49 @@
 @use 'points-de-rupture' as ecran;
 
-// Animations : douces et lentes (pas de distraction), coupées si l'utilisateur préfère moins de mouvement.
+// =============================================================================
+// Connexion : une seule carte, centrée, sur le fond chaud de l'application.
+// Aplats de la charte uniquement : ni motif, ni dégradé, ni illustration.
+// =============================================================================
 
 .page-connexion {
   display: grid;
-  grid-template-columns: minmax(420px, 6fr) 5fr;
+  place-items: center;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--gw-surface);
-
-  @include ecran.tablette-et-moins {
-    grid-template-columns: 1fr;
-  }
+  padding: var(--gw-espace-8) var(--gw-espace-4);
+  background: var(--gw-fond);
 }
 
-// =============================================================================
-// Panneau de marque : cacao, motif bogolan qui glisse, éléments flottants
-// =============================================================================
-.panneau-marque {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: var(--gw-espace-12) var(--gw-espace-10);
-  background: radial-gradient(120% 90% at 30% 20%, #4a3b33 0%, var(--gw-cacao) 45%, var(--gw-cacao-profond) 100%);
-  color: var(--gw-sidebar-texte);
-  isolation: isolate;
-
-  // Motif bogolan qui défile très lentement
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -56px;
-    z-index: -1;
-    background-image: var(--gw-motif-bogolan);
-    background-size: 56px 56px;
-    opacity: 0.09;
-    animation: gw-motif 40s linear infinite;
-  }
-
-  // Liseré terre cuite : rappel du trait orange du logo
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0 0 0 auto;
-    width: 4px;
-    background: linear-gradient(var(--gw-terre-cuite), var(--gw-karite));
-  }
-
-  @include ecran.tablette-et-moins {
-    display: none;
-  }
-}
-
-.flottant {
-  position: absolute;
-  z-index: -1;
-  display: flex;
-  color: var(--gw-terre-cuite-pale-2);
-  opacity: 0.18;
-  animation: gw-flotte 14s ease-in-out infinite;
-}
-
-.f-1 { top: 10%; left: 10%; }
-.f-2 { top: 22%; right: 14%; animation-delay: -2s; animation-duration: 16s; }
-.f-3 { bottom: 12%; left: 14%; animation-delay: -5s; animation-duration: 18s; }
-.f-4 { top: 52%; left: 6%; animation-delay: -8s; }
-.f-5 { right: 10%; bottom: 26%; animation-delay: -3s; animation-duration: 15s; }
-.f-6 { top: 8%; right: 38%; animation-delay: -10s; animation-duration: 17s; }
-
-.marque-contenu {
+.colonne {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 440px;
-  text-align: center;
+  width: min(440px, 100%);
 }
 
-.logo-marque {
-  width: min(260px, 60%);
-  height: auto;
-  filter: drop-shadow(0 16px 40px rgb(0 0 0 / 0.35));
-  animation: gw-logo 900ms var(--gw-courbe) both;
-}
-
-// « Ensemble, on apprend / cuisine / transmet » : le dernier mot change tout seul
-.accroche {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.35em;
-  margin-top: var(--gw-espace-8);
-  color: var(--gw-blanc);
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.2;
-  animation: gw-monte 700ms 250ms var(--gw-courbe) both;
-}
-
-.mots {
-  position: relative;
-  display: inline-grid;
-  color: var(--gw-terre-cuite);
-
-  // Soulignement terre cuite sous le mot
-  &::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    bottom: -4px;
-    left: 0;
-    height: 3px;
-    border-radius: 2px;
-    background: currentcolor;
-    opacity: 0.6;
-  }
-}
-
-.mot {
-  grid-area: 1 / 1;
-  opacity: 0;
-  animation: gw-mot 7.5s infinite;
-
-  &:nth-child(2) { animation-delay: 2.5s; }
-  &:nth-child(3) { animation-delay: 5s; }
-}
-
-.citation-texte {
-  max-width: 36ch;
-  margin-top: var(--gw-espace-4);
-  color: var(--gw-sidebar-texte-doux);
-  line-height: 1.6;
-  animation: gw-monte 700ms 400ms var(--gw-courbe) both;
-}
-
-.points {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--gw-espace-2);
-  margin: var(--gw-espace-8) 0 0;
-  padding: 0;
-  list-style: none;
-
-  li {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: var(--gw-espace-1) var(--gw-espace-3);
-    border: 1px solid rgb(255 255 255 / 0.12);
-    border-radius: var(--gw-rayon-pilule);
-    background: rgb(255 255 255 / 0.06);
-    color: var(--gw-sidebar-texte);
-    font-size: var(--gw-taille-petit);
-    font-weight: 500;
-    backdrop-filter: blur(6px);
-    animation: gw-monte 600ms var(--gw-courbe) both;
-
-    &:nth-child(1) { animation-delay: 550ms; }
-    &:nth-child(2) { animation-delay: 650ms; }
-    &:nth-child(3) { animation-delay: 750ms; }
-  }
-}
-
-// =============================================================================
-// Formulaire : les éléments apparaissent l'un après l'autre
-// =============================================================================
-.zone-formulaire {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--gw-espace-10) var(--gw-espace-6);
-  background: var(--gw-surface);
-
-  @include ecran.mobile {
-    padding: var(--gw-espace-8) var(--gw-espace-5);
-  }
-}
-
-.formulaire-conteneur {
-  width: min(400px, 100%);
-}
-
-.apparition {
-  animation: gw-monte 600ms var(--gw-courbe) both;
-
-  // Entrée en cascade (ordre de lecture)
-  @for $i from 1 through 8 {
-    &:nth-child(#{$i}) {
-      animation-delay: #{80 + $i * 70}ms;
-    }
-  }
-}
-
-.logo-mobile {
-  display: none;
+.logo {
   width: 96px;
   height: auto;
-  margin: 0 auto var(--gw-espace-6);
+  margin-bottom: var(--gw-espace-6);
 
-  @include ecran.tablette-et-moins {
-    display: block;
+  @include ecran.mobile {
+    width: 80px;
+    margin-bottom: var(--gw-espace-5);
+  }
+}
+
+// La carte : un trait terre cuite en haut, rappel du trait orange du logo
+.carte {
+  width: 100%;
+  padding: var(--gw-espace-8) var(--gw-espace-8) var(--gw-espace-6);
+  border: 1px solid var(--gw-bordure);
+  border-top: 4px solid var(--gw-terre-cuite);
+  border-radius: var(--gw-rayon-lg);
+  background: var(--gw-surface);
+  box-shadow: var(--gw-ombre-2);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-6) var(--gw-espace-5) var(--gw-espace-5);
   }
 }
 
@@ -218,13 +58,13 @@
 h1 {
   margin-top: var(--gw-espace-1);
   color: var(--gw-cacao);
-  font-size: var(--gw-taille-titre-page);
+  font-size: 1.625rem;
   font-weight: 700;
   line-height: 1.2;
 }
 
 .sous-titre {
-  margin: var(--gw-espace-2) 0 var(--gw-espace-8);
+  margin: var(--gw-espace-2) 0 var(--gw-espace-6);
   color: var(--gw-texte-doux);
 }
 
@@ -232,13 +72,17 @@ h1 {
   display: flex;
   align-items: flex-start;
   gap: var(--gw-espace-3);
-  margin-bottom: var(--gw-espace-6);
+  margin-bottom: var(--gw-espace-5);
   padding: var(--gw-espace-3) var(--gw-espace-4);
   border: 1px solid color-mix(in srgb, var(--gw-danger) 25%, transparent);
   border-radius: var(--gw-rayon);
   background: var(--gw-danger-fond);
   color: var(--gw-danger);
   animation: gw-secousse 420ms var(--gw-courbe);
+
+  p {
+    margin: 0;
+  }
 }
 
 .champ {
@@ -246,116 +90,66 @@ h1 {
   margin-bottom: var(--gw-espace-1);
 }
 
-form .champ:nth-child(1) { animation-delay: 420ms; }
-form .champ:nth-child(2) { animation-delay: 490ms; }
-
 .icone-champ {
   margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
   color: var(--gw-texte-doux);
 }
 
+// Bouton : au survol, teinte plus foncée, légère élévation, la flèche avance
 .bouton-connexion {
-  position: relative;
   width: 100%;
   height: 50px;
-  overflow: hidden;
   margin-top: var(--gw-espace-3);
-  animation-delay: 560ms !important;
   font-size: 1rem;
-  box-shadow: 0 8px 20px rgb(185 84 18 / 0.25);
+  box-shadow: 0 8px 20px rgb(185 84 18 / 0.22);
   transition:
     box-shadow var(--gw-duree) var(--gw-courbe),
     transform var(--gw-duree) var(--gw-courbe);
 
-  // Reflet qui traverse le bouton au survol
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -60%;
-    width: 40%;
-    height: 100%;
-    background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.28), transparent);
-    transform: skewX(-20deg);
-    transition: left 600ms var(--gw-courbe);
+  .fleche {
+    transition: transform var(--gw-duree) var(--gw-courbe);
   }
 
   &:hover:not(:disabled) {
-    box-shadow: 0 12px 28px rgb(185 84 18 / 0.35);
-    transform: translateY(-1px);
-
-    &::after {
-      left: 120%;
-    }
+    --mat-button-filled-container-color: var(--gw-action-survol);
+    box-shadow: 0 12px 26px rgb(185 84 18 / 0.32);
+    transform: translateY(-2px);
 
     .fleche {
       transform: translateX(4px);
     }
   }
 
-  .fleche {
-    transition: transform var(--gw-duree) var(--gw-courbe);
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
 }
 
 .devise {
-  margin-top: var(--gw-espace-10);
-  animation-delay: 650ms !important;
-  color: var(--gw-texte-discret);
+  margin-top: var(--gw-espace-6);
+  color: var(--gw-texte-doux);
   font-size: var(--gw-taille-petit);
   letter-spacing: 0.08em;
-  text-align: center;
   text-transform: uppercase;
 }
 
-// =============================================================================
-// Images clés
-// =============================================================================
+// Arrivée en douceur : logo, carte, puis devise
+.apparition {
+  animation: gw-monte 600ms var(--gw-courbe) both;
+
+  &.carte {
+    animation-delay: 90ms;
+  }
+
+  &.devise {
+    animation-delay: 180ms;
+  }
+}
+
 @keyframes gw-monte {
   from {
     opacity: 0;
-    transform: translateY(14px);
-  }
-}
-
-@keyframes gw-logo {
-  from {
-    opacity: 0;
-    transform: scale(0.88) translateY(10px);
-  }
-}
-
-@keyframes gw-motif {
-  to {
-    transform: translate(56px, 56px);
-  }
-}
-
-@keyframes gw-flotte {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-18px) rotate(8deg);
-  }
-}
-
-// Chaque mot est visible un tiers du temps, avec un fondu et une petite montée
-@keyframes gw-mot {
-  0% {
-    opacity: 0;
-    transform: translateY(40%);
-  }
-  6%,
-  28% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  34%,
-  100% {
-    opacity: 0;
-    transform: translateY(-40%);
+    transform: translateY(12px);
   }
 }
 
@@ -374,16 +168,14 @@ form .champ:nth-child(2) { animation-delay: 490ms; }
   }
 }
 
-// Moins de mouvement demandé : tout est affiché directement, sans animation
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
+  .apparition,
+  .message-erreur {
+    animation: none;
   }
 
-  .mot:first-child {
-    opacity: 1;
+  .bouton-connexion,
+  .bouton-connexion .fleche {
+    transition: none;
   }
 }

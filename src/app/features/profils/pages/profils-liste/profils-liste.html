@@ -14,7 +14,7 @@
 </app-page-header>
 
 <mat-button-toggle-group
-  class="onglets"
+  class="onglets gw-sections"
   name="onglet"
   aria-label="Choisir la vue"
   [value]="ongletActif()"
@@ -288,105 +288,25 @@
     </div>
   }
 } @else {
-  <!-- ===================== Catalogue des droits ===================== -->
+  <!-- ===================== Catalogue des droits : qui peut faire quoi ===================== -->
   <section class="gw-carte catalogue" aria-labelledby="titre-catalogue">
     <h2 id="titre-catalogue" class="sr-only">Catalogue des droits</h2>
     @if (droits().length === 0) {
       <app-empty-state
         titre="Aucun droit défini"
-        message="Un droit autorise une action précise, par exemple RECETTE_VALIDER."
+        message="Un droit autorise une action précise, par exemple valider les recettes."
         icone="lucideShieldCheck"
       >
         <button matButton="filled" type="button" (click)="nouveauDroit()">Créer un droit</button>
       </app-empty-state>
     } @else {
-      <div class="gw-tableau-conteneur">
-        <table mat-table [dataSource]="droitsPage()" class="gw-tableau">
-          <caption class="sr-only">
-            Catalogue des droits, page
-            {{
-              pageDroits() + 1
-            }}
-          </caption>
-
-          <ng-container matColumnDef="code">
-            <th mat-header-cell *matHeaderCellDef scope="col">Code</th>
-            <td mat-cell *matCellDef="let droit">
-              <span class="droit-code">{{ droit.action }}</span>
-              @if (!droit.actif) {
-                <span class="gw-etiquette gw-etiquette-neutre">Désactivé</span>
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="description">
-            <th mat-header-cell *matHeaderCellDef scope="col">Description</th>
-            <td mat-cell *matCellDef="let droit" class="droit-description">
-              {{ droit.description ?? 'Sans description' }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="statut">
-            <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Actif</th>
-            <td mat-cell *matCellDef="let droit" class="gw-col-centre">
-              <mat-slide-toggle
-                [checked]="droit.actif"
-                [disabled]="indispensable(droit)"
-                (change)="changerActivationDroit(droit)"
-                [aria-label]="(droit.actif ? 'Désactiver' : 'Activer') + ' le droit ' + droit.action"
-                [matTooltip]="indispensable(droit) ? 'Indispensable pour administrer Gwaso' : droit.actif ? 'Donné aux profils qui l’ont' : 'Désactivé : donné à personne'"
-                hideIcon
-              />
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-actions">
-              <span class="sr-only">Actions</span>
-            </th>
-            <td mat-cell *matCellDef="let droit" class="gw-col-actions">
-              @if (!ecran.mobile()) {
-                <button matButton type="button" (click)="modifierDroit(droit)">
-                  Modifier<span class="sr-only"> le droit {{ droit.action }}</span>
-                </button>
-              } @else {
-                <button
-                  matIconButton
-                  type="button"
-                  [attr.aria-label]="'Modifier le droit ' + droit.action"
-                  (click)="modifierDroit(droit)"
-                >
-                  <ng-icon name="lucidePencil" size="1.125rem" aria-hidden="true" />
-                </button>
-              }
-              <button
-                matIconButton
-                type="button"
-                class="bouton-supprimer"
-                [disabled]="indispensable(droit)"
-                [attr.aria-label]="'Supprimer le droit ' + droit.action"
-                matTooltip="Supprimer"
-                (click)="supprimerDroit(droit)"
-              >
-                <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="colonnesDroits()"></tr>
-          <tr mat-row *matRowDef="let droit; columns: colonnesDroits()" [class.ligne-inactive]="!droit.actif"></tr>
-        </table>
-      </div>
-
-      <mat-paginator
-        class="gw-pagination"
-        [length]="droits().length"
-        [pageIndex]="pageDroits()"
-        [pageSize]="tailleDroits()"
-        [pageSizeOptions]="taillesPage"
-        [hidePageSize]="ecran.mobile()"
-        aria-label="Pagination des droits"
-        (page)="changerPageDroits($event)"
+      <app-matrice-droits
+        [profils]="profils()"
+        [droits]="droits()"
+        (profilModifie)="apresMatrice($event)"
+        (modifierDroit)="modifierDroit($event)"
+        (supprimerDroit)="supprimerDroit($event)"
+        (basculerActivation)="changerActivationDroit($event)"
       />
     }
   </section>

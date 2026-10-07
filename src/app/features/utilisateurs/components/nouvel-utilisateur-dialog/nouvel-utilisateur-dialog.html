@@ -159,7 +159,7 @@
               <span class="obligatoire">obligatoire</span>
             }
           </p>
-          <p class="aide">{{ erreurJustificatif() || 'Photo ou PDF : diplôme, attestation, carte professionnelle…' }}</p>
+          <p class="aide">{{ erreurJustificatif() || aideJustificatif() }}</p>
         </div>
         <button matButton="outlined" type="button" (click)="champJustificatif.click()">
           {{ justificatif() ? 'Changer' : 'Choisir' }}

@@ -34,7 +34,9 @@
   <div class="disposition">
     <div class="sections">
       <!-- ===================== 1. Informations ===================== -->
-      <section class="section gw-carte" aria-labelledby="titre-infos">
+      <section class="section gw-carte" id="section-infos"
+        (focusin)="sectionActive.set('infos')"
+        aria-labelledby="titre-infos">
         <header class="section-entete">
           <span class="numero" [class.numero-fait]="!!recette()" aria-hidden="true">
             @if (recette()) {
@@ -44,7 +46,7 @@
             }
           </span>
           <div>
-            <h2 id="titre-infos">Informations</h2>
+            <h2 id="titre-infos" tabindex="-1">Informations</h2>
             <p>Ce que les membres voient en premier.</p>
           </div>
         </header>
@@ -207,6 +209,8 @@
       <section
         class="section gw-carte"
         [class.section-verrouillee]="verrouille()"
+        id="section-photo"
+        (focusin)="sectionActive.set('photo')"
         aria-labelledby="titre-photo"
       >
         <header class="section-entete">
@@ -218,7 +222,7 @@
             }
           </span>
           <div>
-            <h2 id="titre-photo">Photo du plat</h2>
+            <h2 id="titre-photo" tabindex="-1">Photo du plat</h2>
             <p>Une photo lumineuse, prise de près, donne envie de cuisiner.</p>
           </div>
         </header>
@@ -256,6 +260,8 @@
       <section
         class="section gw-carte"
         [class.section-verrouillee]="verrouille()"
+        id="section-ingredients"
+        (focusin)="sectionActive.set('ingredients')"
         aria-labelledby="titre-ingredients"
       >
         <header class="section-entete">
@@ -267,7 +273,7 @@
             }
           </span>
           <div>
-            <h2 id="titre-ingredients">Ingrédients <span class="obligatoire">obligatoire</span></h2>
+            <h2 id="titre-ingredients" tabindex="-1">Ingrédients <span class="obligatoire">obligatoire</span></h2>
             <p>Au moins un ingrédient est nécessaire pour publier.</p>
           </div>
         </header>
@@ -403,6 +409,8 @@
       <section
         class="section gw-carte"
         [class.section-verrouillee]="verrouille()"
+        id="section-etapes"
+        (focusin)="sectionActive.set('etapes')"
         aria-labelledby="titre-etapes"
       >
         <header class="section-entete">
@@ -414,7 +422,7 @@
             }
           </span>
           <div>
-            <h2 id="titre-etapes">Étapes de préparation</h2>
+            <h2 id="titre-etapes" tabindex="-1">Étapes de préparation</h2>
             <p>
               @if (dureeEtapes() > 0) {
                 {{ etapes().length }} étape(s) · {{ dureeEtapes() }} min au total
@@ -562,24 +570,31 @@
         }
       </p>
 
-      <ul class="controles">
-        @for (controle of controles(); track controle.libelle) {
-          <li [class.controle-fait]="controle.fait">
-            <ng-icon
-              [name]="controle.fait ? 'lucideCircleCheck' : 'lucideCircle'"
-              size="1.125rem"
-              aria-hidden="true"
-            />
-            <span>
-              {{ controle.libelle }}
-              <span class="sr-only">{{ controle.fait ? ' : fait' : ' : à faire' }}</span>
-              @if (!controle.obligatoire) {
-                <span class="recommande">recommandé</span>
-              }
-            </span>
+      <!-- Avancement en étapes : fait (vert), en cours de saisie (orange), à faire (numéro) -->
+      <ol class="avancement" aria-label="Avancement de la recette">
+        @for (point of avancement(); track point.section; let i = $index; let dernier = $last) {
+          <li [class]="'point point-' + point.etat" [class.point-dernier]="dernier">
+            <button
+              type="button"
+              class="point-lien"
+              [attr.aria-current]="point.etat === 'en-cours' ? 'step' : null"
+              (click)="allerA(point.section)"
+            >
+              <span class="point-repere" aria-hidden="true">
+                @if (point.etat === 'a-faire') {
+                  {{ i + 1 }}
+                } @else {
+                  <ng-icon name="lucideCheck" size="0.875rem" />
+                }
+              </span>
+              <span class="point-textes">
+                <span class="point-libelle">{{ point.libelle }}</span>
+                <span class="point-detail">{{ point.detail }}</span>
+              </span>
+            </button>
           </li>
         }
-      </ul>
+      </ol>
 
       @if (recette()?.statut === 'PUBLIEE') {
         <p class="note">
@@ -599,8 +614,11 @@
           }
           Publier la recette
         </button>
-        @if (!peutPublier()) {
-          <p class="note">Complétez les points obligatoires pour publier.</p>
+        @if (!peutPublier() && manquants().length > 0) {
+          <p class="note">
+            Pour publier, il manque : {{ manquants().join(', ') }}. Vous pouvez enregistrer la recette en brouillon
+            en attendant.
+          </p>
         }
       }
     </aside>

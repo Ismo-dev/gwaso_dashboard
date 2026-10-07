@@ -1,0 +1,24 @@
+<div class="tuiles" role="radiogroup" [attr.aria-label]="libelle()">
+  @for (option of options(); track option.valeur; let i = $index) {
+    <button
+      type="button"
+      role="radio"
+      class="tuile"
+      [class.tuile-active]="i === indexActif()"
+      [class.tuile-prioritaire]="option.prioritaire && (option.compte ?? 0) > 0"
+      [attr.aria-checked]="i === indexActif()"
+      [attr.tabindex]="i === indexActif() ? 0 : -1"
+      (click)="selectionner(option)"
+      (keydown)="clavier($event, i)"
+    >
+      <span class="tuile-haut">
+        <span class="pastille" [class]="'pastille-' + (option.ton ?? 'neutre')" aria-hidden="true"></span>
+        <span class="tuile-libelle">{{ option.libelle }}</span>
+      </span>
+      <span class="tuile-nombre gw-chiffres">{{ option.compte ?? '–' }}</span>
+      @if (option.aide) {
+        <span class="tuile-aide">{{ option.aide }}</span>
+      }
+    </button>
+  }
+</div>

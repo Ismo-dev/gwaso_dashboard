@@ -1,0 +1,210 @@
+<div class="outils">
+  <label class="recherche">
+    <ng-icon name="lucideSearch" size="1.125rem" aria-hidden="true" />
+    <span class="sr-only">Rechercher un droit</span>
+    <input
+      type="search"
+      placeholder="Rechercher un droit…"
+      [value]="recherche()"
+      (input)="rechercher($any($event.target).value)"
+    />
+  </label>
+  <ul class="legende" aria-label="Légende">
+    <li><span class="case case-oui" aria-hidden="true"><ng-icon name="lucideCheck" size="0.875rem" /></span> Accordé</li>
+    <li><span class="case" aria-hidden="true"></span> Non accordé</li>
+    <li>
+      <span class="case case-oui case-verrou" aria-hidden="true"><ng-icon name="lucideLock" size="0.75rem" /></span>
+      Indispensable
+    </li>
+  </ul>
+</div>
+
+@if (chargement()) {
+  <div class="gw-squelette sq-matrice" aria-busy="true" aria-label="Chargement des droits des profils"></div>
+} @else if (groupes().length === 0) {
+  <p class="vide">Aucun droit ne correspond à « {{ recherche() }} ».</p>
+} @else if (!ecran.mobile()) {
+  <!-- ===================== Ordinateur et tablette : la matrice ===================== -->
+  <div class="conteneur-matrice">
+    <table class="matrice">
+      <caption class="sr-only">Droits accordés à chaque profil</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="col-droit">Droit</th>
+          @for (profil of colonnes(); track profil.id) {
+            <th scope="col" class="col-profil" [class.profil-inactif]="!profil.actif">
+              <span class="profil-nom">{{ profil.nom }}</span>
+              <span class="profil-info">
+                {{ profil.nbUtilisateurs }} membre{{ profil.nbUtilisateurs > 1 ? 's' : '' }}
+                @if (!profil.actif) {
+                  · désactivé
+                }
+              </span>
+            </th>
+          }
+          <th scope="col" class="col-actif">Actif</th>
+          <th scope="col" class="col-actions"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+
+      @for (groupe of groupes(); track groupe.cle) {
+        <tbody>
+          <tr class="ligne-groupe">
+            <th scope="colgroup" [attr.colspan]="colonnes().length + 3">
+              <ng-icon [name]="groupe.icone" size="1rem" aria-hidden="true" />
+              {{ groupe.libelle }}
+            </th>
+          </tr>
+          @for (droit of groupe.droits; track droit.id) {
+            <tr [class.droit-inactif]="!droit.actif">
+              <th scope="row" class="col-droit">
+                <span class="droit-libelle">{{ libelleDroit(droit) }}</span>
+                <span class="droit-code">{{ droit.action }}</span>
+              </th>
+              @for (profil of colonnes(); track profil.id) {
+                <td class="cellule">
+                  <button
+                    type="button"
+                    class="case"
+                    [class.case-oui]="possede(profil, droit)"
+                    [class.case-verrou]="verrouille(profil, droit)"
+                    [class.case-occupee]="occupe(profil, droit)"
+                    [attr.aria-pressed]="possede(profil, droit)"
+                    [attr.aria-label]="libelleCase(profil, droit)"
+                    [attr.aria-disabled]="verrouille(profil, droit) || null"
+                    [matTooltip]="verrouille(profil, droit) ? 'Indispensable pour administrer Gwaso' : ''"
+                    (click)="basculer(profil, droit)"
+                  >
+                    @if (verrouille(profil, droit)) {
+                      <ng-icon name="lucideLock" size="0.875rem" aria-hidden="true" />
+                    } @else if (possede(profil, droit)) {
+                      <ng-icon name="lucideCheck" size="1rem" aria-hidden="true" />
+                    }
+                  </button>
+                </td>
+              }
+              <td class="col-actif">
+                <mat-slide-toggle
+                  hideIcon
+                  [checked]="droit.actif"
+                  [disabled]="indispensable(droit)"
+                  [aria-label]="(droit.actif ? 'Désactiver' : 'Activer') + ' le droit ' + libelleDroit(droit)"
+                  [matTooltip]="indispensable(droit) ? 'Indispensable : toujours actif' : droit.actif ? 'Donné aux profils cochés' : 'Désactivé : donné à personne'"
+                  (change)="basculerActivation.emit(droit)"
+                />
+              </td>
+              <td class="col-actions">
+                <button
+                  matIconButton
+                  type="button"
+                  [matMenuTriggerFor]="menu"
+                  [attr.aria-label]="'Actions sur le droit ' + libelleDroit(droit)"
+                >
+                  <ng-icon name="lucideEllipsis" size="1.125rem" aria-hidden="true" />
+                </button>
+                <mat-menu #menu="matMenu" xPosition="before">
+                  <button mat-menu-item type="button" (click)="modifierDroit.emit(droit)">
+                    <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+                    Modifier
+                  </button>
+                  <button
+                    mat-menu-item
+                    type="button"
+                    class="item-danger"
+                    [disabled]="indispensable(droit)"
+                    (click)="supprimerDroit.emit(droit)"
+                  >
+                    <ng-icon name="lucideTrash2" size="1rem" aria-hidden="true" />
+                    Supprimer
+                  </button>
+                </mat-menu>
+              </td>
+            </tr>
+          }
+        </tbody>
+      }
+    </table>
+  </div>
+} @else {
+  <!-- ===================== Téléphone : une carte par droit ===================== -->
+  @for (groupe of groupes(); track groupe.cle) {
+    <section class="groupe-mobile" [attr.aria-labelledby]="'groupe-' + groupe.cle">
+      <h3 [id]="'groupe-' + groupe.cle">
+        <ng-icon [name]="groupe.icone" size="1rem" aria-hidden="true" />
+        {{ groupe.libelle }}
+      </h3>
+      @for (droit of groupe.droits; track droit.id) {
+        <article class="carte-droit" [class.droit-inactif]="!droit.actif">
+          <div class="carte-entete">
+            <div class="carte-textes">
+              <span class="droit-libelle">{{ libelleDroit(droit) }}</span>
+              <span class="droit-code">{{ droit.action }}</span>
+            </div>
+            <mat-slide-toggle
+              hideIcon
+              [checked]="droit.actif"
+              [disabled]="indispensable(droit)"
+              [aria-label]="(droit.actif ? 'Désactiver' : 'Activer') + ' le droit ' + libelleDroit(droit)"
+              (change)="basculerActivation.emit(droit)"
+            />
+            <button
+              matIconButton
+              type="button"
+              [matMenuTriggerFor]="menuMobile"
+              [attr.aria-label]="'Actions sur le droit ' + libelleDroit(droit)"
+            >
+              <ng-icon name="lucideEllipsis" size="1.125rem" aria-hidden="true" />
+            </button>
+            <mat-menu #menuMobile="matMenu" xPosition="before">
+              <button mat-menu-item type="button" (click)="modifierDroit.emit(droit)">Modifier</button>
+              <button
+                mat-menu-item
+                type="button"
+                class="item-danger"
+                [disabled]="indispensable(droit)"
+                (click)="supprimerDroit.emit(droit)"
+              >
+                Supprimer
+              </button>
+            </mat-menu>
+          </div>
+          <p class="carte-aide">Accordé à {{ nbProfils(droit) }} profil{{ nbProfils(droit) > 1 ? 's' : '' }} :</p>
+          <div class="puces">
+            @for (profil of colonnes(); track profil.id) {
+              <button
+                type="button"
+                class="puce"
+                [class.puce-oui]="possede(profil, droit)"
+                [class.case-occupee]="occupe(profil, droit)"
+                [attr.aria-pressed]="possede(profil, droit)"
+                [attr.aria-label]="libelleCase(profil, droit)"
+                [attr.aria-disabled]="verrouille(profil, droit) || null"
+                (click)="basculer(profil, droit)"
+              >
+                @if (verrouille(profil, droit)) {
+                  <ng-icon name="lucideLock" size="0.875rem" aria-hidden="true" />
+                } @else if (possede(profil, droit)) {
+                  <ng-icon name="lucideCheck" size="0.875rem" aria-hidden="true" />
+                }
+                {{ profil.nom }}
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+}
+
+@if (!chargement() && total() > taillesPage[0]) {
+  <mat-paginator
+    class="gw-pagination"
+    [length]="total()"
+    [pageIndex]="pageCourante()"
+    [pageSize]="taillePage()"
+    [pageSizeOptions]="taillesPage"
+    [hidePageSize]="ecran.mobile()"
+    aria-label="Pagination du catalogue des droits"
+    (page)="changerPage($event)"
+  />
+}
