@@ -22,113 +22,136 @@
   }
 }
 
-// ----- Bandeau d'accueil -----
+// ----- Accueil : une page de journal, pas un bandeau -----
+// Sur le fond de la page, sans couleur pleine ni motif : la typographie et le chiffre portent l'accueil.
 .bienvenue {
-  position: relative;
+  padding-bottom: var(--gw-espace-8);
+  border-bottom: 1px solid var(--gw-bordure);
+
+  @include ecran.mobile {
+    padding-bottom: var(--gw-espace-6);
+  }
+}
+
+.bienvenue-ligne {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: var(--gw-espace-6);
-  padding: var(--gw-espace-8);
-  overflow: hidden;
-  border-radius: var(--gw-rayon-lg);
-  background: var(--gw-cacao);
-  color: var(--gw-sidebar-texte);
-
-  // Motif bogolan discret, estompé vers la gauche
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: var(--gw-motif-bogolan);
-    background-size: 48px 48px;
-    opacity: 0.1;
-    mask-image: linear-gradient(to left, #000 0%, transparent 70%);
-  }
-
-  // (l'emblème est exclu : il reste positionné en absolu, hors du flux)
-  > *:not(.bienvenue-embleme) {
-    position: relative;
-  }
-
-  @include ecran.mobile {
-    padding: var(--gw-espace-6) var(--gw-espace-5);
-  }
-}
-
-.bienvenue-texte {
-  max-width: 60ch;
+  gap: var(--gw-espace-4);
 }
 
 .date {
-  color: var(--gw-sidebar-texte-doux);
+  color: var(--gw-texte-doux);
   font-size: var(--gw-taille-label);
-  text-transform: capitalize;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .bienvenue h1 {
   margin-top: var(--gw-espace-1);
-  color: var(--gw-blanc);
-  font-size: var(--gw-taille-titre-page);
-  font-weight: 700;
-}
-
-.resume {
-  margin-top: var(--gw-espace-2);
-  font-size: 0.9375rem;
-
-  strong {
-    color: var(--gw-terre-cuite);
-    font-size: 1.125rem;
-  }
-}
-
-// Bouton clair sur fond cacao : contraste élevé et action évidente
-.bouton-revue {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--gw-espace-2);
-  min-height: 44px;
-  padding: 0 var(--gw-espace-5);
-  border-radius: var(--gw-rayon);
-  background: var(--gw-blanc);
   color: var(--gw-cacao);
-  font-weight: 600;
-  text-decoration: none;
-  transition: background-color var(--gw-duree) var(--gw-courbe);
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
 
+.bouton-revue {
   ng-icon {
-    color: var(--gw-action);
     transition: transform var(--gw-duree) var(--gw-courbe);
   }
 
-  &:hover {
-    background: var(--gw-terre-cuite-pale);
-
-    ng-icon {
-      transform: translateX(3px);
-    }
-  }
-
-  &:focus-visible {
-    outline-color: var(--gw-terre-cuite);
+  &:hover ng-icon {
+    transform: translateX(3px);
   }
 }
 
-.bienvenue-embleme {
-  position: absolute;
-  right: var(--gw-espace-8);
-  top: 50%;
-  width: 112px;
-  height: auto;
-  opacity: 0.12;
-  transform: translateY(-50%) rotate(-8deg);
-  pointer-events: none;
+// Le total en grand, la phrase à côté
+.resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--gw-espace-3);
+  margin-top: var(--gw-espace-6);
+  color: var(--gw-texte);
+  font-size: 1.0625rem;
+}
 
-  @include ecran.tablette-et-moins {
-    display: none;
+.total {
+  color: var(--gw-action);
+  font-size: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.resume-calme {
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin-top: var(--gw-espace-4);
+  color: var(--gw-succes);
+  font-weight: 600;
+}
+
+// Barre de répartition : un segment par file, proportionnel à son nombre
+.repartition {
+  display: flex;
+  gap: 3px;
+  height: 10px;
+  margin-top: var(--gw-espace-4);
+  overflow: hidden;
+  border-radius: var(--gw-rayon-pilule);
+}
+
+.segment {
+  min-width: 10px;
+  flex-basis: 0;
+}
+
+// Quatre tons de la charte, du plus sombre au plus vif (aplats, sans dégradé)
+.segment-0 {
+  background: var(--gw-cacao);
+}
+
+.segment-1 {
+  background: var(--gw-action);
+}
+
+.segment-2 {
+  background: var(--gw-karite);
+}
+
+.segment-3 {
+  background: var(--gw-terre-cuite);
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2) var(--gw-espace-5);
+  margin: var(--gw-espace-3) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
   }
+
+  .gw-chiffres {
+    color: var(--gw-texte);
+    font-weight: 700;
+  }
+}
+
+.pastille {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
 }
 
 // ----- Sections -----

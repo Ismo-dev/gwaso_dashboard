@@ -30,16 +30,48 @@
   }
 }
 
-.gw-onglets {
-  --mat-button-toggle-selected-state-background-color: var(--gw-cacao);
-  --mat-button-toggle-selected-state-text-color: var(--gw-blanc);
+// Onglets de section (« Demandes / Membres », « Profils / Catalogue ») : du texte souligné,
+// comme de vrais onglets. Les filtres de statut, eux, sont des tuiles (app-filtre-statuts).
+.mat-button-toggle-group.gw-sections {
+  --mat-button-toggle-height: 44px;
   --mat-button-toggle-text-color: var(--gw-texte-doux);
-  --mat-button-toggle-label-text-weight: 500;
-  --mat-button-toggle-height: 40px;
-  --mat-button-toggle-divider-color: var(--gw-bordure);
-  border-color: var(--gw-bordure);
-  background: var(--gw-surface);
+  --mat-button-toggle-selected-state-text-color: var(--gw-cacao);
+  --mat-button-toggle-selected-state-background-color: transparent;
+  --mat-button-toggle-background-color: transparent;
+  --mat-button-toggle-divider-color: transparent;
+  --mat-button-toggle-label-text-weight: 600;
+  --mat-button-toggle-state-layer-color: var(--gw-cacao);
+  display: flex;
+  gap: var(--gw-espace-6);
+  margin-bottom: var(--gw-espace-5);
+  border: 0;
+  border-bottom: 1px solid var(--gw-bordure);
+  border-radius: 0;
+  background: transparent;
+
+  .mat-button-toggle {
+    margin-bottom: -1px;
+    border: 0 !important;
+    border-bottom: 3px solid transparent !important;
+    border-radius: 0;
+    transition:
+      border-color var(--gw-duree) var(--gw-courbe),
+      color var(--gw-duree) var(--gw-courbe);
+  }
+
+  .mat-button-toggle-checked {
+    border-bottom-color: var(--gw-action) !important;
+  }
+
+  .mat-button-toggle-label-content {
+    padding: 0 var(--gw-espace-1);
+  }
+
+  @include ecran.mobile {
+    gap: var(--gw-espace-4);
+  }
 }
+
 
 .gw-onglet-compteur {
   margin-left: var(--gw-espace-2);
@@ -51,8 +83,8 @@
   font-weight: 600;
 
   .mat-button-toggle-checked & {
-    background: rgb(255 255 255 / 0.18);
-    color: var(--gw-blanc);
+    background: var(--gw-terre-cuite-pale);
+    color: var(--gw-action);
   }
 }
 

@@ -9,9 +9,6 @@
   overflow: hidden;
   border-radius: var(--gw-rayon-lg);
   background: var(--gw-cacao-profond);
-  background-image: var(--gw-motif-bogolan);
-  background-size: 44px 44px;
-  background-blend-mode: soft-light;
 
   @include ecran.mobile {
     height: calc(100dvh - 140px);

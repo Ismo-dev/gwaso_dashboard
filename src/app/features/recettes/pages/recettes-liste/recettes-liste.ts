@@ -3,7 +3,6 @@ import { Component, computed, effect, inject, input, OnInit, signal } from '@ang
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
-import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { MatDivider } from '@angular/material/divider';
 import { MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -32,6 +31,7 @@ import { ConfirmationService } from '../../../../core/services/confirmation.serv
 import { EcranService } from '../../../../core/services/ecran.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SessionService } from '../../../../core/services/session.service';
+import { FiltreStatuts, OptionStatut, TonStatut } from '../../../../shared/components/filtre-statuts/filtre-statuts';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
@@ -56,16 +56,20 @@ interface Onglet {
   libelle: string;
   /** Compteur à lire dans les statistiques (absent pour « Toutes »). */
   compteur?: keyof Statistiques['recettes'];
+  /** Tuile : couleur de la pastille, phrase d'aide, mise en avant quand il y a du travail. */
+  ton?: TonStatut;
+  aide?: string;
+  prioritaire?: boolean;
 }
 
 /** Onglets de statut, dans l'ordre du travail de l'administrateur. */
 const ONGLETS: Onglet[] = [
-  { valeur: 'EN_ATTENTE_VALIDATION', libelle: 'À valider', compteur: 'enAttente' },
-  { valeur: 'PUBLIEE', libelle: 'Publiées', compteur: 'publiees' },
-  { valeur: 'REJETEE', libelle: 'Rejetées', compteur: 'rejetees' },
-  { valeur: 'BROUILLON', libelle: 'Brouillons', compteur: 'brouillons' },
-  { valeur: 'ARCHIVEE', libelle: 'Archivées', compteur: 'archivees' },
-  { valeur: 'TOUTES', libelle: 'Toutes' },
+  { valeur: 'EN_ATTENTE_VALIDATION', libelle: 'À valider', compteur: 'enAttente', ton: 'attente', aide: "attendent votre relecture", prioritaire: true },
+  { valeur: 'PUBLIEE', libelle: 'Publiées', compteur: 'publiees', ton: 'succes', aide: "dans l'application" },
+  { valeur: 'REJETEE', libelle: 'Rejetées', compteur: 'rejetees', ton: 'erreur', aide: "à corriger par l'auteur" },
+  { valeur: 'BROUILLON', libelle: 'Brouillons', compteur: 'brouillons', ton: 'neutre', aide: "pas encore envoyées" },
+  { valeur: 'ARCHIVEE', libelle: 'Archivées', compteur: 'archivees', ton: 'neutre', aide: "retirées de l'application" },
+  { valeur: 'TOUTES', libelle: 'Toutes', ton: 'info', aide: "toutes les recettes" },
 ];
 
 const TRIS: { valeur: TriRecette; libelle: string }[] = [
@@ -99,14 +103,13 @@ interface EtatListe {
  */
 @Component({
   imports: [
+    FiltreStatuts,
     ReactiveFormsModule,
     RouterLink,
     DatePipe,
     NgTemplateOutlet,
     MatButton,
     MatIconButton,
-    MatButtonToggleGroup,
-    MatButtonToggle,
     MatFormField,
     MatLabel,
     MatPrefix,
@@ -162,6 +165,22 @@ export class RecettesListe implements OnInit {
   readonly taille = input<string>();
 
   protected readonly onglets = ONGLETS;
+
+  /** Tuiles de statut : le nombre d'éléments de chaque statut, et le filtre. « Tous » : le total. */
+  protected optionsStatut = computed<OptionStatut[]>(() => {
+    const options: OptionStatut[] = ONGLETS.map((o) => ({
+      valeur: o.valeur,
+      libelle: o.libelle,
+      aide: o.aide,
+      ton: o.ton,
+      prioritaire: o.prioritaire,
+      compte: this.compteur(o),
+    }));
+    // « Tous » n'a pas de compteur propre : c'est la somme des autres, quand ils sont tous connus
+    const comptes = ONGLETS.filter((o) => o.compteur).map((o) => this.compteur(o));
+    const total = comptes.every((c) => c !== null) ? comptes.reduce<number>((s, c) => s + (c ?? 0), 0) : null;
+    return options.map((o, i) => (ONGLETS[i].compteur || o.ton !== 'info' ? o : { ...o, compte: total }));
+  });
   protected readonly tris = TRIS;
   protected readonly difficultes = DIFFICULTES;
 
@@ -200,6 +219,26 @@ export class RecettesListe implements OnInit {
 
   /** Recette dont une action est en cours (ses boutons sont désactivés : pas de double envoi). */
   protected actionEnCours = signal<string | null>(null);
+
+  /** Affichage : galerie de photos (par défaut) ou tableau ; retenu sur ce navigateur. */
+  protected vue = signal<'galerie' | 'liste'>(RecettesListe.lireVue());
+
+  private static lireVue(): 'galerie' | 'liste' {
+    try {
+      return localStorage.getItem('gw-recettes-vue') === 'liste' ? 'liste' : 'galerie';
+    } catch {
+      return 'galerie';
+    }
+  }
+
+  changerVue(vue: 'galerie' | 'liste'): void {
+    this.vue.set(vue);
+    try {
+      localStorage.setItem('gw-recettes-vue', vue);
+    } catch {
+      // Stockage indisponible (navigation privée) : le choix vaut pour cette visite
+    }
+  }
 
   /** Colonnes affichées selon la largeur de l'écran. */
   protected colonnes = computed(() =>

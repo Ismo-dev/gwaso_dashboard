@@ -2,7 +2,6 @@ import { Component, computed, effect, inject, input, OnInit, signal } from '@ang
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
-import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -12,6 +11,7 @@ import { NgIcon } from '@ng-icons/core';
 import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap, tap } from 'rxjs';
 import { PageResponse } from '../../../../core/models/page-response.model';
 import { AValiderService } from '../../../../core/services/a-valider.service';
+import { FiltreStatuts, OptionStatut, TonStatut } from '../../../../shared/components/filtre-statuts/filtre-statuts';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { Statistiques } from '../../../tableau-de-bord/models/statistiques.model';
@@ -33,16 +33,20 @@ interface Onglet {
   valeur: FiltreStatut;
   libelle: string;
   compteur?: keyof Statistiques['videos'];
+  /** Tuile : couleur de la pastille, phrase d'aide, mise en avant quand il y a du travail. */
+  ton?: TonStatut;
+  aide?: string;
+  prioritaire?: boolean;
 }
 
 /** Onglets dans l'ordre du travail de l'administrateur : d'abord ce qui attend une décision. */
 const ONGLETS: Onglet[] = [
-  { valeur: 'EN_ATTENTE_VALIDATION', libelle: 'À valider', compteur: 'enAttente' },
-  { valeur: 'PUBLIEE', libelle: 'Publiées', compteur: 'publiees' },
-  { valeur: 'DESACTIVEE', libelle: 'Retirées', compteur: 'desactivees' },
-  { valeur: 'REJETEE', libelle: 'Refusées', compteur: 'rejetees' },
-  { valeur: 'BROUILLON', libelle: 'Brouillons', compteur: 'brouillons' },
-  { valeur: 'TOUTES', libelle: 'Toutes' },
+  { valeur: 'EN_ATTENTE_VALIDATION', libelle: 'À valider', compteur: 'enAttente', ton: 'attente', aide: "attendent votre décision", prioritaire: true },
+  { valeur: 'PUBLIEE', libelle: 'Publiées', compteur: 'publiees', ton: 'succes', aide: "visibles par tous" },
+  { valeur: 'DESACTIVEE', libelle: 'Retirées', compteur: 'desactivees', ton: 'neutre', aide: "retirées après publication" },
+  { valeur: 'REJETEE', libelle: 'Refusées', compteur: 'rejetees', ton: 'erreur', aide: "refusées à la modération" },
+  { valeur: 'BROUILLON', libelle: 'Brouillons', compteur: 'brouillons', ton: 'neutre', aide: "pas encore envoyées" },
+  { valeur: 'TOUTES', libelle: 'Toutes', ton: 'info', aide: "toutes les vidéos" },
 ];
 
 const TAILLES = [12, 24, 48];
@@ -59,12 +63,11 @@ interface EtatListe {
  */
 @Component({
   imports: [
+    FiltreStatuts,
     ReactiveFormsModule,
     RouterLink,
     MatButton,
     MatIconButton,
-    MatButtonToggleGroup,
-    MatButtonToggle,
     MatFormField,
     MatLabel,
     MatPrefix,
@@ -98,6 +101,22 @@ export class VideosListe implements OnInit {
   readonly taille = input<string>();
 
   protected readonly onglets = ONGLETS;
+
+  /** Tuiles de statut : le nombre d'éléments de chaque statut, et le filtre. « Tous » : le total. */
+  protected optionsStatut = computed<OptionStatut[]>(() => {
+    const options: OptionStatut[] = ONGLETS.map((o) => ({
+      valeur: o.valeur,
+      libelle: o.libelle,
+      aide: o.aide,
+      ton: o.ton,
+      prioritaire: o.prioritaire,
+      compte: this.compteur(o),
+    }));
+    // « Tous » n'a pas de compteur propre : c'est la somme des autres, quand ils sont tous connus
+    const comptes = ONGLETS.filter((o) => o.compteur).map((o) => this.compteur(o));
+    const total = comptes.every((c) => c !== null) ? comptes.reduce<number>((s, c) => s + (c ?? 0), 0) : null;
+    return options.map((o, i) => (ONGLETS[i].compteur || o.ton !== 'info' ? o : { ...o, compte: total }));
+  });
   protected readonly tailles = TAILLES;
   protected readonly types = Object.entries(LIBELLES_TYPE_VIDEO) as [TypeVideo, string][];
 

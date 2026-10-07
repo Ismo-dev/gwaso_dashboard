@@ -1,15 +1,5 @@
 @use 'points-de-rupture' as ecran;
 
-.onglets {
-  --mat-button-toggle-selected-state-background-color: var(--gw-cacao);
-  --mat-button-toggle-selected-state-text-color: var(--gw-blanc);
-  --mat-button-toggle-text-color: var(--gw-texte-doux);
-  --mat-button-toggle-height: 40px;
-  --mat-button-toggle-divider-color: var(--gw-bordure);
-  margin-bottom: var(--gw-espace-5);
-  border-color: var(--gw-bordure);
-  background: var(--gw-surface);
-}
 
 .onglet-compteur {
   margin-left: var(--gw-espace-2);
@@ -21,8 +11,8 @@
   font-weight: 600;
 
   .mat-button-toggle-checked & {
-    background: rgb(255 255 255 / 0.18);
-    color: var(--gw-blanc);
+    background: var(--gw-terre-cuite-pale);
+    color: var(--gw-action);
   }
 }
 
@@ -311,11 +301,6 @@
   font-weight: 500;
 }
 
-.ligne-inactive .droit-code,
-.ligne-inactive .droit-description {
-  opacity: 0.6;
-}
-
 .droit-code {
   display: block;
   color: var(--gw-cacao);
@@ -323,13 +308,6 @@
   font-size: var(--gw-taille-label);
   font-weight: 600;
   // Un long code (RECETTE_VALIDER_...) passe à la ligne au lieu de pousser le tableau
-  overflow-wrap: anywhere;
-}
-
-.droit-description {
-  display: block;
-  color: var(--gw-texte-doux);
-  font-size: var(--gw-taille-petit);
   overflow-wrap: anywhere;
 }
 
@@ -374,49 +352,9 @@
   color: var(--gw-danger);
 }
 
-// ----- Catalogue des droits -----
+// ----- Catalogue des droits : la matrice (composant MatriceDroits) occupe la carte -----
 .catalogue {
   overflow: hidden;
-
-  // Largeurs fixes : le tableau tient toujours dans la carte, le texte passe à la ligne
-  .gw-tableau {
-    table-layout: fixed;
-  }
-
-  .mat-column-code {
-    width: 34%;
-
-    // Sur téléphone, le code prend la place laissée par l'interrupteur et les boutons
-    @include ecran.mobile {
-      width: auto;
-    }
-  }
-
-  .mat-column-statut {
-    @include ecran.mobile {
-      width: 76px;
-    }
-  }
-
-  .mat-column-actions {
-    width: 170px;
-    white-space: nowrap;
-
-    // Deux boutons-icônes (2 × 40px) sur une seule ligne, sans « … » de débordement
-    @include ecran.mobile {
-      width: 96px;
-      padding-inline: 4px 12px;
-      text-overflow: clip;
-    }
-  }
-}
-
-.bouton-supprimer {
-  color: var(--gw-texte-doux);
-
-  &:hover {
-    color: var(--gw-danger);
-  }
 }
 
 .detail-icone {

@@ -92,6 +92,7 @@ import {
   lucideSend,
   lucideListChecks,
   lucideScale,
+  lucideLock,
 } from '@ng-icons/lucide';
 
 /**
@@ -104,6 +105,7 @@ import {
  *   3. l'utiliser : <ng-icon name="lucideChefHat" />
  */
 export const ICONES = {
+  lucideLock,
   lucideArrowLeft,
   lucideArrowRight,
   lucideBadgeCheck,

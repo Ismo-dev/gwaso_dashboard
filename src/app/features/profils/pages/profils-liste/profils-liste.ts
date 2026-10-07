@@ -6,21 +6,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatLabel, MatPrefix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
-import {
-  MatCell,
-  MatCellDef,
-  MatColumnDef,
-  MatHeaderCell,
-  MatHeaderCellDef,
-  MatHeaderRow,
-  MatHeaderRowDef,
-  MatRow,
-  MatRowDef,
-  MatTable,
-} from '@angular/material/table';
 import { MatTooltip } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
@@ -28,10 +15,10 @@ import { firstValueFrom, forkJoin } from 'rxjs';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { EcranService } from '../../../../core/services/ecran.service';
 import { NotificationService } from '../../../../core/services/notification.service';
-import { pageDe, pageValide, TAILLES_PAGE } from '../../../../core/utils/pagination';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { DonneesDroitDialog, DroitDialog } from '../../components/droit-dialog/droit-dialog';
+import { MatriceDroits } from '../../components/matrice-droits/matrice-droits';
 import { DonneesProfilDialog, ProfilDialog } from '../../components/profil-dialog/profil-dialog';
 import {
   DroitAffiche,
@@ -54,6 +41,7 @@ type Onglet = 'profils' | 'droits';
  */
 @Component({
   imports: [
+    MatriceDroits,
     FormsModule,
     MatButton,
     MatIconButton,
@@ -70,17 +58,6 @@ type Onglet = 'profils' | 'droits';
     MatMenuItem,
     MatMenuTrigger,
     MatTooltip,
-    MatPaginator,
-    MatTable,
-    MatColumnDef,
-    MatHeaderCell,
-    MatHeaderCellDef,
-    MatCell,
-    MatCellDef,
-    MatHeaderRow,
-    MatHeaderRowDef,
-    MatRow,
-    MatRowDef,
     NgIcon,
     PageHeader,
     EmptyState,
@@ -129,26 +106,6 @@ export class ProfilsListe implements OnInit {
   });
 
   // ----- Recherche dans les droits -----
-  // ----- Pagination du catalogue des droits -----
-  protected readonly taillesPage = TAILLES_PAGE;
-  private pageDroitsDemandee = signal(0);
-  protected tailleDroits = signal(TAILLES_PAGE[0]);
-  protected pageDroits = computed(() =>
-    pageValide(this.pageDroitsDemandee(), this.tailleDroits(), this.droits().length),
-  );
-  protected droitsPage = computed(() =>
-    pageDe(this.droits(), this.pageDroits(), this.tailleDroits()),
-  );
-  /** Sur téléphone, la description passe sous le code : une colonne de moins. */
-  protected colonnesDroits = computed(() =>
-    this.ecran.mobile() ? ['code', 'statut', 'actions'] : ['code', 'description', 'statut', 'actions'],
-  );
-
-  changerPageDroits(evenement: PageEvent): void {
-    this.tailleDroits.set(evenement.pageSize);
-    this.pageDroitsDemandee.set(evenement.pageIndex);
-  }
-
   protected rechercheDroit = signal('');
   protected droitsFiltres = computed(() => {
     const terme = this.rechercheDroit().trim().toLowerCase();
@@ -368,6 +325,14 @@ export class ProfilsListe implements OnInit {
   }
 
   /** Désactivé : le droit reste dans le catalogue et les profils, mais n'est donné à personne. */
+  /** La matrice a changé les droits d'un profil : on met son compteur à jour (et sa fiche si elle est ouverte). */
+  apresMatrice({ profilId, nbDroits }: { profilId: string; nbDroits: number }): void {
+    this.profils.update((profils) => profils.map((p) => (p.id === profilId ? { ...p, nbDroits } : p)));
+    if (this.profilSelectionneId() === profilId) {
+      this.ouvrirProfil(profilId);
+    }
+  }
+
   changerActivationDroit(droit: DroitResponse): void {
     this.profilService.changerActivationDroit(droit.id, !droit.actif).subscribe({
       next: (resultat) => {

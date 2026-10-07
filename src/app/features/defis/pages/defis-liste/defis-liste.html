@@ -13,25 +13,12 @@
   </a>
 </app-page-header>
 
-<div class="gw-onglets-conteneur">
-  <mat-button-toggle-group
-    class="gw-onglets"
-    name="statut"
-    aria-label="Filtrer les défis par statut"
-    [value]="statutActif()"
-    (change)="changerStatut($event.value)"
-    hideSingleSelectionIndicator
-  >
-    @for (onglet of onglets; track onglet.valeur) {
-      <mat-button-toggle [value]="onglet.valeur">
-        {{ onglet.libelle }}
-        @if (compteur(onglet) !== null) {
-          <span class="gw-onglet-compteur gw-chiffres">{{ compteur(onglet) }}</span>
-        }
-      </mat-button-toggle>
-    }
-  </mat-button-toggle-group>
-</div>
+<app-filtre-statuts
+  libelle="Filtrer les défis par statut"
+  [options]="optionsStatut()"
+  [valeur]="statutActif()"
+  (choisir)="changerStatut($any($event))"
+/>
 
 <section class="gw-carte liste" aria-label="Liste des défis">
   <div class="gw-outils">

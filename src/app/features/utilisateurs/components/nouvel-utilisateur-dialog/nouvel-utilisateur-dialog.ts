@@ -37,8 +37,7 @@ import {
   LIBELLES_NIVEAU,
   LIBELLES_TYPE_COMPTE,
   NiveauCuisine,
-  ORDRE_TYPES_COMPTE,
-} from '../../models/utilisateur.model';
+  ORDRE_TYPES_COMPTE, JUSTIFICATIFS_ATTENDUS } from '../../models/utilisateur.model';
 import { UtilisateurService } from '../../services/utilisateur.service';
 
 /** Il faut un email ou un téléphone pour se connecter ; l'email est obligatoire pour un administrateur. */
@@ -142,6 +141,9 @@ export class NouvelUtilisateurDialog implements OnInit {
   });
   /** Chef et producteur : statut à valider (on propose de le faire tout de suite). */
   protected aValider = computed(() => this.role() === 'CHEF' || this.role() === 'PRODUCTEUR');
+  protected aideJustificatif = computed(
+    () => `Photo ou PDF : ${JUSTIFICATIFS_ATTENDUS[this.role() === 'CHEF' ? 'CHEF' : 'PRODUCTEUR']}`,
+  );
 
   constructor() {
     this.formulaire.controls.typeCompte.valueChanges.subscribe((type) => {

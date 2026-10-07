@@ -14,19 +14,6 @@
   scrollbar-color: rgb(255 255 255 / 0.25) transparent;
   scrollbar-width: thin;
 
-  // Motif bogolan très discret en bas du menu : rappel de l'artisanat malien
-  &::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0 0;
-    height: 160px;
-    background-image: var(--gw-motif-bogolan);
-    background-size: 48px 48px;
-    opacity: 0.12;
-    mask-image: linear-gradient(to top, #000 0%, transparent 100%);
-    pointer-events: none;
-  }
-
   // Focus clavier : terre cuite claire, bien visible sur le cacao (4:1)
   :focus-visible {
     outline-color: var(--gw-terre-cuite);

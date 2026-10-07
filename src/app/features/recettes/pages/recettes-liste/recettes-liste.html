@@ -13,25 +13,12 @@
 </app-page-header>
 
 <!-- Statuts : l'onglet « À valider » est le point de départ du travail -->
-<div class="onglets-conteneur">
-  <mat-button-toggle-group
-    class="onglets"
-    name="statut"
-    aria-label="Filtrer les recettes par statut"
-    [value]="statutActif()"
-    (change)="changerStatut($event.value)"
-    hideSingleSelectionIndicator
-  >
-    @for (onglet of onglets; track onglet.valeur) {
-      <mat-button-toggle [value]="onglet.valeur">
-        {{ onglet.libelle }}
-        @if (compteur(onglet) !== null) {
-          <span class="onglet-compteur gw-chiffres">{{ compteur(onglet) }}</span>
-        }
-      </mat-button-toggle>
-    }
-  </mat-button-toggle-group>
-</div>
+<app-filtre-statuts
+  libelle="Filtrer les recettes par statut"
+  [options]="optionsStatut()"
+  [valeur]="statutActif()"
+  (choisir)="changerStatut($any($event))"
+/>
 
 <section class="gw-carte liste" aria-labelledby="titre-liste">
   <h2 id="titre-liste" class="sr-only">Liste des recettes {{ libelleStatut() }}</h2>
@@ -84,6 +71,33 @@
         }
       </mat-select>
     </mat-form-field>
+
+    @if (!ecran.mobile()) {
+      <div class="bascule-vue" role="group" aria-label="Affichage des recettes">
+        <button
+          type="button"
+          class="bouton-vue"
+          [class.bouton-vue-actif]="vue() === 'galerie'"
+          [attr.aria-pressed]="vue() === 'galerie'"
+          matTooltip="Galerie"
+          (click)="changerVue('galerie')"
+        >
+          <ng-icon name="lucideLayoutGrid" size="1.125rem" aria-hidden="true" />
+          <span class="sr-only">Galerie</span>
+        </button>
+        <button
+          type="button"
+          class="bouton-vue"
+          [class.bouton-vue-actif]="vue() === 'liste'"
+          [attr.aria-pressed]="vue() === 'liste'"
+          matTooltip="Tableau"
+          (click)="changerVue('liste')"
+        >
+          <ng-icon name="lucideList" size="1.125rem" aria-hidden="true" />
+          <span class="sr-only">Tableau</span>
+        </button>
+      </div>
+    }
   </div>
 
   <!-- Nombre de résultats, annoncé aux lecteurs d'écran quand il change -->
@@ -165,6 +179,37 @@
                 </div>
               </div>
               <div class="carte-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: recette }" />
+              </div>
+            </li>
+          }
+        </ul>
+      } @else if (vue() === 'galerie') {
+        <!-- Ordinateur et tablette : galerie, la photo d'abord (une recette se juge aussi à l'œil) -->
+        <ul class="galerie">
+          @for (recette of recettes(); track recette.id) {
+            <li class="fiche">
+              <a class="fiche-photo" [routerLink]="[recette.id]" tabindex="-1" aria-hidden="true">
+                @if (recette.photoUrl | fichier; as url) {
+                  <img [src]="url" alt="" loading="lazy" />
+                } @else {
+                  <span class="fiche-photo-vide"><ng-icon name="lucideCookingPot" size="2rem" /></span>
+                }
+              </a>
+              <div class="fiche-statut"><app-status-badge [statut]="recette.statut" /></div>
+              <div class="fiche-corps">
+                <a class="nom" [routerLink]="[recette.id]">{{ recette.nom }}</a>
+                <p class="fiche-meta">
+                  {{ recette.categorieNom ?? 'Sans catégorie' }}
+                  @if (recette.dureeMin) {
+                    · <span class="gw-chiffres">{{ recette.dureeMin }} min</span>
+                  }
+                </p>
+                <p class="fiche-auteur">
+                  {{ recette.auteurNom ?? 'Auteur inconnu' }} · {{ recette.dateCreation | depuis }}
+                </p>
+              </div>
+              <div class="fiche-actions">
                 <ng-container *ngTemplateOutlet="actions; context: { $implicit: recette }" />
               </div>
             </li>

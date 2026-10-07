@@ -14,25 +14,12 @@
 </app-page-header>
 
 <!-- Statuts : « À valider » est le point de départ -->
-<div class="gw-onglets-conteneur">
-  <mat-button-toggle-group
-    class="gw-onglets"
-    name="statut"
-    aria-label="Filtrer les vidéos par statut"
-    [value]="statutActif()"
-    (change)="changerStatut($event.value)"
-    hideSingleSelectionIndicator
-  >
-    @for (onglet of onglets; track onglet.valeur) {
-      <mat-button-toggle [value]="onglet.valeur">
-        {{ onglet.libelle }}
-        @if (compteur(onglet) !== null) {
-          <span class="gw-onglet-compteur gw-chiffres">{{ compteur(onglet) }}</span>
-        }
-      </mat-button-toggle>
-    }
-  </mat-button-toggle-group>
-</div>
+<app-filtre-statuts
+  libelle="Filtrer les vidéos par statut"
+  [options]="optionsStatut()"
+  [valeur]="statutActif()"
+  (choisir)="changerStatut($any($event))"
+/>
 
 <section class="gw-carte liste" aria-labelledby="titre-liste">
   <h2 id="titre-liste" class="sr-only">Vidéos {{ libelleStatut() }}</h2>

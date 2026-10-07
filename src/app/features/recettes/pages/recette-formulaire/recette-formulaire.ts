@@ -70,6 +70,10 @@ import { RecetteService } from '../../services/recette.service';
  *   1. l'admin remplit les informations → la recette est créée en brouillon ;
  *   2. la photo, les ingrédients et les étapes se débloquent → il publie quand la liste de contrôle est complète.
  */
+/** Les quatre parties du formulaire, dans l'ordre. */
+type SectionRecette = 'infos' | 'photo' | 'ingredients' | 'etapes';
+type EtatControle = 'fait' | 'en-cours' | 'a-faire';
+
 @Component({
   imports: [
     ReactiveFormsModule,
@@ -213,13 +217,58 @@ export class RecetteFormulaire implements OnInit {
     this.etapes().reduce((t, e) => t + (e.dureeMinutes ?? 0), 0),
   );
 
-  /** Liste de contrôle avant publication. */
+  /** Partie du formulaire que l'utilisateur est en train de remplir (elle a le focus). */
+  protected sectionActive = signal<SectionRecette | null>(null);
+
+  /**
+   * Avancement, dans l'ordre du formulaire : informations, photo, ingrédients, étapes.
+   * Une étape est obligatoire pour publier (un brouillon peut s'en passer).
+   */
   protected controles = computed(() => [
-    { libelle: 'Informations enregistrées', fait: !!this.recette(), obligatoire: true },
-    { libelle: 'Au moins un ingrédient', fait: this.ingredients().length > 0, obligatoire: true },
-    { libelle: 'Étapes de préparation', fait: this.etapes().length > 0, obligatoire: false },
-    { libelle: 'Photo du plat', fait: !!this.recette()?.photoUrl, obligatoire: false },
+    { section: 'infos' as const, libelle: 'Informations générales', fait: !!this.recette(), obligatoire: true },
+    { section: 'photo' as const, libelle: 'Photo du plat', fait: !!this.recette()?.photoUrl, obligatoire: false },
+    { section: 'ingredients' as const, libelle: 'Au moins un ingrédient', fait: this.ingredients().length > 0, obligatoire: true },
+    { section: 'etapes' as const, libelle: 'Au moins une étape', fait: this.etapes().length > 0, obligatoire: true },
   ]);
+
+  /**
+   * État affiché de chaque point : une partie complète est « faite » (vert), même si elle a le focus ;
+   * la partie en cours de saisie et pas encore complète est « en cours » (orange).
+   */
+  protected avancement = computed(() =>
+    this.controles().map((c) => {
+      const etat: EtatControle = c.fait ? 'fait' : this.sectionActive() === c.section ? 'en-cours' : 'a-faire';
+      const detail =
+        etat === 'fait'
+          ? 'Fait'
+          : etat === 'en-cours'
+            ? 'En cours de saisie'
+            : c.obligatoire
+              ? 'À faire · obligatoire'
+              : 'À faire · recommandé';
+      return { ...c, etat, detail };
+    }),
+  );
+
+  /** Ce qui manque encore pour publier (affiché sous le bouton). */
+  protected manquants = computed(() =>
+    this.controles()
+      .filter((c) => c.obligatoire && !c.fait)
+      .map((c) => c.libelle.toLowerCase()),
+  );
+
+  /** Amène la partie à l'écran (clic dans la carte d'avancement). */
+  allerA(section: SectionRecette): void {
+    const cible = document.getElementById(`section-${section}`);
+    if (!cible) {
+      return;
+    }
+    const doux = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    cible.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'start' });
+    cible.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
+    this.sectionActive.set(section);
+  }
+
   protected peutPublier = computed(() => {
     const statut = this.recette()?.statut;
     return (
@@ -681,12 +730,9 @@ export class RecetteFormulaire implements OnInit {
     if (!recette || !this.peutPublier()) {
       return;
     }
-    const sansEtapes = this.etapes().length === 0;
     const confirme = await this.confirmation.demander({
       titre: `Publier « ${recette.nom} » ?`,
-      message: sansEtapes
-        ? "Attention : la recette n'a pas encore d'étapes. Elle sera tout de même visible par tous les utilisateurs."
-        : 'La recette sera visible par tous les utilisateurs de Gwaso, sur l’application et le site.',
+      message: 'La recette sera visible par tous les utilisateurs de Gwaso, sur l’application et le site.',
       texteConfirmer: 'Publier la recette',
     });
     if (!confirme) {
