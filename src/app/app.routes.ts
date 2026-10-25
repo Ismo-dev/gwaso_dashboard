@@ -66,6 +66,16 @@ export const routes: Routes = [
           import('./features/producteurs/pages/annuaire/annuaire').then((m) => m.Annuaire),
       },
       {
+        // Espace Producteur : gestion du catalogue et des stocks (réservé aux producteurs validés)
+        path: 'espace-producteur',
+        canActivate: [droitGuard],
+        data: { filAriane: 'Mon Catalogue', droit: 'PRODUIT_GERER' },
+        loadChildren: () =>
+          import('./features/espace-producteur/espace-producteur.routes').then(
+            (m) => m.ESPACE_PRODUCTEUR_ROUTES,
+          ),
+      },
+      {
         path: 'categories',
         canActivate: [droitGuard],
         data: { filAriane: 'Catégories', droit: 'CATALOGUE_GERER' },

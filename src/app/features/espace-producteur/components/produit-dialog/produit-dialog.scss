@@ -1,0 +1,485 @@
+@use 'points-de-rupture' as ecran;
+
+:host {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// display: contents : le formulaire s'intègre harmonieusement dans le conteneur du dialogue Material
+.formulaire {
+  display: contents;
+}
+
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  max-height: 75vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.erreur {
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+}
+
+// ----- Section 1 : Sélection d'ingrédient -----
+.section-champ {
+  margin-bottom: var(--gw-espace-4);
+  width: 100%;
+  box-sizing: border-box;
+
+  .label-section {
+    display: block;
+    margin-bottom: var(--gw-espace-2);
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-label);
+    font-weight: 600;
+  }
+}
+
+.ligne-recherche {
+  display: flex;
+  gap: var(--gw-espace-3);
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+
+  .champ-rayon {
+    flex: 0 0 200px;
+    max-width: 220px;
+    min-width: 150px;
+  }
+
+  .champ-recherche-ing {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @include ecran.mobile {
+    flex-direction: column;
+    gap: var(--gw-espace-2);
+
+    .champ-rayon,
+    .champ-recherche-ing {
+      width: 100%;
+      max-width: 100%;
+      flex: 1 1 auto;
+    }
+  }
+}
+
+// Options d'autocomplétion de catégorie
+.nom-cat {
+  font-weight: 500;
+  color: var(--gw-cacao);
+}
+
+.option-tous-rayons {
+  font-weight: 500;
+  color: var(--gw-cacao);
+}
+
+.option-non-classe {
+  font-style: italic;
+  color: var(--gw-texte-doux);
+}
+
+// Options d'autocomplétion d'ingrédient
+.option-contenu {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  width: 100%;
+
+  .miniature-option {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--gw-rayon-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .miniature-vide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--gw-rayon-sm);
+    background: var(--gw-terre-cuite-pale);
+    color: var(--gw-karite);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .nom-ing {
+    font-weight: 500;
+    color: var(--gw-cacao);
+  }
+
+  .badge-cat-option {
+    padding: 2px 8px;
+    border-radius: var(--gw-rayon-pilule);
+    background: var(--gw-fond-accent);
+    color: var(--gw-cacao);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .unite-ing {
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+    margin-left: auto;
+  }
+}
+
+.option-proposer-nouveau {
+  border-top: 1px dashed var(--gw-bordure);
+  background: var(--gw-fond-accent);
+
+  .option-contenu-proposer {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
+    color: var(--gw-action);
+    font-size: var(--gw-taille-petit);
+    font-weight: 500;
+  }
+}
+
+// Proposition d'un nouvel ingrédient
+.carte-nouvel-ingredient {
+  padding: var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  border: 1px dashed var(--gw-action);
+  background: var(--gw-fond-accent);
+  margin-bottom: var(--gw-espace-2);
+  width: 100%;
+  box-sizing: border-box;
+
+  .entete-nouveau {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--gw-espace-3);
+    margin-bottom: var(--gw-espace-3);
+
+    .titre-nouveau {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--gw-espace-2);
+
+      .icone-etincelle {
+        color: var(--gw-action);
+        font-size: 1.25rem;
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+
+      strong {
+        color: var(--gw-cacao);
+        font-size: 0.95rem;
+      }
+
+      .sous-titre-nouveau {
+        margin: 2px 0 0;
+        color: var(--gw-texte-doux);
+        font-size: var(--gw-taille-petit);
+      }
+    }
+
+    .btn-annuler-nouveau {
+      flex-shrink: 0;
+    }
+  }
+
+  .champs-nouveau-grille {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gw-espace-2);
+    width: 100%;
+
+    .champ-nom-nouveau {
+      width: 100%;
+    }
+
+    .ligne-secondaire-nouveau {
+      display: flex;
+      gap: var(--gw-espace-3);
+      width: 100%;
+
+      .champ-rayon-nouveau {
+        flex: 1.4;
+        min-width: 0;
+      }
+
+      .champ-unite-nouveau {
+        flex: 1;
+        min-width: 0;
+      }
+
+      @include ecran.mobile {
+        flex-direction: column;
+        gap: var(--gw-espace-2);
+      }
+    }
+  }
+
+  .info-guide-nouveau {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: var(--gw-espace-2) 0 0;
+    color: var(--gw-karite-fonce, var(--gw-karite));
+    font-size: var(--gw-taille-petit);
+
+    ng-icon {
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Alerte si l'ingrédient existe dans un autre rayon
+.alerte-autre-rayon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-3);
+  margin-top: var(--gw-espace-2);
+  padding: var(--gw-espace-3);
+  border-radius: var(--gw-rayon-sm);
+  background: var(--gw-attention-fond);
+  border: 1px solid var(--gw-attention);
+  color: var(--gw-attention);
+
+  .texte-alerte {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
+    font-size: var(--gw-taille-petit);
+
+    ng-icon {
+      flex-shrink: 0;
+    }
+  }
+
+  .btn-action-rayon {
+    background: var(--gw-surface, #fff);
+    border: 1px solid var(--gw-attention);
+    border-radius: var(--gw-rayon-pilule);
+    padding: 4px 12px;
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-petit);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: var(--gw-attention);
+      color: #fff;
+    }
+  }
+}
+
+// Déclencheur création nouveau
+.zone-action-nouveau {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+  margin-top: var(--gw-espace-2);
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-radius: var(--gw-rayon-sm);
+  background: var(--gw-fond-accent);
+  border: 1px dashed var(--gw-bordure);
+
+  .texte-aide {
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+  }
+
+  .btn-proposer-nouveau {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--gw-action);
+    font-weight: 600;
+    font-size: var(--gw-taille-petit);
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+      color: var(--gw-action-survol);
+    }
+  }
+}
+
+// Carte Ingrédient Sélectionné (synthétique, épurée et aérée)
+.carte-ingredient-selectionne {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  border: 1px solid var(--gw-bordure);
+  background: var(--gw-fond-accent);
+
+  .apercu-gauche {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-3);
+    min-width: 0;
+  }
+
+  .photo-apercu {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--gw-rayon);
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid var(--gw-bordure);
+  }
+
+  .photo-vide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gw-terre-cuite-pale);
+    color: var(--gw-karite);
+  }
+
+  .details-apercu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    .titre-avec-badge {
+      display: flex;
+      align-items: center;
+      gap: var(--gw-espace-2);
+      flex-wrap: wrap;
+
+      .titre-ing {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--gw-cacao);
+      }
+
+      .badge-cat-tag {
+        padding: 2px 8px;
+        border-radius: var(--gw-rayon-pilule);
+        background: var(--gw-surface);
+        color: var(--gw-cacao);
+        border: 1px solid var(--gw-bordure);
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+    }
+
+    .prix-marche {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0;
+      color: var(--gw-texte-doux);
+      font-size: var(--gw-taille-petit);
+
+      ng-icon {
+        color: var(--gw-action);
+      }
+
+      strong {
+        color: var(--gw-cacao);
+      }
+    }
+
+    .badge-photo-officielle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+      color: var(--gw-karite);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+  }
+
+  .bouton-changer {
+    flex-shrink: 0;
+  }
+
+  @include ecran.mobile {
+    flex-direction: column;
+    align-items: stretch;
+
+    .bouton-changer {
+      align-self: flex-start;
+      margin-top: var(--gw-espace-2);
+    }
+  }
+}
+
+// ----- Section 2 : Conditions de vente (style standard GWASO) -----
+.conditions-vente {
+  min-width: 0; // empêche le débordement horizontal
+  margin: var(--gw-espace-4) 0 0;
+  padding: var(--gw-espace-4) var(--gw-espace-4) var(--gw-espace-2);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+
+  legend {
+    padding: 0 var(--gw-espace-2);
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-label);
+    font-weight: 600;
+  }
+
+  .champ-prix-conteneur {
+    margin-bottom: var(--gw-espace-2);
+
+    .champ-prix {
+      width: 100%;
+    }
+  }
+
+  .ligne {
+    display: flex;
+    gap: var(--gw-espace-3);
+
+    > * {
+      flex: 1;
+      min-width: 0;
+    }
+
+    @include ecran.mobile {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+}
+
+// ----- Section 3 : Photo personnalisée du produit -----
+.section-photo {
+  margin-top: var(--gw-espace-4);
+
+  app-image-upload {
+    display: block;
+  }
+}
+

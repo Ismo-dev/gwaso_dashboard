@@ -56,7 +56,7 @@ export class AdminLayout implements OnInit {
     this.authService.moi().subscribe({
       next: (utilisateur) => {
         this.session.mettreAJourUtilisateur(utilisateur);
-        if (!utilisateur.droits.includes('ACCES_DASHBOARD')) {
+        if (!this.session.peutOuvrirLeDashboard()) {
           this.session.deconnecter();
         }
       },

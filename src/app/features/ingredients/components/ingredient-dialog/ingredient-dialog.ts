@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButton } from '@angular/material/button';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
   MatDialogActions,
@@ -13,11 +13,15 @@ import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/m
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatOption, MatSelect } from '@angular/material/select';
-import { Observable, of, switchMap } from 'rxjs';
+import { MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { NgIcon } from '@ng-icons/core';
+import { Observable, of, startWith, switchMap } from 'rxjs';
 import { messageErreur } from '../../../../core/utils/erreurs';
 import { fourchetteDePrix } from '../../../../core/utils/validateurs';
 import { ImageUpload } from '../../../../shared/components/image-upload/image-upload';
-import { IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
+import { CategorieIngredientResponse } from '../../models/categorie-ingredient.model';
+import { CategorieIngredientService } from '../../services/categorie-ingredient.service';
+import { IngredientRequest, IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
 import { IngredientService } from '../../services/ingredient.service';
 
 export interface DonneesIngredientDialog {
@@ -28,7 +32,7 @@ export interface DonneesIngredientDialog {
 }
 
 /**
- * Création ou modification d'un ingrédient (nom, unité, prix indicatif, photo).
+ * Création ou modification d'un ingrédient (nom, rayon/catégorie, unité, prix indicatif, photo).
  * Le prix sert à estimer le budget des recettes : il est exprimé en FCFA pour une unité.
  */
 @Component({
@@ -39,6 +43,7 @@ export interface DonneesIngredientDialog {
     MatDialogActions,
     MatDialogClose,
     MatButton,
+    MatIconButton,
     MatFormField,
     MatLabel,
     MatInput,
@@ -47,23 +52,50 @@ export interface DonneesIngredientDialog {
     MatSuffix,
     MatSelect,
     MatOption,
+    MatAutocomplete,
+    MatAutocompleteTrigger,
+    NgIcon,
     MatProgressSpinner,
     ImageUpload,
   ],
+  providers: [CategorieIngredientService],
   selector: 'app-ingredient-dialog',
   styleUrl: './ingredient-dialog.scss',
   templateUrl: './ingredient-dialog.html',
 })
-export class IngredientDialog {
+export class IngredientDialog implements OnInit {
   private ingredientService = inject(IngredientService);
+  private categorieIngredientService = inject(CategorieIngredientService);
   private fenetre = inject(MatDialogRef<IngredientDialog, IngredientResponse>);
   protected donnees = inject<DonneesIngredientDialog>(MAT_DIALOG_DATA);
 
   protected readonly unites = UNITES;
+  protected categories = signal<CategorieIngredientResponse[]>([]);
+
+  /** Recherche autocomplétée de rayon / catégorie */
+  protected champRechercheCategorie = new FormControl<CategorieIngredientResponse | string | null>('');
+  protected texteRechercheCategorie = signal('');
+
+  protected categoriesFiltrees = computed(() => {
+    const terme = this.texteRechercheCategorie().trim().toLowerCase();
+    const liste = this.categories();
+    if (!terme) {
+      return liste;
+    }
+    return liste.filter((c) => c.nom.toLowerCase().includes(terme));
+  });
+
+  afficherNomCategorie = (cat: CategorieIngredientResponse | string | null): string => {
+    if (!cat) {
+      return '';
+    }
+    return typeof cat === 'string' ? cat : cat.nom;
+  };
 
   protected formulaire = inject(FormBuilder).group(
     {
       nom: [this.donnees.ingredient?.nom ?? this.donnees.nomInitial ?? '', [Validators.required, Validators.maxLength(80)]],
+      categorieId: [this.donnees.ingredient?.categorieId ?? null],
       unite: [this.donnees.ingredient?.unite ?? null, Validators.required],
       prixMin: [this.donnees.ingredient?.prixMin ?? null, Validators.min(0)],
       prixMax: [this.donnees.ingredient?.prixMax ?? null, Validators.min(0)],
@@ -75,6 +107,58 @@ export class IngredientDialog {
   protected photo: File | null = null;
   protected enCours = signal(false);
   protected erreur = signal('');
+
+  ngOnInit(): void {
+    this.champRechercheCategorie.valueChanges
+      .pipe(startWith(this.champRechercheCategorie.value))
+      .subscribe((val) => {
+        let texte = '';
+        if (typeof val === 'string') {
+          texte = val;
+        } else if (val && typeof val === 'object' && 'nom' in val) {
+          texte = val.nom;
+        }
+        this.texteRechercheCategorie.set(texte);
+
+        if (!texte) {
+          this.formulaire.controls.categorieId.setValue(null);
+        } else {
+          const match = this.categories().find((c) => c.nom.toLowerCase() === texte.trim().toLowerCase());
+          this.formulaire.controls.categorieId.setValue(match ? match.id : null);
+        }
+      });
+
+    this.categorieIngredientService.getAll().subscribe({
+      next: (liste) => {
+        const triees = [...liste].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+        this.categories.set(triees);
+
+        const catId = this.donnees.ingredient?.categorieId;
+        if (catId) {
+          const cat = triees.find((c) => c.id === catId);
+          if (cat) {
+            this.champRechercheCategorie.setValue(cat);
+          }
+        }
+      },
+    });
+  }
+
+  choisirCategorie(evenement: MatAutocompleteSelectedEvent): void {
+    const valeur = evenement.option.value as CategorieIngredientResponse | null;
+    if (valeur) {
+      this.formulaire.controls.categorieId.setValue(valeur.id);
+      this.champRechercheCategorie.setValue(valeur);
+    } else {
+      this.formulaire.controls.categorieId.setValue(null);
+      this.champRechercheCategorie.setValue('');
+    }
+  }
+
+  effacerCategorie(): void {
+    this.champRechercheCategorie.setValue('');
+    this.formulaire.controls.categorieId.setValue(null);
+  }
 
   /** Libellé court de l'unité choisie, pour le suffixe « FCFA / kg ». */
   protected uniteCourte(): string {
@@ -93,8 +177,9 @@ export class IngredientDialog {
     this.erreur.set('');
 
     const valeurs = this.formulaire.getRawValue();
-    const requete = {
+    const requete: IngredientRequest = {
       nom: (valeurs.nom ?? '').trim(),
+      categorieId: valeurs.categorieId || null,
       unite: valeurs.unite as Unite,
       prixMin: valeurs.prixMin,
       prixMax: valeurs.prixMax,

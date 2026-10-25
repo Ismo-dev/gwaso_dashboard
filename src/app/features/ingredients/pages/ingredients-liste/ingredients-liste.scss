@@ -27,11 +27,15 @@
 }
 
 .recherche {
-  flex: 1 1 280px;
+  flex: 1 1 240px;
 }
 
 .filtre {
-  flex: 0 1 240px;
+  flex: 0 1 200px;
+
+  &.filtre-unite {
+    flex: 0 1 160px;
+  }
 
   @include ecran.mobile {
     flex: 1 1 100%;
@@ -111,6 +115,29 @@
   font-weight: 600;
 }
 
+.badge-rayon {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.625rem;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite-fonce, var(--gw-karite));
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  &.badge-rayon-mobile {
+    font-size: 0.72rem;
+    padding: 0.1rem 0.45rem;
+  }
+}
+
+.sans-rayon {
+  color: var(--gw-texte-discret);
+  font-weight: 400;
+}
+
 .unite {
   color: var(--gw-texte-doux);
 }
@@ -170,6 +197,14 @@
   display: flex;
   flex: 1;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.carte-entete {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
   min-width: 0;
 
   .nom {

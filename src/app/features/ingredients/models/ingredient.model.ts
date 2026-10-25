@@ -34,6 +34,8 @@ export interface IngredientResponse {
   unite: Unite | null;
   prixMin: number | null;
   prixMax: number | null;
+  categorieId?: string | null;
+  categorieNom?: string | null;
 }
 
 /** IngredientRequestDTO côté backend. */
@@ -43,4 +45,5 @@ export interface IngredientRequest {
   unite: Unite;
   prixMin?: number | null;
   prixMax?: number | null;
+  categorieId?: string | null;
 }

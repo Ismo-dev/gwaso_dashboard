@@ -1,0 +1,392 @@
+<app-page-header
+  surtitre="Espace Producteur"
+  titre="Mon catalogue de produits"
+  description="Gérez les ingrédients et denrées que vous proposez aux cuisiniers et restaurants de la communauté."
+>
+  <button matButton="filled" type="button" (click)="ajouter()">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+    Mettre en vente un produit
+  </button>
+</app-page-header>
+
+<!-- Indicateurs clés du producteur (Chiffres clés) -->
+@if (!chargement() && !erreur() && produits().length > 0) {
+  <div class="grille-chiffres">
+    <app-stat-card
+      libelle="Produits en vente"
+      [valeur]="totalProduits()"
+      icone="lucideStore"
+      detail="Présents dans l'annuaire"
+    />
+    <app-stat-card
+      libelle="Stock disponible"
+      [valeur]="produitsEnStock()"
+      icone="lucideCircleCheck"
+      detail="Approvisionnement optimal"
+    />
+    <app-stat-card
+      libelle="Stocks faibles (≤ 5)"
+      [valeur]="stockFaibleCount()"
+      icone="lucideTriangleAlert"
+      detail="À réapprovisionner"
+    />
+    <app-stat-card
+      libelle="Valeur estimée du stock"
+      [valeur]="valeurTotaleStock()"
+      icone="lucideCoins"
+      detail="Valorisation globale (FCFA)"
+    />
+  </div>
+}
+
+<section class="gw-carte liste" aria-labelledby="titre-liste">
+  <h2 id="titre-liste" class="sr-only">Liste de mes produits</h2>
+
+  <!-- Barre d'outils : recherche, catégorie, tri, bascule de vue -->
+  <div class="outils">
+    <mat-form-field class="champ-recherche" subscriptSizing="dynamic">
+      <mat-label>Rechercher</mat-label>
+      <ng-icon
+        matPrefix
+        class="icone-champ"
+        name="lucideSearch"
+        size="1.125rem"
+        aria-hidden="true"
+      />
+      <input
+        matInput
+        type="search"
+        [ngModel]="recherche()"
+        (ngModelChange)="rechercher($event)"
+        placeholder="Nom d'ingrédient ou catégorie"
+      />
+      @if (recherche()) {
+        <button
+          matIconButton
+          matSuffix
+          type="button"
+          aria-label="Effacer la recherche"
+          (click)="rechercher('')"
+        >
+          <ng-icon name="lucideX" size="1rem" aria-hidden="true" />
+        </button>
+      }
+    </mat-form-field>
+
+    <mat-form-field class="champ-filtre" subscriptSizing="dynamic">
+      <mat-label>Catégorie</mat-label>
+      <mat-select [value]="categorieFiltre()" (selectionChange)="filtrerCategorie($event.value)">
+        <mat-option [value]="null">Toutes les catégories</mat-option>
+        @for (cat of categoriesAvecComptes(); track cat.id) {
+          <mat-option [value]="cat.id">{{ cat.nom }} ({{ cat.compte }})</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="champ-filtre" subscriptSizing="dynamic">
+      <mat-label>Trier par</mat-label>
+      <mat-select [value]="triActif()" (selectionChange)="changerTri($event.value)">
+        @for (tri of tris; track tri.valeur) {
+          <mat-option [value]="tri.valeur">{{ tri.libelle }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (!ecran.mobile()) {
+      <div class="bascule-vue" role="group" aria-label="Affichage des produits">
+        <button
+          type="button"
+          class="bouton-vue"
+          [class.bouton-vue-actif]="vue() === 'galerie'"
+          [attr.aria-pressed]="vue() === 'galerie'"
+          matTooltip="Galerie"
+          (click)="changerVue('galerie')"
+        >
+          <ng-icon name="lucideLayoutGrid" size="1.125rem" aria-hidden="true" />
+          <span class="sr-only">Galerie</span>
+        </button>
+        <button
+          type="button"
+          class="bouton-vue"
+          [class.bouton-vue-actif]="vue() === 'liste'"
+          [attr.aria-pressed]="vue() === 'liste'"
+          matTooltip="Tableau"
+          (click)="changerVue('liste')"
+        >
+          <ng-icon name="lucideList" size="1.125rem" aria-hidden="true" />
+          <span class="sr-only">Tableau</span>
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Résumé du nombre de résultats -->
+  <p class="resume" aria-live="polite">
+    @if (!chargement()) {
+      <strong class="gw-chiffres">{{ produitsFiltres().length }}</strong>
+      {{ produitsFiltres().length > 1 ? 'produits' : 'produit' }}
+      @if (filtresActifs()) {
+        <button matButton type="button" class="effacer" (click)="effacerFiltres()">
+          Effacer les filtres
+        </button>
+      }
+    }
+  </p>
+
+  @if (chargement()) {
+    <!-- Chargement : squelettes uniformes -->
+    <div class="squelette" aria-busy="true" aria-label="Chargement des produits">
+      @for (ligne of lignesSquelette; track ligne) {
+        <div class="squelette-ligne">
+          <span class="gw-squelette sq-photo"></span>
+          <span class="sq-textes">
+            <span class="gw-squelette sq-titre"></span>
+            <span class="gw-squelette sq-sous-titre"></span>
+          </span>
+          <span class="gw-squelette sq-badge"></span>
+        </div>
+      }
+    </div>
+  } @else if (erreur()) {
+    <app-empty-state
+      titre="Impossible de charger votre catalogue"
+      message="Vérifiez votre connexion au serveur, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">
+        <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+        Réessayer
+      </button>
+    </app-empty-state>
+  } @else if (produits().length === 0) {
+    <app-empty-state
+      titre="Votre catalogue est vide"
+      message="Commencez à mettre en vente vos ingrédients locaux pour qu'ils soient trouvés par les cuisiniers."
+      icone="lucideStore"
+    >
+      <button matButton="filled" type="button" (click)="ajouter()">
+        <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+        Mettre en vente mon premier produit
+      </button>
+    </app-empty-state>
+  } @else if (produitsFiltres().length === 0) {
+    <app-empty-state
+      titre="Aucun produit ne correspond"
+      message="Essayez un autre mot-clé ou une autre catégorie."
+      icone="lucideSearch"
+    >
+      <button matButton="outlined" type="button" (click)="effacerFiltres()">
+        Effacer les filtres
+      </button>
+    </app-empty-state>
+  } @else {
+    <div class="resultats">
+      @if (ecran.mobile()) {
+        <!-- Téléphone : liste de cartes compactes -->
+        <ul class="cartes">
+          @for (produit of elementsPage(); track produit.id) {
+            <li class="carte">
+              <div class="carte-haut">
+                <ng-container *ngTemplateOutlet="photo; context: { $implicit: produit }" />
+                <div class="carte-infos">
+                  <span class="nom">{{ produit.ingredientNom }}</span>
+                  <p class="meta">
+                    {{ produit.categorieNom ?? 'Sans catégorie' }} ·
+                    <strong class="gw-chiffres">{{ produit.prixIndicatif | number }} FCFA</strong>
+                  </p>
+                  <span class="meta">
+                    Stock : <strong class="gw-chiffres">{{ produit.quantite | number }} {{ produit.unite | unite }}</strong>
+                  </span>
+                </div>
+              </div>
+              <div class="carte-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: produit }" />
+              </div>
+            </li>
+          }
+        </ul>
+      } @else if (vue() === 'galerie') {
+        <!-- Ordinateur et tablette : galerie avec photo -->
+        <ul class="galerie">
+          @for (produit of elementsPage(); track produit.id) {
+            <li class="fiche">
+              <div class="fiche-photo">
+                @if ((produit.imageUrl ?? produit.ingredientPhotoUrl) | fichier; as url) {
+                  <img [src]="url" [alt]="produit.ingredientNom" loading="lazy" />
+                } @else {
+                  <span class="fiche-photo-vide">
+                    <ng-icon name="lucideCarrot" size="2rem" />
+                  </span>
+                }
+              </div>
+
+              <!-- Statut de stock sur la photo -->
+              <div class="fiche-statut">
+                @if (produit.quantite <= 0) {
+                  <span class="pastille-stock rupture">Épuisé</span>
+                } @else if (produit.quantite <= 5) {
+                  <span class="pastille-stock faible">Stock faible</span>
+                } @else {
+                  <span class="pastille-stock dispo">En stock</span>
+                }
+              </div>
+
+              <div class="fiche-corps">
+                <h3 class="nom">{{ produit.ingredientNom }}</h3>
+                <p class="fiche-meta">
+                  {{ produit.categorieNom ?? 'Sans catégorie' }}
+                </p>
+                <div class="fiche-prix-stock">
+                  <span class="fiche-prix">
+                    <strong class="gw-chiffres">{{ produit.prixIndicatif | number }}</strong> <small>FCFA</small>
+                  </span>
+                  <span class="fiche-stock">
+                    {{ produit.quantite | number }} {{ produit.unite | unite }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="fiche-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: produit }" />
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <!-- Ordinateur et tablette : tableau conforme au design admin -->
+        <div class="gw-tableau-conteneur">
+          <table mat-table [dataSource]="elementsPage()" class="gw-tableau tableau">
+            <caption class="sr-only">Liste des produits de votre catalogue</caption>
+
+            <!-- Colonne Ingrédient -->
+            <ng-container matColumnDef="produit">
+              <th mat-header-cell *matHeaderCellDef scope="col">Ingrédient</th>
+              <td mat-cell *matCellDef="let produit">
+                <div class="cellule-produit">
+                  <ng-container *ngTemplateOutlet="photo; context: { $implicit: produit }" />
+                  <div class="cellule-textes">
+                    <span class="nom">{{ produit.ingredientNom }}</span>
+                    <span class="sous-texte">{{ produit.categorieNom ?? 'Sans catégorie' }}</span>
+                  </div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Colonne Catégorie -->
+            <ng-container matColumnDef="categorie">
+              <th mat-header-cell *matHeaderCellDef scope="col">Catégorie</th>
+              <td mat-cell *matCellDef="let produit">
+                {{ produit.categorieNom ?? '—' }}
+              </td>
+            </ng-container>
+
+            <!-- Colonne Prix -->
+            <ng-container matColumnDef="prix">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Prix indicatif</th>
+              <td mat-cell *matCellDef="let produit" class="gw-col-centre">
+                <strong class="gw-chiffres">{{ produit.prixIndicatif | number }} FCFA</strong>
+              </td>
+            </ng-container>
+
+            <!-- Colonne Stock -->
+            <ng-container matColumnDef="stock">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Stock disponible</th>
+              <td mat-cell *matCellDef="let produit" class="gw-col-centre">
+                <span class="gw-chiffres">{{ produit.quantite | number }} {{ produit.unite | unite }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Colonne Statut -->
+            <ng-container matColumnDef="statut">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-centre">Disponibilité</th>
+              <td mat-cell *matCellDef="let produit" class="gw-col-centre">
+                @if (produit.quantite <= 0) {
+                  <span class="pastille-stock rupture">Épuisé</span>
+                } @else if (produit.quantite <= 5) {
+                  <span class="pastille-stock faible">Stock faible</span>
+                } @else {
+                  <span class="pastille-stock dispo">En stock</span>
+                }
+              </td>
+            </ng-container>
+
+            <!-- Colonne Actions -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef scope="col" class="gw-col-actions">
+                <span class="sr-only">Actions</span>
+              </th>
+              <td mat-cell *matCellDef="let produit" class="gw-col-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: produit }" />
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="colonnes()"></tr>
+            <tr mat-row *matRowDef="let row; columns: colonnes()"></tr>
+          </table>
+        </div>
+      }
+
+      @if (produitsFiltres().length > taillesPage[0]) {
+        <mat-paginator
+          class="gw-pagination"
+          [length]="produitsFiltres().length"
+          [pageSize]="taille()"
+          [pageIndex]="page()"
+          [pageSizeOptions]="taillesPage"
+          [hidePageSize]="ecran.mobile()"
+          (page)="changerPage($event)"
+          aria-label="Pagination du catalogue"
+        />
+      }
+    </div>
+  }
+</section>
+
+<!-- Vignette du produit (réutilisée par le tableau et les cartes) -->
+<ng-template #photo let-produit>
+  @if ((produit.imageUrl ?? produit.ingredientPhotoUrl) | fichier; as url) {
+    <img class="photo" [src]="url" [alt]="produit.ingredientNom" loading="lazy" width="48" height="48" />
+  } @else {
+    <span class="photo photo-vide" aria-hidden="true">
+      <ng-icon name="lucideCarrot" size="1.25rem" />
+    </span>
+  }
+</ng-template>
+
+<!-- Actions d'un produit (Modifier et Menu) -->
+<ng-template #actions let-produit>
+  <div class="actions">
+    <button
+      matButton="outlined"
+      type="button"
+      class="bouton-principal"
+      (click)="modifier(produit)"
+    >
+      <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+      Modifier
+    </button>
+
+    <button
+      matIconButton
+      type="button"
+      [matMenuTriggerFor]="menuActions"
+      [attr.aria-label]="'Autres actions pour ' + produit.ingredientNom"
+      matTooltip="Autres actions"
+    >
+      <ng-icon name="lucideEllipsis" size="1.25rem" aria-hidden="true" />
+    </button>
+
+    <mat-menu #menuActions="matMenu" xPosition="before">
+      <button mat-menu-item type="button" (click)="modifier(produit)">
+        <ng-icon name="lucidePencil" size="1.125rem" aria-hidden="true" />
+        <span>Modifier l'offre…</span>
+      </button>
+      <mat-divider />
+      <button mat-menu-item type="button" class="item-danger" (click)="supprimer(produit)">
+        <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+        <span>Retirer de la vente…</span>
+      </button>
+    </mat-menu>
+  </div>
+</ng-template>

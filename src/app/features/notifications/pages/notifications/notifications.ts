@@ -14,6 +14,7 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import { DefiService } from '../../../defis/services/defi.service';
+import { IngredientService } from '../../../ingredients/services/ingredient.service';
 import { RecetteService } from '../../../recettes/services/recette.service';
 import { LIBELLES_TYPE_COMPTE } from '../../../utilisateurs/models/utilisateur.model';
 import { UtilisateurService } from '../../../utilisateurs/services/utilisateur.service';
@@ -75,6 +76,7 @@ export class Notifications implements OnInit {
   private recetteService = inject(RecetteService);
   private defiService = inject(DefiService);
   private utilisateurService = inject(UtilisateurService);
+  private ingredientService = inject(IngredientService);
   private toast = inject(NotificationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -285,6 +287,22 @@ export class Notifications implements OnInit {
       case 'INSCRIPTION':
         return this.utilisateurService.getCuisinier(id).pipe(
           map((c) => this.apercuCompte(`${c.prenom} ${c.nom}`, c.email ?? c.telephone, c.photoProfil, c.statut, ['Cuisinier'])),
+        );
+      case 'INGREDIENT_PROPOSE':
+        return this.ingredientService.getById(id).pipe(
+          map((ing) => ({
+            titre: ing.nom,
+            sousTitre: ing.categorieNom ?? 'Rayon non spécifié (à classifier)',
+            image: ing.photoUrl,
+            video: null,
+            statut: ing.categorieNom ? 'Classifié' : 'Non classifié',
+            details: [
+              ing.unite ? `Unité de vente : ${ing.unite}` : '',
+              ing.prixMin || ing.prixMax
+                ? `Prix indicatif : ${ing.prixMin ?? '—'} à ${ing.prixMax ?? '—'} FCFA`
+                : 'Prix indicatif à fixer',
+            ].filter(Boolean),
+          })),
         );
     }
   }

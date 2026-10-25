@@ -3,6 +3,7 @@ import { computed, inject, Service, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
 import { CompteursAValider } from '../models/a-valider.model';
+import { SessionService } from './session.service';
 
 /**
  * Compteurs « à valider » affichés dans le menu et la cloche de notifications.
@@ -11,6 +12,7 @@ import { CompteursAValider } from '../models/a-valider.model';
 @Service()
 export class AValiderService {
   private http = inject(HttpClient);
+  private session = inject(SessionService);
 
   readonly compteurs = signal<CompteursAValider | null>(null);
 
@@ -20,11 +22,20 @@ export class AValiderService {
   });
 
   rafraichir(): void {
+    // Ne pas appeler l'API de statistiques admin si l'utilisateur n'a aucun droit de modération
+    if (
+      !this.session.aLeDroit('UTILISATEUR_GERER') &&
+      !this.session.aLeDroit('RECETTE_VALIDER') &&
+      !this.session.aLeDroit('VIDEO_MODERER') &&
+      !this.session.aLeDroit('DEFI_VALIDER')
+    ) {
+      return;
+    }
+
     this.http
       .get<ApiResponse<{ aValider: CompteursAValider }>>(`${environment.apiUrl}/admin/statistiques`)
       .subscribe({
         next: (reponse) => this.compteurs.set(reponse.data.aValider),
-        // En cas d'erreur, on garde les derniers compteurs connus (le message est affiché par l'intercepteur)
         error: () => undefined,
       });
   }

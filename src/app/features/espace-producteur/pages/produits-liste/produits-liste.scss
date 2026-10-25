@@ -1,0 +1,413 @@
+@use 'points-de-rupture' as ecran;
+
+// ----- Chiffres clés (KPIs) -----
+.grille-chiffres {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gw-espace-4);
+  margin-bottom: var(--gw-espace-6);
+
+  @include ecran.tablette {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include ecran.mobile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gw-espace-3);
+  }
+}
+
+// ----- Carte principale de la liste -----
+.liste {
+  overflow: hidden;
+}
+
+.outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-5) var(--gw-espace-5) 0;
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4) var(--gw-espace-4) 0;
+  }
+}
+
+.champ-recherche {
+  flex: 1 1 280px;
+}
+
+.champ-filtre {
+  flex: 0 1 220px;
+
+  @include ecran.mobile {
+    flex: 1 1 100%;
+  }
+}
+
+.icone-champ {
+  margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+}
+
+.resume {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 44px;
+  padding: var(--gw-espace-2) var(--gw-espace-5);
+  color: var(--gw-texte-doux);
+
+  strong {
+    color: var(--gw-cacao);
+  }
+
+  @include ecran.mobile {
+    padding-inline: var(--gw-espace-4);
+  }
+}
+
+// ----- Squelette de chargement -----
+.squelette {
+  padding: 0 var(--gw-espace-5) var(--gw-espace-5);
+}
+
+.squelette-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-4) 0;
+  border-top: 1px solid var(--gw-bordure);
+}
+
+.sq-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--gw-rayon);
+}
+
+.sq-textes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+}
+
+.sq-titre {
+  width: 40%;
+  height: 1rem;
+}
+
+.sq-sous-titre {
+  width: 25%;
+  height: 0.75rem;
+}
+
+.sq-badge {
+  width: 88px;
+  height: 1.5rem;
+  border-radius: var(--gw-rayon-pilule);
+}
+
+// ----- Résultats -----
+.resultats {
+  transition: opacity var(--gw-duree) var(--gw-courbe);
+}
+
+// ----- Tableau (mat-table standard GWASO) -----
+.tableau {
+  --mat-table-row-item-container-height: 72px;
+}
+
+.cellule-produit {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  min-width: 200px;
+}
+
+.cellule-textes {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nom {
+  color: var(--gw-cacao);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.sous-texte {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.photo {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--gw-rayon);
+  object-fit: cover;
+}
+
+.photo-vide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--gw-espace-1);
+}
+
+.bouton-principal {
+  --mat-button-outlined-container-height: 36px;
+  --mat-button-text-container-height: 36px;
+}
+
+.item-danger {
+  --mat-menu-item-label-text-color: var(--gw-danger);
+  --mat-menu-item-icon-color: var(--gw-danger);
+  color: var(--gw-danger);
+}
+
+// ----- Cartes (téléphone) -----
+.cartes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-4);
+  border-top: 1px solid var(--gw-bordure);
+}
+
+.carte-haut {
+  display: flex;
+  gap: var(--gw-espace-3);
+}
+
+.carte-infos {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gw-espace-1);
+  min-width: 0;
+}
+
+.meta {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.carte-actions .actions {
+  justify-content: flex-start;
+}
+
+// ----- Bascule galerie / tableau -----
+.bascule-vue {
+  display: inline-flex;
+  align-self: center;
+  padding: 3px;
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond);
+}
+
+.bouton-vue {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--gw-rayon-sm);
+  background: transparent;
+  color: var(--gw-texte-doux);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--gw-cacao);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--gw-action);
+    outline-offset: 1px;
+  }
+}
+
+.bouton-vue-actif {
+  background: var(--gw-surface);
+  color: var(--gw-cacao);
+  box-shadow: var(--gw-ombre-1);
+}
+
+// ----- Galerie de fiches -----
+.galerie {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--gw-espace-5);
+  margin: 0;
+  padding: var(--gw-espace-5);
+  list-style: none;
+}
+
+.fiche {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-lg);
+  background: var(--gw-surface);
+  transition:
+    box-shadow var(--gw-duree) var(--gw-courbe),
+    transform var(--gw-duree) var(--gw-courbe);
+
+  &:hover {
+    box-shadow: var(--gw-ombre-2);
+    transform: translateY(-2px);
+
+    .fiche-photo img {
+      transform: scale(1.04);
+    }
+  }
+
+  &:focus-within {
+    box-shadow: var(--gw-ombre-2);
+  }
+}
+
+.fiche-photo {
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--gw-fond-accent);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 400ms var(--gw-courbe);
+  }
+}
+
+.fiche-photo-vide {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+}
+
+.fiche-statut {
+  position: absolute;
+  top: var(--gw-espace-3);
+  left: var(--gw-espace-3);
+  padding: 2px;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-surface);
+  box-shadow: var(--gw-ombre-1);
+}
+
+.fiche-corps {
+  flex: 1;
+  padding: var(--gw-espace-4) var(--gw-espace-4) var(--gw-espace-2);
+
+  .nom {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gw-cacao);
+  }
+}
+
+.fiche-meta {
+  margin-top: var(--gw-espace-1);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.fiche-prix-stock {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: var(--gw-espace-3);
+  padding-top: var(--gw-espace-2);
+  border-top: 1px solid var(--gw-bordure);
+}
+
+.fiche-prix {
+  color: var(--gw-cacao);
+  font-size: 1.0625rem;
+  font-weight: 700;
+
+  small {
+    font-size: var(--gw-taille-petit);
+    font-weight: 500;
+    color: var(--gw-texte-doux);
+  }
+}
+
+.fiche-stock {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}
+
+.fiche-actions {
+  padding: 0 var(--gw-espace-3) var(--gw-espace-3);
+}
+
+// ----- Pastilles de disponibilité / stock -----
+.pastille-stock {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--gw-rayon-pilule);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+
+  &.dispo {
+    background: var(--gw-succes-fond);
+    color: var(--gw-succes);
+  }
+
+  &.faible {
+    background: var(--gw-attention-fond);
+    color: var(--gw-attention);
+  }
+
+  &.rupture {
+    background: var(--gw-danger-fond);
+    color: var(--gw-danger);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiche,
+  .fiche-photo img {
+    transition: none;
+  }
+
+  .fiche:hover {
+    transform: none;
+
+    .fiche-photo img {
+      transform: none;
+    }
+  }
+}

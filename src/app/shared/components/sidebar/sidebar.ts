@@ -66,6 +66,12 @@ export class Sidebar {
       ],
     },
     {
+      titre: 'Producteur',
+      liens: [
+        { libelle: 'Mon Catalogue', lien: '/espace-producteur', icone: 'lucideShoppingBasket', droit: 'PRODUIT_GERER' },
+      ],
+    },
+    {
       titre: 'Catalogue',
       liens: [
         { libelle: 'Catégories', lien: '/categories', icone: 'lucideLayoutGrid', droit: 'CATALOGUE_GERER' },

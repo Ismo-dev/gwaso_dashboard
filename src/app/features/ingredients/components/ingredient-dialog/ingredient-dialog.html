@@ -14,6 +14,44 @@
         <mat-error>Le nom est obligatoire.</mat-error>
       </mat-form-field>
 
+      <mat-form-field class="champ-categorie">
+        <mat-label>Rayon / Catégorie</mat-label>
+        <input
+          matInput
+          type="text"
+          [formControl]="champRechercheCategorie"
+          [matAutocomplete]="autoCategorie"
+          placeholder="Ex. Légumes, Céréales..."
+        />
+        @if (champRechercheCategorie.value) {
+          <button
+            matIconButton
+            matSuffix
+            type="button"
+            aria-label="Effacer le rayon"
+            (click)="effacerCategorie()"
+          >
+            <ng-icon name="lucideX" size="1rem" />
+          </button>
+        } @else {
+          <ng-icon matSuffix name="lucideChevronDown" />
+        }
+        <mat-autocomplete
+          #autoCategorie="matAutocomplete"
+          [displayWith]="afficherNomCategorie"
+          (optionSelected)="choisirCategorie($event)"
+        >
+          <mat-option [value]="null">
+            <span class="option-non-classe">Sans rayon (Général)</span>
+          </mat-option>
+          @for (cat of categoriesFiltrees(); track cat.id) {
+            <mat-option [value]="cat">
+              {{ cat.nom }}
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+
       <mat-form-field class="champ-unite">
         <mat-label>Unité de vente</mat-label>
         <mat-select formControlName="unite">

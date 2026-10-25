@@ -1,0 +1,365 @@
+@use 'points-de-rupture' as ecran;
+
+// ----- Squelettes de chargement -----
+.squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-6);
+
+  .gw-squelette {
+    border-radius: var(--gw-rayon-lg);
+  }
+
+  .sq-bandeau {
+    height: 148px;
+  }
+
+  .sq-chiffre {
+    height: 128px;
+  }
+}
+
+// ----- Accueil éditorial (style journal GWASO) -----
+.bienvenue {
+  padding-bottom: var(--gw-espace-8);
+  border-bottom: 1px solid var(--gw-bordure);
+
+  @include ecran.mobile {
+    padding-bottom: var(--gw-espace-6);
+  }
+}
+
+.bienvenue-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--gw-espace-4);
+}
+
+.bienvenue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-3);
+
+  @include ecran.mobile {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.date {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.bienvenue h1 {
+  margin-top: var(--gw-espace-1);
+  color: var(--gw-cacao);
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--gw-espace-3);
+  margin-top: var(--gw-espace-6);
+  color: var(--gw-texte);
+  font-size: 1.0625rem;
+}
+
+.total {
+  color: var(--gw-action);
+  font-size: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.resume-calme {
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin-top: var(--gw-espace-4);
+  color: var(--gw-succes);
+  font-weight: 600;
+}
+
+// ----- Sections -----
+.section {
+  margin-top: var(--gw-espace-10);
+
+  @include ecran.mobile {
+    margin-top: var(--gw-espace-8);
+  }
+}
+
+.section-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--gw-espace-1) var(--gw-espace-3);
+  margin-bottom: var(--gw-espace-4);
+
+  h2 {
+    font-size: var(--gw-taille-titre-section);
+    font-weight: 700;
+  }
+
+  p {
+    color: var(--gw-texte-doux);
+  }
+}
+
+// ----- Chiffres clés (KPIs) -----
+.grille-chiffres {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gw-espace-4);
+
+  @include ecran.tablette {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include ecran.mobile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gw-espace-3);
+  }
+}
+
+// ----- Panneaux en 2 colonnes -----
+.colonnes {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: var(--gw-espace-4);
+  margin-top: var(--gw-espace-10);
+
+  @include ecran.tablette-et-moins {
+    grid-template-columns: 1fr;
+  }
+}
+
+.colonne-principale,
+.colonne-laterale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+}
+
+.panneau {
+  padding: var(--gw-espace-6);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-5) var(--gw-espace-4);
+  }
+}
+
+.panneau-alerte {
+  border-left: 4px solid var(--gw-attention);
+}
+
+.panneau-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gw-espace-4);
+  margin-bottom: var(--gw-espace-5);
+
+  h2 {
+    font-size: var(--gw-taille-titre-carte);
+    font-weight: 600;
+    color: var(--gw-cacao);
+  }
+
+  p {
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+    margin-top: 2px;
+  }
+}
+
+// ----- Tags de rayons actifs -----
+.tags-rayons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond-accent);
+
+  .label-rayons {
+    font-size: var(--gw-taille-petit);
+    font-weight: 600;
+    color: var(--gw-cacao);
+  }
+
+  .badge-cat-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--gw-rayon-pilule);
+    background: var(--gw-surface);
+    border: 1px solid var(--gw-bordure);
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-petit);
+    font-weight: 500;
+  }
+}
+
+// ----- Liste de produits dans les panneaux -----
+.liste-produits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item-produit {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-4);
+  padding: var(--gw-espace-3) 0;
+  border-top: 1px solid var(--gw-bordure);
+
+  &:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+.produit-photo {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--gw-rayon);
+  object-fit: cover;
+}
+
+.produit-photo-vide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gw-terre-cuite-pale);
+  color: var(--gw-karite);
+}
+
+.produit-infos {
+  flex: 1;
+  min-width: 0;
+}
+
+.produit-nom {
+  display: block;
+  color: var(--gw-cacao);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.produit-meta {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  margin-top: 2px;
+}
+
+.texte-danger {
+  color: var(--gw-danger);
+}
+
+.produit-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  flex-shrink: 0;
+
+  .prix-badge {
+    color: var(--gw-cacao);
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .stock-info {
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+
+    strong {
+      color: var(--gw-cacao);
+    }
+  }
+
+  .item-danger-btn {
+    color: var(--gw-danger);
+  }
+}
+
+// ----- Fiche Annuaire / Contact -----
+.profil-identite {
+  margin-bottom: var(--gw-espace-4);
+
+  .nom-producteur {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
+
+    .icone-role {
+      color: var(--gw-action);
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gw-cacao);
+    }
+  }
+
+  .localite-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--gw-espace-1);
+    color: var(--gw-karite);
+    font-size: var(--gw-taille-petit);
+    font-weight: 500;
+  }
+}
+
+.liste-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+  margin: 0 0 var(--gw-espace-5);
+  padding: var(--gw-espace-3);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond-accent);
+  list-style: none;
+
+  .ligne-contact {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-2);
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-petit);
+
+    ng-icon {
+      color: var(--gw-action);
+    }
+  }
+}
+
+.action-annuaire-box {
+  .bouton-pleine-largeur {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gw-espace-2);
+  }
+}

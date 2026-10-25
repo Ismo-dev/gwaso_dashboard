@@ -1,0 +1,178 @@
+<header class="entete-dialog">
+  <div class="identite-dialog">
+    <app-avatar
+      [prenom]="producteur().prenom"
+      [nom]="producteur().nom"
+      [photo]="producteur().photoProfil"
+      taille="lg"
+    />
+    <div class="texte-identite">
+      <div class="badge-role">
+        <ng-icon name="lucideStore" /> Producteur / Fournisseur validé
+      </div>
+      <h2>{{ producteur().prenom }} {{ producteur().nom }}</h2>
+      @if (producteur().localite) {
+        <p class="localite">
+          <ng-icon name="lucideMapPin" size="0.95rem" aria-hidden="true" />
+          {{ producteur().localite }}
+        </p>
+      }
+    </div>
+  </div>
+
+  <button matIconButton mat-dialog-close type="button" aria-label="Fermer la fiche">
+    <ng-icon name="lucideX" />
+  </button>
+</header>
+
+<mat-dialog-content class="corps-dialog">
+  <!-- Bloc Contact direct -->
+  <section class="bloc-contact" aria-label="Coordonnées de contact">
+    <div class="ligne-contacts">
+      @if (producteur().telephone) {
+        <a [href]="'tel:' + producteur().telephone" class="bouton-contact tel">
+          <ng-icon name="lucidePhone" />
+          <span>Appeler : <strong class="gw-chiffres">{{ producteur().telephone }}</strong></span>
+        </a>
+      }
+      @if (producteur().email) {
+        <a [href]="'mailto:' + producteur().email" class="bouton-contact email">
+          <ng-icon name="lucideMail" />
+          <span>Écrire : <strong>{{ producteur().email }}</strong></span>
+        </a>
+      }
+    </div>
+  </section>
+
+  <!-- Filtres et recherche des produits du producteur -->
+  <section class="section-produits">
+    <div class="entete-section-produits">
+      <div>
+        <h3>Catalogue de produits</h3>
+        <p class="sous-titre-produits">
+          {{ producteur().produits.length }} produit{{ producteur().produits.length > 1 ? 's' : '' }} proposé{{ producteur().produits.length > 1 ? 's' : '' }} aux cuisiniers
+        </p>
+      </div>
+
+      <mat-form-field class="champ-recherche" subscriptSizing="dynamic">
+        <mat-label>Rechercher dans ce catalogue</mat-label>
+        <input
+          matInput
+          type="text"
+          [ngModel]="recherche()"
+          (ngModelChange)="recherche.set($event)"
+          placeholder="Ex. Gombo, Arachide..."
+        />
+        <ng-icon matPrefix name="lucideSearch" />
+        @if (recherche()) {
+          <button matIconButton matSuffix type="button" (click)="recherche.set('')" aria-label="Effacer">
+            <ng-icon name="lucideX" />
+          </button>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Filtre par catégorie -->
+    @if (categories().length > 0) {
+      <div class="filtre-categories" aria-label="Filtrer par catégorie">
+        <button
+          type="button"
+          class="pill-cat"
+          [class.active]="categorieFiltre() === null"
+          (click)="filtrerCategorie(null)"
+        >
+          Tous les rayons ({{ producteur().produits.length }})
+        </button>
+        @for (cat of categories(); track cat.id) {
+          <button
+            type="button"
+            class="pill-cat"
+            [class.active]="categorieFiltre() === cat.id"
+            (click)="filtrerCategorie(cat.id)"
+          >
+            {{ cat.nom }} ({{ cat.compte }})
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Grille des produits détaillés -->
+    @if (produitsFiltres().length === 0) {
+      <div class="vide-produits">
+        <app-empty-state
+          titre="Aucun produit ne correspond"
+          message="Modifiez votre recherche ou sélectionnez un autre rayon."
+          icone="lucideSearch"
+        />
+      </div>
+    } @else {
+      <div class="grille-produits-detail">
+        @for (prod of produitsFiltres(); track prod.id) {
+          <article class="carte-produit-detail">
+            <div class="visuel-produit">
+              @if ((prod.imageUrl ?? prod.ingredientPhotoUrl) | fichier; as photo) {
+                <img [src]="photo" [alt]="prod.ingredientNom" loading="lazy" />
+              } @else {
+                <div class="visuel-vide">
+                  <ng-icon name="lucideCarrot" />
+                </div>
+              }
+            </div>
+
+            <div class="info-produit-detail">
+              <div class="titre-ligne">
+                <h4>{{ prod.ingredientNom }}</h4>
+                @if (prod.categorieNom) {
+                  <span class="badge-cat">{{ prod.categorieNom }}</span>
+                }
+              </div>
+
+              <div class="caracteristiques">
+                <div class="item-caract">
+                  <span class="label">Prix indicatif</span>
+                  <strong class="valeur gw-chiffres">
+                    @if (prod.prixIndicatif !== null) {
+                      {{ prod.prixIndicatif | number: '1.0-0' : 'fr' }} FCFA<small> / {{ prod.unite | unite }}</small>
+                    } @else {
+                      Prix à demander
+                    }
+                  </strong>
+                </div>
+
+                <div class="item-caract">
+                  <span class="label">Quantité disponible</span>
+                  <span class="valeur-stock gw-chiffres">
+                    @if (prod.quantite !== null) {
+                      {{ prod.quantite | number }} {{ prod.unite | unite }}
+                    } @else {
+                      Disponible
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions class="actions-dialog">
+  @if (session.aLeDroit('UTILISATEUR_GERER')) {
+    <a
+      matButton="outlined"
+      [routerLink]="['/utilisateurs', producteur().id]"
+      [queryParams]="{ role: 'PRODUCTEUR' }"
+      mat-dialog-close
+    >
+      <ng-icon name="lucideSettings" /> Gérer ce compte (Admin)
+    </a>
+  } @else {
+    <span></span>
+  }
+
+  <button matButton="filled" type="button" mat-dialog-close>
+    Fermer
+  </button>
+</mat-dialog-actions>

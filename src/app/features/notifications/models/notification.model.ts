@@ -11,7 +11,8 @@ export type TypeNotification =
   | 'VIDEO_A_VALIDER'
   | 'DEFI_A_VALIDER'
   | 'PARTICIPATION_DEFI'
-  | 'DEFI_TERMINE';
+  | 'DEFI_TERMINE'
+  | 'INGREDIENT_PROPOSE';
 
 /** NotificationResponseDTO côté backend. */
 export interface NotificationResponse {
@@ -56,6 +57,7 @@ export const INFOS_TYPES: Record<TypeNotification, InfosType> = {
   DEFI_A_VALIDER: { categorie: 'Défi proposé', icone: 'lucideTrophy', ton: 'terre', action: 'Examiner le défi', aDecider: true },
   PARTICIPATION_DEFI: { categorie: 'Participation', icone: 'lucideUsers', ton: 'karite', action: 'Voir le défi', aDecider: false },
   DEFI_TERMINE: { categorie: 'Défi terminé', icone: 'lucideMedal', ton: 'karite', action: 'Voir le classement', aDecider: false },
+  INGREDIENT_PROPOSE: { categorie: 'Ingrédient proposé', icone: 'lucideCarrot', ton: 'terre', action: 'Consulter le catalogue', aDecider: true },
 };
 
 /** Page du dashboard où se trouve l'élément concerné (null s'il n'y en a pas). */
@@ -72,6 +74,8 @@ export function lienCible(n: NotificationResponse): { lien: string[]; parametres
     case 'PARTICIPATION_DEFI':
     case 'DEFI_TERMINE':
       return { lien: ['/defis', n.cibleId] };
+    case 'INGREDIENT_PROPOSE':
+      return { lien: ['/ingredients'] };
     // Un cuisinier qui demande à devenir chef / producteur reste cuisinier tant que ce n'est pas validé :
     // on ouvre la fiche avec son type actuel
     case 'DEMANDE_CHEF':
