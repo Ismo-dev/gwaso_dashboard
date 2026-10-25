@@ -7,7 +7,7 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import { DefiResponse } from '../../../defis/models/defi.model';
 import { DefiService } from '../../../defis/services/defi.service';
-import { RecetteResponse } from '../../../recettes/models/recette.model';
+import { RecetteResponse, nomsCategories } from '../../../recettes/models/recette.model';
 import { RecetteService } from '../../../recettes/services/recette.service';
 
 const TAILLE = 50;
@@ -20,6 +20,7 @@ const TAILLE = 50;
   templateUrl: './activite-chef.html',
 })
 export class ActiviteChef {
+  protected readonly nomsCategories = nomsCategories;
   private recetteService = inject(RecetteService);
   private defiService = inject(DefiService);
 
@@ -43,8 +44,12 @@ export class ActiviteChef {
     this.chargement.set(true);
     const vide = { contenu: [], totalElements: 0 };
     forkJoin({
-      recettes: this.recetteService.rechercher({ auteurId: id, taille: TAILLE }).pipe(catchError(() => of(vide))),
-      defis: this.defiService.rechercher({ chefId: id, taille: TAILLE }).pipe(catchError(() => of(vide))),
+      recettes: this.recetteService
+        .rechercher({ auteurId: id, taille: TAILLE })
+        .pipe(catchError(() => of(vide))),
+      defis: this.defiService
+        .rechercher({ chefId: id, taille: TAILLE })
+        .pipe(catchError(() => of(vide))),
     }).subscribe(({ recettes, defis }) => {
       this.recettes.set(recettes.contenu as RecetteResponse[]);
       this.nbRecettes.set(recettes.totalElements);

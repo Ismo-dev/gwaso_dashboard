@@ -31,7 +31,11 @@ import { ConfirmationService } from '../../../../core/services/confirmation.serv
 import { EcranService } from '../../../../core/services/ecran.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SessionService } from '../../../../core/services/session.service';
-import { FiltreStatuts, OptionStatut, TonStatut } from '../../../../shared/components/filtre-statuts/filtre-statuts';
+import {
+  FiltreStatuts,
+  OptionStatut,
+  TonStatut,
+} from '../../../../shared/components/filtre-statuts/filtre-statuts';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { PageHeader } from '../../../../shared/components/page-header/page-header';
 import { StatusBadge } from '../../../../shared/components/status-badge/status-badge';
@@ -46,6 +50,7 @@ import {
   RecetteResponse,
   StatutRecette,
   TriRecette,
+  nomsCategories,
 } from '../../models/recette.model';
 import { RecetteService } from '../../services/recette.service';
 
@@ -64,12 +69,43 @@ interface Onglet {
 
 /** Onglets de statut, dans l'ordre du travail de l'administrateur. */
 const ONGLETS: Onglet[] = [
-  { valeur: 'EN_ATTENTE_VALIDATION', libelle: 'À valider', compteur: 'enAttente', ton: 'attente', aide: "attendent votre relecture", prioritaire: true },
-  { valeur: 'PUBLIEE', libelle: 'Publiées', compteur: 'publiees', ton: 'succes', aide: "dans l'application" },
-  { valeur: 'REJETEE', libelle: 'Rejetées', compteur: 'rejetees', ton: 'erreur', aide: "à corriger par l'auteur" },
-  { valeur: 'BROUILLON', libelle: 'Brouillons', compteur: 'brouillons', ton: 'neutre', aide: "pas encore envoyées" },
-  { valeur: 'ARCHIVEE', libelle: 'Archivées', compteur: 'archivees', ton: 'neutre', aide: "retirées de l'application" },
-  { valeur: 'TOUTES', libelle: 'Toutes', ton: 'info', aide: "toutes les recettes" },
+  {
+    valeur: 'EN_ATTENTE_VALIDATION',
+    libelle: 'À valider',
+    compteur: 'enAttente',
+    ton: 'attente',
+    aide: 'attendent votre relecture',
+    prioritaire: true,
+  },
+  {
+    valeur: 'PUBLIEE',
+    libelle: 'Publiées',
+    compteur: 'publiees',
+    ton: 'succes',
+    aide: "dans l'application",
+  },
+  {
+    valeur: 'REJETEE',
+    libelle: 'Rejetées',
+    compteur: 'rejetees',
+    ton: 'erreur',
+    aide: "à corriger par l'auteur",
+  },
+  {
+    valeur: 'BROUILLON',
+    libelle: 'Brouillons',
+    compteur: 'brouillons',
+    ton: 'neutre',
+    aide: 'pas encore envoyées',
+  },
+  {
+    valeur: 'ARCHIVEE',
+    libelle: 'Archivées',
+    compteur: 'archivees',
+    ton: 'neutre',
+    aide: "retirées de l'application",
+  },
+  { valeur: 'TOUTES', libelle: 'Toutes', ton: 'info', aide: 'toutes les recettes' },
 ];
 
 const TRIS: { valeur: TriRecette; libelle: string }[] = [
@@ -145,6 +181,7 @@ interface EtatListe {
   templateUrl: './recettes-liste.html',
 })
 export class RecettesListe implements OnInit {
+  protected readonly nomsCategories = nomsCategories;
   protected session = inject(SessionService);
   private recetteService = inject(RecetteService);
   private categorieService = inject(CategorieService);
@@ -178,8 +215,12 @@ export class RecettesListe implements OnInit {
     }));
     // « Tous » n'a pas de compteur propre : c'est la somme des autres, quand ils sont tous connus
     const comptes = ONGLETS.filter((o) => o.compteur).map((o) => this.compteur(o));
-    const total = comptes.every((c) => c !== null) ? comptes.reduce<number>((s, c) => s + (c ?? 0), 0) : null;
-    return options.map((o, i) => (ONGLETS[i].compteur || o.ton !== 'info' ? o : { ...o, compte: total }));
+    const total = comptes.every((c) => c !== null)
+      ? comptes.reduce<number>((s, c) => s + (c ?? 0), 0)
+      : null;
+    return options.map((o, i) =>
+      ONGLETS[i].compteur || o.ton !== 'info' ? o : { ...o, compte: total },
+    );
   });
   protected readonly tris = TRIS;
   protected readonly difficultes = DIFFICULTES;

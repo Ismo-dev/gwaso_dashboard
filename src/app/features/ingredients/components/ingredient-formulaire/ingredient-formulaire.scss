@@ -1,8 +1,9 @@
 @use 'points-de-rupture' as ecran;
 
-// display: contents : le formulaire ne casse pas la mise en page du dialogue
+// Petit espace en haut : le libellé flottant du premier champ n'est pas rogné dans une fenêtre
 .formulaire {
-  display: contents;
+  display: block;
+  padding-top: var(--gw-espace-2);
 }
 
 .erreur {
@@ -66,4 +67,19 @@
 .aide {
   color: var(--gw-texte-doux);
   font-size: var(--gw-taille-petit);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gw-espace-3);
+  margin-top: var(--gw-espace-5);
+
+  @include ecran.mobile {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
 }

@@ -1,0 +1,52 @@
+<div class="audio" [class.a-un-audio]="!!audioActuel()">
+  <p class="langue">
+    <ng-icon name="lucideMic" size="1rem" aria-hidden="true" />
+    {{ libelleLangue() }}
+    @if (audioActuel() && !brouillon()) {
+      <span class="etat">enregistré</span>
+    }
+  </p>
+
+  @if (enregistrement()) {
+    <div class="en-cours" role="status">
+      <span class="voyant" aria-hidden="true"></span>
+      <span class="gw-chiffres">Enregistrement… {{ duree() }}</span>
+      <button matButton="filled" type="button" (click)="arreter()">
+        <ng-icon name="lucideSquare" size="1rem" aria-hidden="true" />
+        Arrêter
+      </button>
+    </div>
+  } @else if (brouillon(); as b) {
+    <audio class="lecteur" controls [src]="b.apercu" [attr.aria-label]="'Écouter le nouvel audio en ' + libelleLangue()"></audio>
+    <div class="boutons">
+      <button matButton type="button" [disabled]="envoi()" (click)="annuler()">Recommencer</button>
+      <button matButton="filled" type="button" [disabled]="envoi()" (click)="envoyer()">
+        @if (envoi()) {
+          <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+        }
+        Enregistrer l'audio
+      </button>
+    </div>
+  } @else {
+    @if (audioActuel() | fichier; as url) {
+      <audio class="lecteur" controls preload="none" [src]="url" [attr.aria-label]="'Écouter l\'audio en ' + libelleLangue()"></audio>
+    }
+    <div class="boutons">
+      <button matButton="outlined" type="button" [disabled]="envoi()" (click)="demarrer()">
+        <ng-icon name="lucideMic" size="1rem" aria-hidden="true" />
+        {{ audioActuel() ? 'Réenregistrer' : 'Enregistrer au micro' }}
+      </button>
+      <label class="bouton-fichier">
+        <input type="file" accept="audio/*,.m4a,.mp3,.ogg,.wav,.aac,.webm" (change)="choisirFichier($event)" [disabled]="envoi()" />
+        <ng-icon name="lucideUpload" size="1rem" aria-hidden="true" />
+        Choisir un fichier
+      </label>
+      @if (audioActuel()) {
+        <button matButton type="button" class="retirer" [disabled]="envoi()" (click)="retirer()">Retirer</button>
+      }
+    </div>
+  }
+  @if (erreurMicro(); as message) {
+    <p class="erreur" role="alert">{{ message }}</p>
+  }
+</div>

@@ -1,0 +1,36 @@
+<!-- Formulaire seul : la fenêtre ou le panneau qui l'accueille fournit le titre -->
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  @if (erreur()) {
+    <p class="erreur" role="alert">{{ erreur() }}</p>
+  }
+
+  <mat-form-field class="champ">
+    <mat-label>Nom de l'ustensile</mat-label>
+    <input matInput formControlName="nom" maxlength="80" />
+    <mat-hint>Ex. Canari, Mortier et pilon, Couscoussier</mat-hint>
+    <mat-error>Le nom est obligatoire.</mat-error>
+  </mat-form-field>
+
+  <mat-form-field class="champ">
+    <mat-label>Description</mat-label>
+    <textarea matInput formControlName="description" rows="3" maxlength="255"></textarea>
+    <mat-hint>Facultatif · à quoi il sert</mat-hint>
+  </mat-form-field>
+
+  <app-image-upload
+    libelle="Photo de l'ustensile"
+    format="carre"
+    [imageActuelle]="sauve()?.photoUrl ?? null"
+    (fichierChoisi)="photo = $event"
+  />
+
+  <div class="actions">
+    <button matButton="outlined" type="button" (click)="annuler()">Annuler</button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      {{ texteValider() ?? (ustensile() ? 'Enregistrer' : "Créer l'ustensile") }}
+    </button>
+  </div>
+</form>

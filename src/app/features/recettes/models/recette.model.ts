@@ -12,6 +12,8 @@ export type TriRecette = 'RECENTES' | 'ANCIENNES' | 'NOM_CROISSANT' | 'NOM_DECRO
 export interface RecetteResponse {
   id: string;
   nom: string;
+  /** Accroche sous le nom (« Riz au poisson façon sénégalaise »). */
+  sousTitre: string | null;
   description: string | null;
   photoUrl: string | null;
   dureeMin: number | null;
@@ -25,12 +27,34 @@ export interface RecetteResponse {
   motifRejet: string | null;
   dateCreation: string;
   datePublication: string | null;
+  /** Catégorie principale (la première) ; voir aussi `categories`. */
   categorieId: string | null;
   categorieNom: string | null;
+  /** Toutes les catégories de la recette (une recette peut en avoir plusieurs), la principale en premier. */
+  categories: CategorieRecette[];
   auteurId: string | null;
   auteurNom: string | null;
   valideParAdminId: string | null;
   valideParAdminNom: string | null;
+}
+
+/** CategorieRecetteDTO côté backend : une catégorie de la recette. */
+export interface CategorieRecette {
+  id: string;
+  nom: string;
+}
+
+/** Nombre maximal de catégories par recette (limite de l'API). */
+export const MAX_CATEGORIES_RECETTE = 5;
+
+/** Les catégories d'une recette en une ligne (« Plats · Fêtes »), ou null si elle n'en a aucune. */
+export function nomsCategories(
+  recette: Pick<RecetteResponse, 'categories' | 'categorieNom'>,
+): string | null {
+  const noms = recette.categories?.length
+    ? recette.categories.map((c) => c.nom)
+    : [recette.categorieNom];
+  return noms.filter(Boolean).join(' · ') || null;
 }
 
 /** NomRecetteResponseDTO côté backend : autre nom sous lequel le plat est connu (ex. Tigadèguèna). */
@@ -46,13 +70,15 @@ export interface NomRecetteResponse {
  */
 export interface RecetteRequest {
   nom: string;
+  sousTitre?: string | null;
   description?: string | null;
   dureeMin: number;
   nbPersonnes?: number | null;
   estMalienne?: boolean;
   telechargeable?: boolean;
   difficulte?: Difficulte;
-  categorieId: string;
+  /** Une à cinq catégories ; la première devient la catégorie principale. */
+  categorieIds: string[];
   /** À la création : les autres noms du même plat (ex. « Tigadèguèna » pour le mafé). */
   autresNoms?: string[];
 }
@@ -99,6 +125,9 @@ export interface RecetteIngredientResponse {
   quantite: number | null;
   unite: string | null;
 }
+
+/** Langue d'un audio d'étape : la préparation guidée lit l'un ou l'autre. */
+export type LangueAudio = 'FR' | 'BAMBARA';
 
 /** EtapeResponseDTO côté backend : une étape de préparation. */
 export interface EtapeResponse {

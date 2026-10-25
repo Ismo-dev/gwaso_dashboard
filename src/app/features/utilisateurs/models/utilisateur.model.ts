@@ -18,6 +18,7 @@ export const LIBELLES_TYPE_COMPTE: Record<TypeCompte, string> = {
   CUISINIER: 'Cuisinier',
   CHEF: 'Chef cuisinier',
   PRODUCTEUR: 'Producteur',
+  LIVREUR: 'Livreur',
 };
 
 /** Icône Lucide de chaque type de compte. */
@@ -26,6 +27,7 @@ export const ICONES_TYPE_COMPTE: Record<TypeCompte, string> = {
   CUISINIER: 'lucideCookingPot',
   CHEF: 'lucideChefHat',
   PRODUCTEUR: 'lucideStore',
+  LIVREUR: 'lucideBike',
 };
 
 /** Ce que chaque type de compte demande à la création (le type ne donne aucun droit). */
@@ -34,10 +36,14 @@ export const AIDES_TYPE_COMPTE: Record<TypeCompte, string> = {
   CUISINIER: 'Membre de la communauté (niveau en cuisine)',
   CHEF: 'Chef cuisinier (justificatif obligatoire)',
   PRODUCTEUR: 'Vend ses produits (localité et justificatif)',
+  LIVREUR: 'Livre pour un fournisseur, qui l’ajoute depuis son espace',
 };
 
 /** Ordre d'affichage des types de compte. */
-export const ORDRE_TYPES_COMPTE: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
+export const ORDRE_TYPES_COMPTE: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR', 'LIVREUR'];
+
+/** Types créés depuis le dashboard : un livreur est ajouté par son fournisseur, dans son espace. */
+export const TYPES_COMPTE_CREABLES: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
 
 export const LIBELLES_NIVEAU: Record<NiveauCuisine, string> = {
   DEBUTANT: 'Débutant',
@@ -64,6 +70,9 @@ export interface DemandeStatut {
   photoProfil: string | null;
   preuveUrl: string | null;
   localite: string | null;
+  /** Fournisseur : position de sa localité sur la carte. */
+  latitude?: number | null;
+  longitude?: number | null;
   dateInscription: string;
 }
 
@@ -82,11 +91,21 @@ export interface FicheUtilisateur {
   profilNom: string | null;
   niveau?: NiveauCuisine | null;
   localite?: string | null;
+  /** Fournisseur : position de sa localité sur la carte. */
+  latitude?: number | null;
+  longitude?: number | null;
   preuveUrl?: string | null;
   statutRole?: StatutRole;
   motifRejet?: string | null;
   dateValidation?: string | null;
   valideParAdminNom?: string | null;
+  /** Livreur : pièce d'identité, paiement et fournisseur pour qui il livre. */
+  pieceIdentiteUrl?: string | null;
+  numeroMobileMoney?: string | null;
+  operateur?: OperateurMobileMoney | null;
+  disponible?: boolean;
+  fournisseurId?: string | null;
+  fournisseurNom?: string | null;
 }
 
 /** UtilisateurResumeDTO côté backend : une ligne de la liste de tous les utilisateurs. */
@@ -162,6 +181,8 @@ export interface ProducteurResponse {
   telephone: string | null;
   photoProfil: string | null;
   localite: string | null;
+  latitude: number | null;
+  longitude: number | null;
   preuveUrl: string | null;
   motifRejet: string | null;
   statutRole: StatutRole;
@@ -246,6 +267,8 @@ export interface DemandeStatutResponse {
   statut: StatutRole;
   preuveUrl: string;
   localite: string | null;
+  latitude: number | null;
+  longitude: number | null;
   motivation: string | null;
   motifRejet: string | null;
   dateDemande: string;
@@ -269,4 +292,38 @@ export interface ProduitProducteurResponse {
   quantite: number | null;
   unite: string;
   imageUrl: string | null;
+}
+
+/** Lien OpenStreetMap centré sur un point (point de retrait d'un fournisseur). */
+export function lienCarte(latitude: number, longitude: number): string {
+  return `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=17/${latitude}/${longitude}`;
+}
+
+export type OperateurMobileMoney = 'ORANGE_MONEY' | 'MOOV_MONEY';
+
+export const LIBELLES_OPERATEUR: Record<OperateurMobileMoney, string> = {
+  ORANGE_MONEY: 'Orange Money',
+  MOOV_MONEY: 'Moov Money',
+};
+
+/** LivreurFicheResponseDTO côté backend : un livreur, ajouté par son fournisseur. */
+export interface LivreurFicheResponse {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string | null;
+  telephone: string | null;
+  photoProfil: string | null;
+  statutCompte: StatutCompte;
+  dateInscription: string;
+  profilId: string | null;
+  profilNom: string | null;
+  statutRole: StatutRole;
+  motifRejet: string | null;
+  pieceIdentiteUrl: string | null;
+  numeroMobileMoney: string | null;
+  operateur: OperateurMobileMoney | null;
+  disponible: boolean;
+  fournisseurId: string | null;
+  fournisseurNom: string | null;
 }

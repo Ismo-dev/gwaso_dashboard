@@ -26,14 +26,33 @@ export const UNITES: { valeur: Unite; libelle: string }[] = [
   { valeur: 'SACHET', libelle: 'Sachet' },
 ];
 
+/**
+ * Statut d'un ingrédient ou d'un ustensile : un chef peut proposer ce qui manque au catalogue,
+ * l'administration valide ou refuse.
+ */
+export type StatutCatalogue = 'EN_ATTENTE' | 'VALIDE' | 'REFUSE';
+
+/** Champs communs à un ingrédient et à un ustensile proposés par un chef. */
+export interface PropositionChef {
+  statut?: StatutCatalogue;
+  motifRefus?: string | null;
+  proposeParId?: string | null;
+  proposeParNom?: string | null;
+}
+
 /** IngredientResponseDTO côté backend. */
-export interface IngredientResponse {
+export interface IngredientResponse extends PropositionChef {
   id: string;
   nom: string;
   photoUrl: string | null;
   unite: Unite | null;
   prixMin: number | null;
   prixMax: number | null;
+}
+
+/** L'élément fait partie du catalogue validé (les anciens n'ont pas de statut). */
+export function estValide(element: PropositionChef): boolean {
+  return !element.statut || element.statut === 'VALIDE';
 }
 
 /** IngredientRequestDTO côté backend. */

@@ -1,5 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, input, OnInit, signal, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  OnInit,
+  signal,
+  untracked,
+} from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatButtonToggle, MatButtonToggleGroup } from '@angular/material/button-toggle';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -19,12 +28,13 @@ import { LIBELLES_TYPE_COMPTE } from '../../../utilisateurs/models/utilisateur.m
 import { UtilisateurService } from '../../../utilisateurs/services/utilisateur.service';
 import { formaterDuree } from '../../../videos/models/video.model';
 import { VideoService } from '../../../videos/services/video.service';
-import {
-  INFOS_TYPES,
-  lienCible,
-  NotificationResponse,
-} from '../../models/notification.model';
+import { estPropositionUstensile, INFOS_TYPES, lienCible, NotificationResponse } from '../../models/notification.model';
+import { IngredientResponse } from '../../../ingredients/models/ingredient.model';
+import { IngredientService } from '../../../ingredients/services/ingredient.service';
+import { UstensileResponse } from '../../../ustensiles/models/ustensile.model';
+import { UstensileService } from '../../../ustensiles/services/ustensile.service';
 import { NotificationsService } from '../../services/notifications.service';
+import { nomsCategories } from '../../../recettes/models/recette.model';
 
 const TAILLE_PAGE = 20;
 
@@ -75,6 +85,8 @@ export class Notifications implements OnInit {
   private recetteService = inject(RecetteService);
   private defiService = inject(DefiService);
   private utilisateurService = inject(UtilisateurService);
+  private ingredientService = inject(IngredientService);
+  private ustensileService = inject(UstensileService);
   private toast = inject(NotificationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -141,7 +153,9 @@ export class Notifications implements OnInit {
       .rechercher({ nonLues: this.filtre() === 'nonLues', page: this.page, taille: TAILLE_PAGE })
       .subscribe({
         next: (page) => {
-          this.notifications.update((liste) => (depuisLeDebut ? page.contenu : [...liste, ...page.contenu]));
+          this.notifications.update((liste) =>
+            depuisLeDebut ? page.contenu : [...liste, ...page.contenu],
+          );
           this.toutCharge.set(page.page + 1 >= page.totalPages);
           this.page = page.page + 1;
           this.chargement.set(false);
@@ -166,11 +180,19 @@ export class Notifications implements OnInit {
   }
 
   choisir(n: NotificationResponse): void {
-    this.router.navigate([], { relativeTo: this.route, queryParams: { id: n.id }, queryParamsHandling: 'merge' });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { id: n.id },
+      queryParamsHandling: 'merge',
+    });
   }
 
   fermer(): void {
-    this.router.navigate([], { relativeTo: this.route, queryParams: { id: null }, queryParamsHandling: 'merge' });
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { id: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   // ===================== Détail =====================
@@ -215,10 +237,12 @@ export class Notifications implements OnInit {
   }
 
   /** Charge l'élément concerné et le met sous une forme commune. */
-  private lireApercu(n: NotificationResponse): Observable<Apercu> {
+  private lireApercu(n: NotificationResponse): Observable<Apercu | null> {
     const id = n.cibleId!;
     switch (n.type) {
       case 'VIDEO_A_VALIDER':
+      case 'VIDEO_PUBLIEE':
+      case 'VIDEO_REFUSEE':
         return this.videoService.getDetail(id).pipe(
           map(({ video }) => ({
             titre: video.titre,
@@ -230,19 +254,30 @@ export class Notifications implements OnInit {
           })),
         );
       case 'RECETTE_A_VALIDER':
+      case 'RECETTE_PUBLIEE':
+      case 'RECETTE_REFUSEE':
+      case 'RECETTE_RETIREE':
+      case 'NOUVEL_AVIS':
+      case 'REPONSE_AVIS':
         return this.recetteService.getById(id).pipe(
           map((r) => ({
             titre: r.nom,
-            sousTitre: r.categorieNom,
+            sousTitre: nomsCategories(r),
             image: r.photoUrl,
             video: null,
             statut: r.statut,
-            details: [r.dureeMin ? `${r.dureeMin} min` : '', r.nbPersonnes ? `${r.nbPersonnes} personnes` : ''].filter(Boolean),
+            details: [
+              r.dureeMin ? `${r.dureeMin} min` : '',
+              r.nbPersonnes ? `${r.nbPersonnes} personnes` : '',
+            ].filter(Boolean),
           })),
         );
       case 'DEFI_A_VALIDER':
       case 'PARTICIPATION_DEFI':
       case 'DEFI_TERMINE':
+      case 'DEFI_PUBLIE':
+      case 'DEFI_REFUSE':
+      case 'CLASSEMENT_PUBLIE':
         return this.defiService.getById(id).pipe(
           map((d) => ({
             titre: d.nom,
@@ -260,37 +295,119 @@ export class Notifications implements OnInit {
       case 'DEMANDE_PRODUCTEUR':
         if (n.acteurRole === 'CUISINIER') {
           // Cuisinier qui demande à devenir chef / producteur
-          return this.utilisateurService.getCuisinier(id).pipe(
-            map((c) =>
-              this.apercuCompte(`${c.prenom} ${c.nom}`, c.email ?? c.telephone, c.photoProfil, 'EN_ATTENTE', [
-                n.type === 'DEMANDE_CHEF' ? 'Cuisinier → chef cuisinier' : 'Cuisinier → producteur',
-              ]),
+          return this.utilisateurService
+            .getCuisinier(id)
+            .pipe(
+              map((c) =>
+                this.apercuCompte(
+                  `${c.prenom} ${c.nom}`,
+                  c.email ?? c.telephone,
+                  c.photoProfil,
+                  'EN_ATTENTE',
+                  [
+                    n.type === 'DEMANDE_CHEF'
+                      ? 'Cuisinier → chef cuisinier'
+                      : 'Cuisinier → producteur',
+                  ],
+                ),
+              ),
+            );
+        }
+        return n.type === 'DEMANDE_CHEF'
+          ? this.utilisateurService
+              .getChef(id)
+              .pipe(
+                map((c) =>
+                  this.apercuCompte(
+                    `${c.prenom} ${c.nom}`,
+                    c.email ?? c.telephone,
+                    c.photoProfil,
+                    c.statutRole,
+                    ['Chef cuisinier'],
+                  ),
+                ),
+              )
+          : this.utilisateurService
+              .getProducteur(id)
+              .pipe(
+                map((p) =>
+                  this.apercuCompte(
+                    `${p.prenom} ${p.nom}`,
+                    p.email ?? p.telephone,
+                    p.photoProfil,
+                    p.statutRole,
+                    ['Producteur', p.localite ?? ''],
+                  ),
+                ),
+              );
+      case 'ADMIN_AJOUTE':
+        return this.utilisateurService
+          .getAdmin(id)
+          .pipe(
+            map((a) =>
+              this.apercuCompte(
+                `${a.prenom} ${a.nom}`,
+                a.email ?? a.telephone,
+                a.photoProfil,
+                a.statut,
+                ['Administrateur'],
+              ),
             ),
           );
-        }
-        return n.type === 'DEMANDE_CHEF' ? this.utilisateurService.getChef(id).pipe(
-          map((c) => this.apercuCompte(`${c.prenom} ${c.nom}`, c.email ?? c.telephone, c.photoProfil, c.statutRole, ['Chef cuisinier'])),
-        ) : this.utilisateurService.getProducteur(id).pipe(
-          map((p) =>
-            this.apercuCompte(`${p.prenom} ${p.nom}`, p.email ?? p.telephone, p.photoProfil, p.statutRole, [
-              'Producteur',
-              p.localite ?? '',
-            ]),
-          ),
+      case 'CATALOGUE_A_VALIDER': {
+        const ustensile = estPropositionUstensile(n);
+        const element$: Observable<{ element: IngredientResponse | UstensileResponse; detail: string | null }> =
+          ustensile
+            ? this.ustensileService.getById(id).pipe(map((u) => ({ element: u, detail: u.description })))
+            : this.ingredientService
+                .getById(id)
+                .pipe(map((i) => ({ element: i, detail: i.unite ? `Unité : ${i.unite}` : null })));
+        return element$.pipe(
+          map(({ element, detail }) => ({
+            titre: element.nom,
+            sousTitre: element.proposeParNom ? `Proposé par ${element.proposeParNom}` : null,
+            image: element.photoUrl,
+            video: null,
+            statut: element.statut === 'REFUSE' ? 'REJETE' : (element.statut ?? 'VALIDE'),
+            details: [ustensile ? 'Ustensile' : 'Ingrédient', detail ?? ''].filter(Boolean),
+          })),
         );
-      case 'ADMIN_AJOUTE':
-        return this.utilisateurService.getAdmin(id).pipe(
-          map((a) => this.apercuCompte(`${a.prenom} ${a.nom}`, a.email ?? a.telephone, a.photoProfil, a.statut, ['Administrateur'])),
-        );
+      }
       case 'INSCRIPTION':
-        return this.utilisateurService.getCuisinier(id).pipe(
-          map((c) => this.apercuCompte(`${c.prenom} ${c.nom}`, c.email ?? c.telephone, c.photoProfil, c.statut, ['Cuisinier'])),
-        );
+        return this.utilisateurService
+          .getCuisinier(id)
+          .pipe(
+            map((c) =>
+              this.apercuCompte(
+                `${c.prenom} ${c.nom}`,
+                c.email ?? c.telephone,
+                c.photoProfil,
+                c.statut,
+                ['Cuisinier'],
+              ),
+            ),
+          );
+      // Décision sur une demande ou une proposition : le message suffit
+      default:
+        return of(null);
     }
   }
 
-  private apercuCompte(nom: string, contact: string | null, photo: string | null, statut: string | null, details: string[]): Apercu {
-    return { titre: nom, sousTitre: contact, image: photo, video: null, statut, details: details.filter(Boolean) };
+  private apercuCompte(
+    nom: string,
+    contact: string | null,
+    photo: string | null,
+    statut: string | null,
+    details: string[],
+  ): Apercu {
+    return {
+      titre: nom,
+      sousTitre: contact,
+      image: photo,
+      video: null,
+      statut,
+      details: details.filter(Boolean),
+    };
   }
 
   private libelleJour(date: string): string {

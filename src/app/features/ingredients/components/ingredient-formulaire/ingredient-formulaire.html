@@ -1,0 +1,84 @@
+<!-- Formulaire seul : la fenêtre ou le panneau qui l'accueille fournit le titre -->
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  @if (erreur()) {
+    <p class="erreur" role="alert">{{ erreur() }}</p>
+  }
+
+  <div class="ligne">
+    <mat-form-field class="champ-nom">
+      <mat-label>Nom de l'ingrédient</mat-label>
+      <input matInput formControlName="nom" maxlength="80" />
+      <mat-hint>Ex. Gombo frais, Soumbala</mat-hint>
+      <mat-error>Le nom est obligatoire.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="champ-unite">
+      <mat-label>Unité de vente</mat-label>
+      <mat-select formControlName="unite">
+        @for (unite of unites; track unite.valeur) {
+          <mat-option [value]="unite.valeur">{{ unite.libelle }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Choisissez une unité.</mat-error>
+    </mat-form-field>
+  </div>
+
+  <!-- Les deux prix forment un seul groupe : on les présente ensemble (proximité) -->
+  <fieldset class="prix">
+    <legend>Prix indicatif au marché <span class="facultatif">(facultatif)</span></legend>
+    <div class="ligne">
+      <mat-form-field>
+        <mat-label>Prix minimum</mat-label>
+        <input
+          matInput
+          type="number"
+          min="0"
+          step="25"
+          inputmode="numeric"
+          formControlName="prixMin"
+        />
+        <span matTextSuffix>FCFA{{ uniteCourte() ? ' / ' + uniteCourte() : '' }}</span>
+        <mat-error>Le prix doit être positif.</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Prix maximum</mat-label>
+        <input
+          matInput
+          type="number"
+          min="0"
+          step="25"
+          inputmode="numeric"
+          formControlName="prixMax"
+        />
+        <span matTextSuffix>FCFA{{ uniteCourte() ? ' / ' + uniteCourte() : '' }}</span>
+        <mat-error>Le prix doit être positif.</mat-error>
+      </mat-form-field>
+    </div>
+    @if (
+      formulaire.hasError('fourchette') &&
+      (formulaire.controls.prixMax.touched || formulaire.controls.prixMin.touched)
+    ) {
+      <p class="erreur-groupe" role="alert">
+        Le prix minimum ne peut pas dépasser le prix maximum.
+      </p>
+    }
+    <p class="aide">Sert à estimer le budget des recettes.</p>
+  </fieldset>
+
+  <app-image-upload
+    libelle="Photo de l'ingrédient"
+    format="carre"
+    [imageActuelle]="sauve()?.photoUrl ?? null"
+    (fichierChoisi)="photo = $event"
+  />
+
+  <div class="actions">
+    <button matButton="outlined" type="button" (click)="annuler()">Annuler</button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      {{ texteValider() ?? (ingredient() ? 'Enregistrer' : "Créer l'ingrédient") }}
+    </button>
+  </div>
+</form>

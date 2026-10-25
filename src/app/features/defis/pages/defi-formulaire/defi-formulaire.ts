@@ -41,11 +41,14 @@ import { IngredientService } from '../../../ingredients/services/ingredient.serv
 import { RecetteService } from '../../../recettes/services/recette.service';
 import { UstensileService } from '../../../ustensiles/services/ustensile.service';
 import { ChoixElements, ElementCatalogue } from '../../components/choix-elements/choix-elements';
+import { EditeurQuestions, nouvelleQuestion, QuestionEdition } from '../../components/editeur-questions/editeur-questions';
+import { ListeReponses, normaliserReponse } from '../../components/liste-reponses/liste-reponses';
 import {
   DefiRequest,
   DefiResponse,
   iconeType,
   PhotoDefiResponse,
+  POINTS_PAR_DEFAUT,
   TypeDefiResponse,
 } from '../../models/defi.model';
 import { DefiService } from '../../services/defi.service';
@@ -116,6 +119,8 @@ function aujourdhui(): Date {
     EditeurRiche,
     FichierPipe,
     ChoixElements,
+    ListeReponses,
+    EditeurQuestions,
   ],
   selector: 'app-defi-formulaire',
   styleUrl: './defi-formulaire.scss',
@@ -147,6 +152,7 @@ export class DefiFormulaire implements OnDestroy {
     dateDebut: [null as Date | null, Validators.required],
     dateFin: [null as Date | null, Validators.required],
     reponseAttendue: ['', Validators.maxLength(1000)],
+    points: [POINTS_PAR_DEFAUT as number | null, [Validators.min(1), Validators.max(1000)]],
     description: ['', [Validators.required, Validators.maxLength(3000)]],
     regles: ['', Validators.maxLength(3000)],
     conditionsParticipation: ['', Validators.maxLength(3000)],
@@ -159,6 +165,13 @@ export class DefiFormulaire implements OnDestroy {
   protected typeChoisi = computed(() => this.types()?.find((t) => t.id === this.typeChoisiId()) ?? null);
   protected recetteObligatoire = computed(() => this.typeChoisi()?.recetteObligatoire ?? false);
   protected devinette = computed(() => this.typeChoisi()?.modeParticipation === 'REPONSE');
+  protected quiz = computed(() => this.typeChoisi()?.modeParticipation === 'QUIZ');
+
+  // ----- Devinette : autres bonnes réponses ; quiz : questions -----
+  protected autresReponses = signal<string[]>([]);
+  protected questions = signal<QuestionEdition[]>([]);
+  /** Quiz déjà joué : le serveur refuse de changer les questions. */
+  protected questionsVerrouillees = computed(() => this.quiz() && (this.defi()?.nbParticipants ?? 0) > 0);
   /** Ce que les participants voient : ingrédients ou ustensile choisis dans le catalogue. */
   protected elements = computed(() => this.typeChoisi()?.elements ?? 'AUCUN');
 
@@ -230,6 +243,28 @@ export class DefiFormulaire implements OnDestroy {
       });
     });
 
+    // La bonne réponse n'est obligatoire que pour une devinette. Gérée ici et pas par un attribut `required` :
+    // quand le champ disparaît (passage à « Plat libre »), Angular retire le validateur sans recalculer l'état,
+    // et le formulaire restait invalide pour toujours.
+    effect(() => {
+      const devinette = this.devinette();
+      untracked(() => {
+        const reponse = this.formulaire.controls.reponseAttendue;
+        reponse.setValidators(devinette ? [Validators.required, Validators.maxLength(1000)] : [Validators.maxLength(1000)]);
+        reponse.updateValueAndValidity();
+      });
+    });
+
+    // Un quiz commence avec une question vide à remplir
+    effect(() => {
+      const quiz = this.quiz();
+      untracked(() => {
+        if (quiz && this.questions().length === 0) {
+          this.questions.set([nouvelleQuestion()]);
+        }
+      });
+    });
+
     // Premier type proposé par défaut pour un nouveau défi
     effect(() => {
       const types = this.types();
@@ -256,6 +291,7 @@ export class DefiFormulaire implements OnDestroy {
           dateDebut: depuisIso(defi.dateDebut),
           dateFin: depuisIso(defi.dateFin),
           reponseAttendue: defi.reponseAttendue ?? '',
+          points: defi.modeParticipation === 'REPONSE' ? (defi.points ?? POINTS_PAR_DEFAUT) : POINTS_PAR_DEFAUT,
           description: defi.description ?? '',
           regles: defi.regles ?? '',
           conditionsParticipation: defi.conditionsParticipation ?? '',
@@ -264,6 +300,19 @@ export class DefiFormulaire implements OnDestroy {
         if (defi.recetteId) {
           this.champRecette.setValue({ id: defi.recetteId, nom: defi.recetteNom ?? '' });
         }
+        this.autresReponses.set(defi.autresReponses ?? []);
+        this.questions.set(
+          (defi.questions ?? []).map((q) =>
+            nouvelleQuestion({
+              enonce: q.enonce,
+              dureeSecondes: q.dureeSecondes,
+              points: q.points,
+              reponsesAcceptees: q.reponsesAcceptees,
+              propositions: q.propositions,
+              choixMultiple: q.propositions.length > 0,
+            }),
+          ),
+        );
         this.ingredientsChoisis.set(defi.ingredients.map((e) => e.id).filter((id): id is string => !!id));
         this.ustensilesChoisis.set(defi.ustensiles.map((e) => e.id).filter((id): id is string => !!id));
         this.filAriane.definirPageCourante(`Modifier « ${defi.nom} »`);
@@ -354,6 +403,17 @@ export class DefiFormulaire implements OnDestroy {
       reponseAttendue: this.devinette() ? v.reponseAttendue?.trim() || null : null,
       ingredientIds: this.elements() === 'INGREDIENTS' ? this.ingredientsChoisis() : [],
       ustensileIds: this.elements() === 'USTENSILES' ? this.ustensilesChoisis() : [],
+      autresReponses: this.devinette() ? this.autresReponses() : [],
+      points: this.devinette() ? v.points : null,
+      questions: this.quiz()
+        ? this.questions().map((q) => ({
+            enonce: q.enonce.trim(),
+            dureeSecondes: q.dureeSecondes,
+            points: q.points,
+            reponsesAcceptees: q.reponsesAcceptees,
+            propositions: q.choixMultiple ? q.propositions : [],
+          }))
+        : [],
     };
     const existant = this.defi();
     const appel = existant ? this.defiService.modifier(existant.id, requete) : this.defiService.creer(requete);
@@ -397,8 +457,46 @@ export class DefiFormulaire implements OnDestroy {
     if (this.devinette() && !this.formulaire.value.reponseAttendue?.trim()) {
       return 'Indiquez la bonne réponse de la devinette.';
     }
+    if (this.devinette() && c.points.invalid) {
+      return 'Les points d’une bonne réponse vont de 1 à 1000.';
+    }
+    if (this.quiz()) {
+      const message = this.verifierQuestions();
+      if (message) {
+        return message;
+      }
+    }
     if (this.formulaire.invalid) {
       return 'Certains champs sont à compléter. Ils sont signalés en rouge.';
+    }
+    return '';
+  }
+
+  private verifierQuestions(): string {
+    const questions = this.questions();
+    if (questions.length === 0) {
+      return 'Ajoutez au moins une question au quiz.';
+    }
+    for (const [i, q] of questions.entries()) {
+      const numero = `Question ${i + 1}`;
+      if (!q.enonce.trim()) {
+        return `${numero} : écrivez l'énoncé.`;
+      }
+      if (!q.points || q.points < 1 || q.points > 1000) {
+        return `${numero} : les points vont de 1 à 1000.`;
+      }
+      if (q.reponsesAcceptees.length === 0) {
+        return `${numero} : indiquez au moins une bonne réponse.`;
+      }
+      if (q.choixMultiple) {
+        if (q.propositions.length < 2) {
+          return `${numero} : proposez au moins deux choix.`;
+        }
+        const bonnes = q.reponsesAcceptees.map(normaliserReponse);
+        if (!q.propositions.some((p) => bonnes.includes(normaliserReponse(p)))) {
+          return `${numero} : la bonne réponse doit faire partie des propositions.`;
+        }
+      }
     }
     return '';
   }

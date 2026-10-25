@@ -17,13 +17,12 @@
   width: var(--gw-largeur-sidebar-compacte);
 }
 
+// Seule zone qui défile (celle de Material) : simple bloc, l'en-tête y reste collé en haut
 .zone-principale {
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 
 .contenu {
-  flex: 1;
   width: 100%;
   max-width: var(--gw-largeur-contenu);
   margin: 0 auto;

@@ -1,3 +1,10 @@
+// Toute la hauteur du menu : sans cela, « height: 100% » de .sidebar ne se résout pas
+// et la colonne grandit au lieu de garder le compte visible en bas
+:host {
+  display: block;
+  height: 100%;
+}
+
 .sidebar {
   position: relative;
   display: flex;
@@ -5,14 +12,9 @@
   height: 100%;
   color: var(--gw-sidebar-texte);
   background: var(--gw-sidebar-fond);
-  // Écran peu haut (zoom du navigateur, petit portable) : toute la colonne défile d'un bloc,
-  // au lieu d'écraser le menu entre le logo et le compte
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  // Barre de défilement fine et sombre, assortie au menu
-  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
-  scrollbar-width: thin;
+  // Logo en haut et compte en bas restent toujours visibles ; sur un écran peu haut
+  // (zoom du navigateur, petit portable), seule la liste des liens défile
+  overflow: hidden;
 
   // Focus clavier : terre cuite claire, bien visible sur le cacao (4:1)
   :focus-visible {
@@ -67,8 +69,15 @@
 .navigation {
   position: relative;
   z-index: 1;
-  // Prend la place libre (le compte reste en bas sur un grand écran), sans jamais rétrécir sous son contenu
-  flex: 1 0 auto;
+  // Prend la place libre (le compte reste en bas) et défile si les liens ne tiennent pas
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  // Barre de défilement fine et sombre, assortie au menu
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+  scrollbar-width: thin;
   padding: var(--gw-espace-2) var(--gw-espace-3) var(--gw-espace-6);
 }
 

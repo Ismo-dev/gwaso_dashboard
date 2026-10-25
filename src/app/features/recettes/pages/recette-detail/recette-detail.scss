@@ -250,6 +250,33 @@ h1 {
   color: var(--gw-succes);
 }
 
+.bandeau-neutre {
+  border: 1px solid var(--gw-bordure);
+  background: var(--gw-surface-2);
+  color: var(--gw-texte);
+}
+
+// Texte à gauche, action à droite ; sur téléphone, l'action passe dessous en pleine largeur
+.bandeau-texte {
+  flex: 1;
+  min-width: 0;
+}
+
+.bandeau-action {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+@include ecran.mobile {
+  .bandeau:has(.bandeau-action) {
+    flex-wrap: wrap;
+  }
+
+  .bandeau-action {
+    width: 100%;
+  }
+}
+
 // ----- Contenu -----
 .colonnes {
   display: grid;

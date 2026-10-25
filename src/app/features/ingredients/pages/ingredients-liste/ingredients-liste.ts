@@ -34,7 +34,11 @@ import {
   DonneesIngredientDialog,
   IngredientDialog,
 } from '../../components/ingredient-dialog/ingredient-dialog';
-import { IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
+import { estValide, IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
+import {
+  PropositionCatalogue,
+  PropositionsCatalogue,
+} from '../../../../shared/components/propositions-catalogue/propositions-catalogue';
 import { IngredientService } from '../../services/ingredient.service';
 
 /**
@@ -70,6 +74,7 @@ import { IngredientService } from '../../services/ingredient.service';
     NgIcon,
     PageHeader,
     EmptyState,
+    PropositionsCatalogue,
     FichierPipe,
     UnitePipe,
   ],
@@ -95,7 +100,7 @@ export class IngredientsListe implements OnInit {
   protected ingredientsFiltres = computed(() => {
     const terme = this.recherche().trim().toLowerCase();
     const unite = this.uniteFiltre();
-    return this.ingredients().filter(
+    return this.ingredientsValides().filter(
       (i) => (!terme || i.nom.toLowerCase().includes(terme)) && (!unite || i.unite === unite),
     );
   });
@@ -103,8 +108,74 @@ export class IngredientsListe implements OnInit {
   protected filtresActifs = computed(() => !!this.recherche().trim() || !!this.uniteFiltre());
   /** Ingrédients sans prix : à compléter pour que l'estimation du budget des recettes soit juste. */
   protected sansPrix = computed(
-    () => this.ingredients().filter((i) => i.prixMin === null && i.prixMax === null).length,
+    () => this.ingredientsValides().filter((i) => i.prixMin === null && i.prixMax === null).length,
   );
+
+  // ----- Propositions des chefs -----
+
+  /** Éléments validés : le catalogue proprement dit (les propositions sont à part, les refus masqués). */
+  protected ingredientsValides = computed(() => this.ingredients().filter(estValide));
+
+  protected propositions = computed<PropositionCatalogue[]>(() =>
+    this.ingredients()
+      .filter((e) => e.statut === 'EN_ATTENTE')
+      .map((e) => ({
+        id: e.id,
+        nom: e.nom,
+        photoUrl: e.photoUrl,
+        proposeParNom: e.proposeParNom ?? null,
+        detail: e.unite ? `unité : ${UNITES.find((u) => u.valeur === e.unite)?.libelle ?? e.unite}` : null,
+      })),
+  );
+
+  /** Proposition en cours de validation ou de refus. */
+  protected propositionEnCours = signal<string | null>(null);
+
+  completerProposition(p: PropositionCatalogue): void {
+    const element = this.ingredients().find((e) => e.id === p.id);
+    if (element) {
+      void this.modifier(element);
+    }
+  }
+
+  validerProposition(p: PropositionCatalogue): void {
+    this.propositionEnCours.set(p.id);
+    this.ingredientService.valider(p.id).subscribe({
+      next: (valide) => {
+        this.remplacer(valide);
+        this.propositionEnCours.set(null);
+        this.notification.succes(`L'ingrédient « ${valide.nom} » rejoint le catalogue.`);
+      },
+      error: () => this.propositionEnCours.set(null),
+    });
+  }
+
+  async refuserProposition(p: PropositionCatalogue): Promise<void> {
+    const motif = await this.confirmation.demanderMotif({
+      titre: `Refuser « ${p.nom} » ?`,
+      message: `${p.proposeParNom ?? 'Le chef'} verra le motif et devra le remplacer dans ses recettes.`,
+      libelle: 'Motif du refus',
+      aide: 'Ex. : il existe déjà sous le nom « Gombo sec ».',
+      texteConfirmer: 'Refuser',
+    });
+    if (!motif) {
+      return;
+    }
+    this.propositionEnCours.set(p.id);
+    this.ingredientService.refuser(p.id, motif).subscribe({
+      next: (refuse) => {
+        this.remplacer(refuse);
+        this.propositionEnCours.set(null);
+        this.notification.succes(`Proposition « ${refuse.nom} » refusée.`);
+      },
+      error: () => this.propositionEnCours.set(null),
+    });
+  }
+
+  private remplacer(element: IngredientResponse): void {
+    this.ingredients.update((liste) => liste.map((e) => (e.id === element.id ? element : e)));
+  }
+
 
   // ----- Pagination (la liste est chargée en entier, on la découpe ici) -----
   protected readonly taillesPage = TAILLES_PAGE;

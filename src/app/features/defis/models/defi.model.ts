@@ -9,8 +9,8 @@ import { Pagination } from '../../../core/models/page-response.model';
  */
 export type StatutDefi = 'PROPOSE' | 'VALIDE' | 'REJETE' | 'EN_COURS' | 'TERMINE' | 'ANNULE';
 
-/** Comment on participe : REALISATION (photo, vidéo d'un plat) ou REPONSE (devinette). */
-export type ModeParticipation = 'REALISATION' | 'REPONSE';
+/** Comment on participe : REALISATION (photo, vidéo d'un plat), REPONSE (devinette) ou QUIZ (questions chronométrées). */
+export type ModeParticipation = 'REALISATION' | 'REPONSE' | 'QUIZ';
 
 /**
  * Ce que les participants voient pour répondre : rien de plus, des ingrédients du catalogue
@@ -34,7 +34,35 @@ export interface ElementDefi {
 export const LIBELLES_MODE: Record<ModeParticipation, string> = {
   REALISATION: 'Réalisation (photo ou vidéo)',
   REPONSE: 'Réponse (devinette)',
+  QUIZ: 'Quiz (questions chronométrées)',
 };
+
+/** Points d'une bonne réponse quand l'auteur n'en précise pas. */
+export const POINTS_PAR_DEFAUT = 10;
+
+/** Temps proposés pour une question de quiz, en secondes. */
+export const DUREES_QUESTION = [10, 15, 20, 30, 45, 60, 90, 120];
+
+/** Question de quiz (QuestionDefiDTO) : réponses visibles par l'auteur et les admins seulement. */
+export interface QuestionDefi {
+  id: string;
+  ordre: number;
+  enonce: string;
+  dureeSecondes: number;
+  points: number;
+  reponsesAcceptees: string[];
+  /** Choix proposés ; vide = réponse libre. */
+  propositions: string[];
+}
+
+/** QuestionDefiRequestDTO. */
+export interface QuestionDefiRequest {
+  enonce: string;
+  dureeSecondes: number;
+  points: number;
+  reponsesAcceptees: string[];
+  propositions: string[];
+}
 
 /** TypeDefiResponseDTO côté backend : « Recette imposée », « Plat libre », « Devinette »... */
 export interface TypeDefiResponse {
@@ -98,6 +126,15 @@ export interface DefiResponse {
   elements: ElementsDefi | null;
   ingredients: ElementDefi[];
   ustensiles: ElementDefi[];
+  /** Devinette : autres bonnes réponses (« tigadèguèna » pour « mafé »), auteur et admins seulement. */
+  autresReponses: string[];
+  /** Devinette : points d'une bonne réponse ; quiz : total des points. */
+  points: number | null;
+  /** Quiz : nombre de questions et temps total en secondes. */
+  nbQuestions: number;
+  dureeQuizSecondes: number;
+  /** Quiz : questions avec leurs réponses (auteur et admins seulement). */
+  questions: QuestionDefi[];
 }
 
 /** DefiRequestDTO côté backend (création / modification). Dates au format AAAA-MM-JJ. */
@@ -117,6 +154,12 @@ export interface DefiRequest {
   ingredientIds?: string[];
   /** Devinette « quel est cet ustensile ? ». */
   ustensileIds?: string[];
+  /** Devinette : autres bonnes réponses. */
+  autresReponses?: string[];
+  /** Devinette : points d'une bonne réponse. */
+  points?: number | null;
+  /** Quiz : les questions dans l'ordre. */
+  questions?: QuestionDefiRequest[];
 }
 
 /** ParticipationDefiResponseDTO côté backend : un membre inscrit au défi (cuisinier, chef, producteur ou admin). */
@@ -137,6 +180,11 @@ export interface ParticipationDefiResponse {
   reponse: string | null;
   score: number | null;
   classement: number | null;
+  /** Devinette corrigée automatiquement : réponse juste ou non. */
+  reponseCorrecte: boolean | null;
+  /** Quiz : bonnes réponses et temps total (millisecondes). */
+  bonnesReponses: number | null;
+  tempsTotalMs: number | null;
 }
 
 /** Filtres de GET /defis. */
@@ -152,7 +200,7 @@ export function estVideo(url: string | null): boolean {
   return !!url && /\.(mp4|mov|webm|mkv|m4v)(\?|$)/i.test(url);
 }
 
-/** Icône d'un type de défi : recette imposée, devinette, ou plat libre. */
+/** Icône d'un type de défi : recette imposée, devinette, quiz ou plat libre. */
 export function iconeType(
   type: Pick<TypeDefiResponse, 'recetteObligatoire' | 'modeParticipation'> & { elements?: ElementsDefi | null } | null,
 ): string {
@@ -161,6 +209,9 @@ export function iconeType(
   }
   if (type?.modeParticipation === 'REPONSE') {
     return 'lucideCircleHelp';
+  }
+  if (type?.modeParticipation === 'QUIZ') {
+    return 'lucideListChecks';
   }
   return type?.recetteObligatoire ? 'lucideBookOpen' : 'lucideCookingPot';
 }

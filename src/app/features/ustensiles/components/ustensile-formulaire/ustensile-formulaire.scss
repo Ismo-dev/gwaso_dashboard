@@ -1,0 +1,41 @@
+@use 'points-de-rupture' as ecran;
+
+// Petit espace en haut : le libellé flottant du premier champ n'est pas rogné dans une fenêtre
+.formulaire {
+  display: block;
+  padding-top: var(--gw-espace-2);
+}
+
+.erreur {
+  margin-bottom: var(--gw-espace-4);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.champ {
+  width: 100%;
+  margin-bottom: var(--gw-espace-2);
+}
+
+app-image-upload {
+  display: block;
+  margin-top: var(--gw-espace-2);
+}
+
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gw-espace-3);
+  margin-top: var(--gw-espace-5);
+
+  @include ecran.mobile {
+    flex-direction: column-reverse;
+
+    button {
+      width: 100%;
+    }
+  }
+}

@@ -221,3 +221,18 @@
   height: 180px;
   border-radius: var(--gw-rayon);
 }
+
+// ----- Devinette : points et correction automatique -----
+.champ-points {
+  width: min(100%, 280px);
+  margin-top: var(--gw-espace-3);
+}
+
+.aide-correction {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin: 0 0 var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}

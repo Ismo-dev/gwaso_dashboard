@@ -20,6 +20,7 @@ import {
   EtapeUstensileResponse,
   RecetteIngredientResponse,
   RecetteResponse,
+  nomsCategories,
 } from '../../models/recette.model';
 import { RecetteService } from '../../services/recette.service';
 
@@ -51,6 +52,7 @@ const DIFFICULTES: Record<string, string> = {
   templateUrl: './recette-detail.html',
 })
 export class RecetteDetail {
+  protected readonly nomsCategories = nomsCategories;
   private recetteService = inject(RecetteService);
   private confirmation = inject(ConfirmationService);
   private notification = inject(NotificationService);
@@ -182,6 +184,52 @@ export class RecetteDetail {
           miseAJour,
           `« ${recette.nom} » a été rejetée. L'auteur verra votre motif.`,
         ),
+      error: () => this.actionEnCours.set(false),
+    });
+  }
+
+  /** Retire la recette de l'application : elle n'est plus visible, mais reste modifiable. */
+  async retirer(): Promise<void> {
+    const recette = this.recette();
+    if (!recette) {
+      return;
+    }
+    const motif = await this.confirmation.demanderMotif({
+      titre: `Retirer « ${recette.nom} » de l'application ?`,
+      message:
+        'Les utilisateurs ne la verront plus, sur l’application comme sur le site. Rien n’est supprimé : vous pourrez la remettre en ligne à tout moment.',
+      libelle: 'Motif du retrait',
+      aide: "Ce message sera montré à l'auteur : dites-lui ce qu'il faut corriger.",
+      texteConfirmer: 'Retirer de l’application',
+    });
+    if (!motif) {
+      return;
+    }
+    this.actionEnCours.set(true);
+    this.recetteService.archiver(recette.id, motif).subscribe({
+      next: (miseAJour) =>
+        this.apresAction(miseAJour, `« ${recette.nom} » n'est plus visible dans l'application.`),
+      error: () => this.actionEnCours.set(false),
+    });
+  }
+
+  async remettreEnLigne(): Promise<void> {
+    const recette = this.recette();
+    if (!recette) {
+      return;
+    }
+    const confirme = await this.confirmation.demander({
+      titre: `Remettre « ${recette.nom} » en ligne ?`,
+      message: 'La recette sera de nouveau visible par tous les utilisateurs de Gwaso.',
+      texteConfirmer: 'Remettre en ligne',
+    });
+    if (!confirme) {
+      return;
+    }
+    this.actionEnCours.set(true);
+    this.recetteService.soumettre(recette.id).subscribe({
+      next: (miseAJour) =>
+        this.apresAction(miseAJour, `« ${recette.nom} » est de nouveau en ligne.`),
       error: () => this.actionEnCours.set(false),
     });
   }

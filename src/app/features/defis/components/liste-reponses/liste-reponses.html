@@ -1,0 +1,31 @@
+<mat-form-field class="champ" subscriptSizing="dynamic">
+  <mat-label>{{ libelle() }}</mat-label>
+  <input
+    matInput
+    maxlength="200"
+    [placeholder]="placeholder()"
+    [value]="saisie()"
+    [disabled]="valeurs().length >= max()"
+    (input)="saisie.set($any($event.target).value)"
+    (keydown.enter)="$event.preventDefault(); ajouter()"
+  />
+  <button matIconButton matSuffix type="button" [attr.aria-label]="'Ajouter : ' + libelle()" [disabled]="!saisie().trim()" (click)="ajouter()">
+    <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+  </button>
+  <mat-hint>{{ aide() }}</mat-hint>
+</mat-form-field>
+@if (valeurs().length > 0) {
+  <ul class="puces" [attr.aria-label]="libelle()">
+    @for (valeur of valeurs(); track valeur) {
+      <li class="puce" [class.puce-en-avant]="estEnAvant(valeur)">
+        @if (estEnAvant(valeur)) {
+          <ng-icon name="lucideCheck" size="0.875rem" aria-label="Bonne réponse" />
+        }
+        {{ valeur }}
+        <button type="button" [attr.aria-label]="'Retirer ' + valeur" (click)="retirer(valeur)">
+          <ng-icon name="lucideX" size="0.875rem" aria-hidden="true" />
+        </button>
+      </li>
+    }
+  </ul>
+}

@@ -1,0 +1,51 @@
+:host {
+  display: block;
+}
+
+.champ {
+  width: 100%;
+}
+
+.puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+  margin: var(--gw-espace-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px var(--gw-espace-3);
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-karite-pale);
+  color: var(--gw-karite);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: rgb(112 61 30 / 0.12);
+    }
+  }
+}
+
+// Bonne réponse parmi les propositions
+.puce-en-avant {
+  background: var(--gw-succes-fond, #e3f6ec);
+  color: var(--gw-succes, #137e4c);
+}

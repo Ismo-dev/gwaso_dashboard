@@ -136,6 +136,13 @@
   grid-template-columns: 1fr 1fr;
 }
 
+// Sous-titre : toute la largeur, sous le nom et les catégories
+.champ-plein {
+  display: block;
+  width: 100%;
+  margin-top: var(--gw-espace-3);
+}
+
 // Durée, personnes et difficulté : trois champs de même hauteur, alignés
 .grille-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));

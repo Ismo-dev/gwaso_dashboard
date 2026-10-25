@@ -34,9 +34,12 @@
   <div class="disposition">
     <div class="sections">
       <!-- ===================== 1. Informations ===================== -->
-      <section class="section gw-carte" id="section-infos"
+      <section
+        class="section gw-carte"
+        id="section-infos"
         (focusin)="sectionActive.set('infos')"
-        aria-labelledby="titre-infos">
+        aria-labelledby="titre-infos"
+      >
         <header class="section-entete">
           <span class="numero" [class.numero-fait]="!!recette()" aria-hidden="true">
             @if (recette()) {
@@ -69,16 +72,26 @@
               <mat-error>Le nom est obligatoire.</mat-error>
             </mat-form-field>
 
+            <!-- Une recette peut être dans plusieurs catégories (ex. Plats et Fêtes) -->
             <mat-form-field>
-              <mat-label>Catégorie</mat-label>
-              <mat-select formControlName="categorieId">
+              <mat-label>Catégories</mat-label>
+              <mat-select formControlName="categorieIds" multiple>
                 @for (categorie of categories(); track categorie.id) {
-                  <mat-option [value]="categorie.id">{{ categorie.nom }}</mat-option>
+                  <mat-option [value]="categorie.id" [disabled]="categorieBloquee(categorie.id)">{{
+                    categorie.nom
+                  }}</mat-option>
                 }
               </mat-select>
-              <mat-error>Choisissez une catégorie.</mat-error>
+              <mat-hint>Une ou plusieurs, {{ maxCategories }} au maximum</mat-hint>
+              <mat-error>Choisissez au moins une catégorie.</mat-error>
             </mat-form-field>
           </div>
+
+          <mat-form-field class="champ-plein">
+            <mat-label>Sous-titre (facultatif)</mat-label>
+            <input matInput formControlName="sousTitre" maxlength="150" />
+            <mat-hint>Affiché sous le nom dans l'application. Ex. Riz au poisson façon sénégalaise</mat-hint>
+          </mat-form-field>
 
           <!-- Autres noms : un même plat peut s'appeler Mafé ou Tigadèguèna -->
           <div class="autres-noms">
@@ -102,7 +115,10 @@
               >
                 <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
               </button>
-              <mat-hint>Facultatif · Entrée pour ajouter. Les noms sont enregistrés avec la recette.</mat-hint>
+              <mat-hint
+                >Facultatif · Entrée pour ajouter. Les noms sont enregistrés avec la
+                recette.</mat-hint
+              >
             </mat-form-field>
             @if (noms().length > 0 || nomsEnAttente().length > 0) {
               <ul class="puces-noms" aria-label="Autres noms du plat">
@@ -119,7 +135,10 @@
                   </li>
                 }
                 @for (nom of nomsEnAttente(); track nom) {
-                  <li class="puce-nom puce-attente" matTooltip="Enregistré à la création de la recette">
+                  <li
+                    class="puce-nom puce-attente"
+                    matTooltip="Enregistré à la création de la recette"
+                  >
                     {{ nom }}
                     <button
                       type="button"
@@ -273,7 +292,9 @@
             }
           </span>
           <div>
-            <h2 id="titre-ingredients" tabindex="-1">Ingrédients <span class="obligatoire">obligatoire</span></h2>
+            <h2 id="titre-ingredients" tabindex="-1">
+              Ingrédients <span class="obligatoire">obligatoire</span>
+            </h2>
             <p>Au moins un ingrédient est nécessaire pour publier.</p>
           </div>
         </header>
@@ -326,8 +347,8 @@
                 <p class="budget-vide">Pas encore d'estimation</p>
               }
               <p class="budget-aide">
-                Calculé automatiquement avec les prix du marché des ingrédients. Un ingrédient sans prix
-                n'est pas compté.
+                Calculé automatiquement avec les prix du marché des ingrédients. Un ingrédient sans
+                prix n'est pas compté.
               </p>
             </div>
           </div>
@@ -616,8 +637,8 @@
         </button>
         @if (!peutPublier() && manquants().length > 0) {
           <p class="note">
-            Pour publier, il manque : {{ manquants().join(', ') }}. Vous pouvez enregistrer la recette en brouillon
-            en attendant.
+            Pour publier, il manque : {{ manquants().join(', ') }}. Vous pouvez enregistrer la
+            recette en brouillon en attendant.
           </p>
         }
       }

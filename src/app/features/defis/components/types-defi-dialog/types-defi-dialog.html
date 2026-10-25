@@ -25,7 +25,7 @@
             <label class="gw-choix" [class.gw-choix-actif]="formulaire.controls.modeParticipation.value === mode">
               <input type="radio" class="sr-only" formControlName="modeParticipation" [value]="mode" />
               <span class="gw-choix-icone" aria-hidden="true">
-                <ng-icon [name]="mode === 'REPONSE' ? 'lucideCircleHelp' : 'lucideCookingPot'" size="1.125rem" />
+                <ng-icon [name]="mode === 'REPONSE' ? 'lucideCircleHelp' : mode === 'QUIZ' ? 'lucideListChecks' : 'lucideCookingPot'" size="1.125rem" />
               </span>
               <span class="gw-choix-textes">
                 <span class="gw-choix-titre">{{ libellesMode[mode] }}</span>
@@ -37,7 +37,7 @@
 
       @if (formulaire.controls.modeParticipation.value === 'REALISATION') {
         <mat-checkbox formControlName="recetteObligatoire">Le défi impose une recette</mat-checkbox>
-      } @else {
+      } @else if (formulaire.controls.modeParticipation.value === 'REPONSE') {
         <fieldset class="groupe">
           <legend>Que voient les participants pour répondre ?</legend>
           <div class="gw-choix-grille elements" role="radiogroup">

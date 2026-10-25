@@ -319,3 +319,9 @@ h1 {
   margin-top: var(--gw-espace-3);
   margin-left: calc(var(--gw-espace-3) * -1);
 }
+
+.lien-carte {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}

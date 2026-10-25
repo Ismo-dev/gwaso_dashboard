@@ -44,7 +44,18 @@
     @if (d.localite) {
       <div>
         <dt>Localité</dt>
-        <dd>{{ d.localite }}</dd>
+        <dd>
+          <!-- La localité d'un fournisseur est un lieu choisi sur la carte : on peut l'y voir -->
+          @if (d.latitude != null && d.longitude != null) {
+            <a class="lien-carte" [href]="lienCarte(d.latitude, d.longitude)" target="_blank" rel="noopener">
+              <ng-icon name="lucideMapPin" size="0.875rem" aria-hidden="true" />
+              {{ d.localite }}
+              <span class="sr-only">(carte, nouvel onglet)</span>
+            </a>
+          } @else {
+            {{ d.localite }}
+          }
+        </dd>
       </div>
     }
   </dl>

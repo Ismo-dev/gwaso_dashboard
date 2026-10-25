@@ -193,14 +193,16 @@
                 @if (recette.photoUrl | fichier; as url) {
                   <img [src]="url" alt="" loading="lazy" />
                 } @else {
-                  <span class="fiche-photo-vide"><ng-icon name="lucideCookingPot" size="2rem" /></span>
+                  <span class="fiche-photo-vide"
+                    ><ng-icon name="lucideCookingPot" size="2rem"
+                  /></span>
                 }
               </a>
               <div class="fiche-statut"><app-status-badge [statut]="recette.statut" /></div>
               <div class="fiche-corps">
                 <a class="nom" [routerLink]="[recette.id]">{{ recette.nom }}</a>
                 <p class="fiche-meta">
-                  {{ recette.categorieNom ?? 'Sans catégorie' }}
+                  {{ nomsCategories(recette) ?? 'Sans catégorie' }}
                   @if (recette.dureeMin) {
                     · <span class="gw-chiffres">{{ recette.dureeMin }} min</span>
                   }
@@ -236,7 +238,9 @@
                   <ng-container *ngTemplateOutlet="photo; context: { $implicit: recette }" />
                   <div class="cellule-textes">
                     <a class="nom" [routerLink]="[recette.id]">{{ recette.nom }}</a>
-                    <span class="sous-texte">{{ recette.categorieNom ?? 'Sans catégorie' }}</span>
+                    <span class="sous-texte">{{
+                      nomsCategories(recette) ?? 'Sans catégorie'
+                    }}</span>
                   </div>
                 </div>
               </td>

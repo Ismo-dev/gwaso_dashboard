@@ -59,6 +59,7 @@ import {
   RecetteIngredientResponse,
   RecetteRequest,
   RecetteResponse,
+  MAX_CATEGORIES_RECETTE,
 } from '../../models/recette.model';
 import { RecetteService } from '../../services/recette.service';
 
@@ -122,6 +123,7 @@ export class RecetteFormulaire implements OnInit {
   readonly id = input<string>();
 
   protected readonly unites = UNITES;
+  protected readonly maxCategories = MAX_CATEGORIES_RECETTE;
   protected readonly difficultes: { valeur: Difficulte; libelle: string }[] = [
     { valeur: 'FACILE', libelle: 'Facile' },
     { valeur: 'MOYEN', libelle: 'Moyenne' },
@@ -140,17 +142,21 @@ export class RecetteFormulaire implements OnInit {
 
   // ----- 1. Informations -----
   protected formulaire = inject(FormBuilder).group({
-      nom: ['', [Validators.required, Validators.maxLength(120)]],
-      categorieId: ['', Validators.required],
-      description: ['', Validators.maxLength(3000)],
-      dureeMin: [
-        null as number | null,
-        [Validators.required, Validators.min(1), Validators.max(1440)],
-      ],
-      nbPersonnes: [4 as number | null, [Validators.min(1), Validators.max(100)]],
-      difficulte: ['MOYEN' as Difficulte],
-      estMalienne: [true],
-      telechargeable: [true],
+    nom: ['', [Validators.required, Validators.maxLength(120)]],
+    sousTitre: ['', Validators.maxLength(150)],
+    categorieIds: [
+      [] as string[],
+      [Validators.required, Validators.maxLength(MAX_CATEGORIES_RECETTE)],
+    ],
+    description: ['', Validators.maxLength(3000)],
+    dureeMin: [
+      null as number | null,
+      [Validators.required, Validators.min(1), Validators.max(1440)],
+    ],
+    nbPersonnes: [4 as number | null, [Validators.min(1), Validators.max(100)]],
+    difficulte: ['MOYEN' as Difficulte],
+    estMalienne: [true],
+    telechargeable: [true],
   });
   protected enregistrementInfos = signal(false);
   protected erreurInfos = signal('');
@@ -166,10 +172,9 @@ export class RecetteFormulaire implements OnInit {
   protected envoiPhoto = signal(false);
 
   // ----- 3. Ingrédients -----
-  protected champIngredient = new FormControl<string | IngredientResponse | { creer: string }>(
-    '',
-    { nonNullable: true },
-  );
+  protected champIngredient = new FormControl<string | IngredientResponse | { creer: string }>('', {
+    nonNullable: true,
+  });
   protected quantite = new FormControl<number | null>(null, [
     Validators.required,
     Validators.min(0.01),
@@ -225,10 +230,30 @@ export class RecetteFormulaire implements OnInit {
    * Une étape est obligatoire pour publier (un brouillon peut s'en passer).
    */
   protected controles = computed(() => [
-    { section: 'infos' as const, libelle: 'Informations générales', fait: !!this.recette(), obligatoire: true },
-    { section: 'photo' as const, libelle: 'Photo du plat', fait: !!this.recette()?.photoUrl, obligatoire: false },
-    { section: 'ingredients' as const, libelle: 'Au moins un ingrédient', fait: this.ingredients().length > 0, obligatoire: true },
-    { section: 'etapes' as const, libelle: 'Au moins une étape', fait: this.etapes().length > 0, obligatoire: true },
+    {
+      section: 'infos' as const,
+      libelle: 'Informations générales',
+      fait: !!this.recette(),
+      obligatoire: true,
+    },
+    {
+      section: 'photo' as const,
+      libelle: 'Photo du plat',
+      fait: !!this.recette()?.photoUrl,
+      obligatoire: false,
+    },
+    {
+      section: 'ingredients' as const,
+      libelle: 'Au moins un ingrédient',
+      fait: this.ingredients().length > 0,
+      obligatoire: true,
+    },
+    {
+      section: 'etapes' as const,
+      libelle: 'Au moins une étape',
+      fait: this.etapes().length > 0,
+      obligatoire: true,
+    },
   ]);
 
   /**
@@ -237,7 +262,11 @@ export class RecetteFormulaire implements OnInit {
    */
   protected avancement = computed(() =>
     this.controles().map((c) => {
-      const etat: EtatControle = c.fait ? 'fait' : this.sectionActive() === c.section ? 'en-cours' : 'a-faire';
+      const etat: EtatControle = c.fait
+        ? 'fait'
+        : this.sectionActive() === c.section
+          ? 'en-cours'
+          : 'a-faire';
       const detail =
         etat === 'fait'
           ? 'Fait'
@@ -272,7 +301,7 @@ export class RecetteFormulaire implements OnInit {
   protected peutPublier = computed(() => {
     const statut = this.recette()?.statut;
     return (
-      (statut === 'BROUILLON' || statut === 'REJETEE') &&
+      (statut === 'BROUILLON' || statut === 'REJETEE' || statut === 'ARCHIVEE') &&
       this.controles().every((c) => c.fait || !c.obligatoire)
     );
   });
@@ -342,7 +371,12 @@ export class RecetteFormulaire implements OnInit {
   private remplirFormulaire(recette: RecetteResponse): void {
     this.formulaire.reset({
       nom: recette.nom,
-      categorieId: recette.categorieId ?? '',
+      sousTitre: recette.sousTitre ?? '',
+      categorieIds: recette.categories?.length
+        ? recette.categories.map((c) => c.id)
+        : recette.categorieId
+          ? [recette.categorieId]
+          : [],
       description: recette.description ?? '',
       dureeMin: recette.dureeMin,
       nbPersonnes: recette.nbPersonnes,
@@ -353,6 +387,20 @@ export class RecetteFormulaire implements OnInit {
   }
 
   // ===================== 1. Informations =====================
+
+  /** Le maximum est atteint : les catégories non choisies ne sont plus proposées. */
+  protected categorieBloquee(id: string): boolean {
+    const choisies = this.formulaire.controls.categorieIds.value ?? [];
+    return choisies.length >= MAX_CATEGORIES_RECETTE && !choisies.includes(id);
+  }
+
+  /** La catégorie principale actuelle reste en tête si elle est toujours choisie (l'application mobile l'affiche). */
+  private ordonnerCategories(ids: string[]): string[] {
+    const principale = this.recette()?.categorieId;
+    return principale && ids.includes(principale)
+      ? [principale, ...ids.filter((id) => id !== principale)]
+      : ids;
+  }
 
   enregistrerInfos(): void {
     if (this.formulaire.invalid) {
@@ -368,7 +416,9 @@ export class RecetteFormulaire implements OnInit {
     const nomTape = this.champNom.value.trim().replace(/,$/, '').trim();
     const requete: RecetteRequest = {
       nom: (v.nom ?? '').trim(),
-      categorieId: v.categorieId ?? '',
+      // Chaîne vide pour effacer : un null est ignoré en modification
+      sousTitre: (v.sousTitre ?? '').trim(),
+      categorieIds: this.ordonnerCategories(v.categorieIds ?? []),
       description: (v.description ?? '').trim() || null,
       dureeMin: v.dureeMin ?? 0,
       nbPersonnes: v.nbPersonnes,
@@ -487,7 +537,13 @@ export class RecetteFormulaire implements OnInit {
   protected nomIngredient = (
     valeur: string | IngredientResponse | { creer: string } | null,
   ): string =>
-    !valeur ? '' : typeof valeur === 'string' ? valeur : 'creer' in valeur ? valeur.creer : valeur.nom;
+    !valeur
+      ? ''
+      : typeof valeur === 'string'
+        ? valeur
+        : 'creer' in valeur
+          ? valeur.creer
+          : valeur.nom;
 
   /**
    * Quand l'admin choisit un ingrédient, on propose son unité habituelle.
@@ -611,12 +667,10 @@ export class RecetteFormulaire implements OnInit {
   private apresEditeurEtape(resultat: ResultatEtapeEditeur | undefined): void {
     const recette = this.recette();
     if (resultat?.ingredientsRecetteModifies && recette) {
-      this.recetteService
-        .getIngredients(recette.id)
-        .subscribe((ingredients) => {
-          this.ingredients.set(ingredients);
-          this.rafraichirBudget();
-        });
+      this.recetteService.getIngredients(recette.id).subscribe((ingredients) => {
+        this.ingredients.set(ingredients);
+        this.rafraichirBudget();
+      });
     }
     if (resultat?.modifie) {
       this.rechargerEtapes();
@@ -732,7 +786,8 @@ export class RecetteFormulaire implements OnInit {
     }
     const confirme = await this.confirmation.demander({
       titre: `Publier « ${recette.nom} » ?`,
-      message: 'La recette sera visible par tous les utilisateurs de Gwaso, sur l’application et le site.',
+      message:
+        'La recette sera visible par tous les utilisateurs de Gwaso, sur l’application et le site.',
       texteConfirmer: 'Publier la recette',
     });
     if (!confirme) {

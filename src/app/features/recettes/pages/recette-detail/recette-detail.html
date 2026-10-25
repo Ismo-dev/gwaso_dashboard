@@ -73,8 +73,8 @@
       <p class="auteur">
         Proposée par <strong>{{ recette.auteurNom ?? 'un auteur inconnu' }}</strong> le
         {{ recette.dateCreation | date: 'd MMMM y' }}
-        @if (recette.categorieNom) {
-          · {{ recette.categorieNom }}
+        @if (nomsCategories(recette)) {
+          · {{ nomsCategories(recette) }}
         }
       </p>
       @if (recette.description) {
@@ -144,7 +144,7 @@
   } @else if (recette.statut === 'PUBLIEE') {
     <section class="bandeau bandeau-succes" aria-labelledby="titre-publiee">
       <ng-icon name="lucideBadgeCheck" size="1.25rem" aria-hidden="true" />
-      <div>
+      <div class="bandeau-texte">
         <h2 id="titre-publiee">Recette publiée</h2>
         <p>
           @if (recette.datePublication) {
@@ -153,8 +153,42 @@
           @if (recette.valideParAdminNom) {
             par {{ recette.valideParAdminNom }}
           }
+          · visible par tous les utilisateurs
         </p>
       </div>
+      <button
+        matButton="outlined"
+        type="button"
+        class="bandeau-action gw-bouton-danger"
+        [disabled]="actionEnCours()"
+        (click)="retirer()"
+      >
+        <ng-icon name="lucideEyeOff" size="1.125rem" aria-hidden="true" />
+        Retirer de l'application…
+      </button>
+    </section>
+  } @else if (recette.statut === 'ARCHIVEE') {
+    <section class="bandeau bandeau-neutre" aria-labelledby="titre-retiree">
+      <ng-icon name="lucideEyeOff" size="1.25rem" aria-hidden="true" />
+      <div class="bandeau-texte">
+        <h2 id="titre-retiree">Retirée de l'application</h2>
+        <p>
+          Les utilisateurs ne la voient plus.
+          @if (recette.motifRejet) {
+            Motif communiqué à l'auteur : « {{ recette.motifRejet }} »
+          }
+        </p>
+      </div>
+      <button
+        matButton="filled"
+        type="button"
+        class="bandeau-action"
+        [disabled]="actionEnCours()"
+        (click)="remettreEnLigne()"
+      >
+        <ng-icon name="lucideEye" size="1.125rem" aria-hidden="true" />
+        Remettre en ligne
+      </button>
     </section>
   }
 

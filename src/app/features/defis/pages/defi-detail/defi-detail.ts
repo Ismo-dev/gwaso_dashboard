@@ -102,6 +102,11 @@ export class DefiDetail {
   /** Le classement se publie quand le défi est terminé. */
   protected peutPublier = computed(() => this.peutNoter() && this.defi()?.statut === 'TERMINE');
   protected devinette = computed(() => this.defi()?.modeParticipation === 'REPONSE');
+  protected quiz = computed(() => this.defi()?.modeParticipation === 'QUIZ');
+  /** Devinette et quiz : points calculés automatiquement, pas de note à saisir. */
+  protected corrigeAuto = computed(() => this.devinette() || this.quiz());
+  /** Saisie d'une note : seulement pour les défis « réalisation ». */
+  protected saisieNote = computed(() => this.peutNoter() && !this.corrigeAuto());
   protected nbNotes = computed(() => this.participants().filter((p) => p.score !== null).length);
   protected modifiable = computed(() => {
     const statut = this.defi()?.statut;
@@ -113,8 +118,13 @@ export class DefiDetail {
    * calculés comme le fera l'API (ex æquo = même rang ; sans note = pas de rang).
    */
   protected classement = computed<LigneClassement[]>(() => {
+    const auto = this.corrigeAuto();
+    const quiz = this.quiz();
+    // Corrigés automatiquement : à points égaux, le plus rapide passe devant (comme l'API)
+    const vitesse = (p: ParticipationDefiResponse) =>
+      quiz ? (p.tempsTotalMs ?? Number.MAX_SAFE_INTEGER) : p.dateSoumission ? Date.parse(p.dateSoumission) : Number.MAX_SAFE_INTEGER;
     const tries = [...this.participants()].sort(
-      (a, b) => (b.score ?? -1) - (a.score ?? -1),
+      (a, b) => (b.score ?? -1) - (a.score ?? -1) || (auto ? vitesse(a) - vitesse(b) : 0),
     );
     let rang = 0;
     let precedent: number | null = null;
@@ -125,7 +135,7 @@ export class DefiDetail {
       if (participation.score === null) {
         return { participation, rang: null };
       }
-      if (participation.score !== precedent) {
+      if (auto || participation.score !== precedent) {
         rang = index + 1;
         precedent = participation.score;
       }

@@ -26,7 +26,7 @@
       <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
     </app-empty-state>
   </div>
-} @else if (ustensiles().length === 0) {
+} @else if (ustensilesValides().length === 0 && propositions().length === 0) {
   <div class="gw-carte">
     <app-empty-state
       titre="Aucun ustensile pour le moment"
@@ -37,6 +37,16 @@
     </app-empty-state>
   </div>
 } @else {
+  @if (propositions().length > 0) {
+    <app-propositions-catalogue
+      quoi="ustensile"
+      [propositions]="propositions()"
+      [enCours]="propositionEnCours()"
+      (completer)="completerProposition($event)"
+      (valider)="validerProposition($event)"
+      (refuser)="refuserProposition($event)"
+    />
+  }
   <div class="barre-outils">
     <mat-form-field class="recherche" subscriptSizing="dynamic">
       <mat-label>Rechercher un ustensile</mat-label>
