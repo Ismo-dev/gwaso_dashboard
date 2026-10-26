@@ -71,4 +71,18 @@ export class UstensileService {
       )
       .pipe(map(() => undefined));
   }
+
+  /** Valide la proposition d'un chef : elle rejoint le catalogue. */
+  valider(id: string): Observable<UstensileResponse> {
+    return this.http
+      .put<ApiResponse<UstensileResponse>>(`${this.url}/${id}/valider`, {})
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  /** Refuse la proposition d'un chef ; le motif lui est montré. */
+  refuser(id: string, motif: string): Observable<UstensileResponse> {
+    return this.http
+      .put<ApiResponse<UstensileResponse>>(`${this.url}/${id}/refuser`, { motif })
+      .pipe(map((reponse) => reponse.data));
+  }
 }

@@ -3,7 +3,12 @@
   titre="Notifications"
   description="Inscriptions, contenus à valider, défis : tout ce qui s'est passé sur Gwaso."
 >
-  <button matButton="outlined" type="button" [disabled]="service.nombreNonLues() === 0" (click)="toutMarquerLu()">
+  <button
+    matButton="outlined"
+    type="button"
+    [disabled]="service.nombreNonLues() === 0"
+    (click)="toutMarquerLu()"
+  >
     <ng-icon name="lucideCheck" size="1.125rem" aria-hidden="true" />
     Tout marquer comme lu
   </button>
@@ -33,11 +38,17 @@
     @if (chargement() && notifications().length === 0) {
       <div class="squelette" aria-busy="true" aria-label="Chargement">
         @for (i of [1, 2, 3, 4, 5]; track i) {
-          <div class="sq-ligne"><span class="gw-squelette sq-rond"></span><span class="gw-squelette sq-texte"></span></div>
+          <div class="sq-ligne">
+            <span class="gw-squelette sq-rond"></span><span class="gw-squelette sq-texte"></span>
+          </div>
         }
       </div>
     } @else if (erreur()) {
-      <app-empty-state titre="Impossible de charger les notifications" icone="lucideCircleAlert" ton="erreur">
+      <app-empty-state
+        titre="Impossible de charger les notifications"
+        icone="lucideCircleAlert"
+        ton="erreur"
+      >
         <button matButton="filled" type="button" (click)="charger(true)">Réessayer</button>
       </app-empty-state>
     } @else if (notifications().length === 0) {
@@ -84,7 +95,9 @@
       }
       @if (!toutCharge()) {
         <div class="plus">
-          <button matButton type="button" [disabled]="chargement()" (click)="charger(false)">Voir plus</button>
+          <button matButton type="button" [disabled]="chargement()" (click)="charger(false)">
+            Voir plus
+          </button>
         </div>
       }
     }
@@ -117,7 +130,12 @@
       <!-- Qui ? -->
       @if (n.acteurId) {
         <div class="acteur">
-          <app-avatar [prenom]="n.acteurPrenom ?? ''" [nom]="n.acteurNom ?? ''" [photo]="n.acteurPhotoProfil" taille="md" />
+          <app-avatar
+            [prenom]="n.acteurPrenom ?? ''"
+            [nom]="n.acteurNom ?? ''"
+            [photo]="n.acteurPhotoProfil"
+            taille="md"
+          />
           <div>
             <p class="acteur-nom">{{ n.acteurPrenom }} {{ n.acteurNom }}</p>
             @if (n.acteurRole) {
@@ -159,7 +177,12 @@
       }
 
       @if (lien(); as cible) {
-        <a matButton="filled" class="action" [routerLink]="cible.lien" [queryParams]="cible.parametres">
+        <a
+          matButton="filled"
+          class="action"
+          [routerLink]="cible.lien"
+          [queryParams]="cible.parametres"
+        >
           {{ infos[n.type].action }}
           <ng-icon name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
         </a>

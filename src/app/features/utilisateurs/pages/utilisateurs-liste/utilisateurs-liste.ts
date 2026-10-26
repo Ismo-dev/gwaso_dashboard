@@ -67,7 +67,7 @@ import { UtilisateurService } from '../../services/utilisateur.service';
 
 type Onglet = 'demandes' | 'membres';
 
-const ROLES: TypeCompte[] = ['CUISINIER', 'CHEF', 'PRODUCTEUR', 'ADMIN'];
+const ROLES: TypeCompte[] = ['CUISINIER', 'CHEF', 'PRODUCTEUR', 'LIVREUR', 'ADMIN'];
 const STATUTS: { valeur: StatutCompte; libelle: string }[] = [
   { valeur: 'ACTIF', libelle: 'Actif' },
   { valeur: 'SUSPENDU', libelle: 'Suspendu' },
@@ -150,6 +150,7 @@ export class UtilisateursListe implements OnInit {
     CUISINIER: 'Cuisiniers',
     CHEF: 'Chefs cuisiniers',
     PRODUCTEUR: 'Producteurs',
+    LIVREUR: 'Livreurs',
   };
   protected ecran = inject(EcranService);
 
@@ -341,6 +342,8 @@ export class UtilisateursListe implements OnInit {
             photoProfil: d.demandeurPhotoProfil,
             preuveUrl: d.preuveUrl,
             localite: d.localite,
+            latitude: d.latitude,
+            longitude: d.longitude,
             dateInscription: d.dateDemande,
           })),
         ];

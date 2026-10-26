@@ -6,6 +6,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { PageResponse } from '../../../core/models/page-response.model';
 import { versParams } from '../../../core/utils/http-params';
 import {
+  LangueAudio,
   EtapeIngredientRequest,
   EtapeIngredientResponse,
   EtapeRequest,
@@ -95,9 +96,10 @@ export class RecetteService {
       .pipe(map((reponse) => reponse.data));
   }
 
-  archiver(id: string): Observable<RecetteResponse> {
+  /** Retire une recette publiée de l'application (statut ARCHIVEE) ; le motif est montré à l'auteur. */
+  archiver(id: string, motif: string): Observable<RecetteResponse> {
     return this.http
-      .put<ApiResponse<RecetteResponse>>(`${this.url}/${id}/archiver`, {})
+      .put<ApiResponse<RecetteResponse>>(`${this.url}/${id}/archiver`, { motifRejet: motif })
       .pipe(map((reponse) => reponse.data));
   }
 
@@ -223,6 +225,23 @@ export class RecetteService {
 
   envoyerPhotoEtape(etapeId: string, fichier: File): Observable<void> {
     return this.envoyerFichier(`${environment.apiUrl}/fichiers/etapes/${etapeId}/photo`, fichier);
+  }
+
+  /** Audio d'explication d'une étape (FR ou BAMBARA) : enregistré au micro ou choisi sur l'ordinateur. */
+  envoyerAudioEtape(etapeId: string, langue: LangueAudio, fichier: Blob, nom: string): Observable<void> {
+    const formulaire = new FormData();
+    formulaire.append('file', fichier, nom);
+    return this.http
+      .post<ApiResponse<unknown>>(`${environment.apiUrl}/fichiers/etapes/${etapeId}/audio`, formulaire, {
+        params: { langue },
+      })
+      .pipe(map(() => undefined));
+  }
+
+  supprimerAudioEtape(etapeId: string, langue: LangueAudio): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${environment.apiUrl}/fichiers/etapes/${etapeId}/audio`, { params: { langue } })
+      .pipe(map(() => undefined));
   }
 
   envoyerVideoEtape(etapeId: string, fichier: File): Observable<void> {

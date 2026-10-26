@@ -4,7 +4,7 @@
  * Il dit quelles informations demander (niveau, localité, justificatif). Il ne donne AUCUN droit :
  * ce que la personne peut faire dépend uniquement des droits de son profil.
  */
-export type TypeCompte = 'ADMIN' | 'CUISINIER' | 'CHEF' | 'PRODUCTEUR';
+export type TypeCompte = 'ADMIN' | 'CUISINIER' | 'CHEF' | 'PRODUCTEUR' | 'LIVREUR';
 
 export type StatutCompte = 'ACTIF' | 'INACTIF' | 'SUSPENDU' | 'SUPPRIME';
 

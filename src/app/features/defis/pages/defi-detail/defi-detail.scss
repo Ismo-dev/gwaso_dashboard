@@ -533,3 +533,55 @@
   font-weight: 500;
   overflow-wrap: anywhere;
 }
+
+// ----- Devinette et quiz : correction automatique -----
+.autres-reponses {
+  margin: 0 0 var(--gw-espace-2);
+  font-weight: 600;
+}
+
+.verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: var(--gw-espace-2);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.verdict-juste {
+  color: var(--gw-succes);
+}
+
+.verdict-faux {
+  color: var(--gw-danger);
+}
+
+.questions-quiz {
+  display: grid;
+  gap: var(--gw-espace-3);
+  margin: var(--gw-espace-3) 0 0;
+  padding-left: var(--gw-espace-5, 1.25rem);
+
+  p {
+    margin: 0;
+  }
+}
+
+.question-enonce {
+  font-weight: 600;
+}
+
+.question-meta,
+.question-reponses {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.question-reponses {
+  color: var(--gw-succes);
+  font-weight: 600;
+}

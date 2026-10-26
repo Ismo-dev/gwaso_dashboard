@@ -375,7 +375,9 @@ ng-icon {
   --mat-dialog-container-shape: var(--gw-rayon-lg) 0 0 var(--gw-rayon-lg);
   --mat-dialog-container-max-width: 100vw;
 
+  // Le panneau gère son propre défilement (corps) : la surface ne défile jamais
   .mat-mdc-dialog-surface {
+    overflow: hidden;
     border-radius: var(--gw-rayon-lg) 0 0 var(--gw-rayon-lg);
     animation: gw-glisse-gauche var(--gw-duree-lente) var(--gw-courbe);
   }

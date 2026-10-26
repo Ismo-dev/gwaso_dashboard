@@ -14,6 +14,7 @@ import {
   CuisinierRequest,
   CuisinierResponse,
   DemandeStatutResponse,
+  LivreurFicheResponse,
   FiltresComptesAValider,
   FiltresUtilisateurs,
   ProducteurRequest,
@@ -174,6 +175,12 @@ export class UtilisateurService {
   rejeterProducteur(id: string, motifRejet: string): Observable<ProducteurResponse> {
     return this.http
       .put<ApiResponse<ProducteurResponse>>(`${this.url}/producteurs/${id}/rejeter`, { motifRejet })
+      .pipe(map((reponse) => reponse.data));
+  }
+
+  getLivreur(id: string): Observable<LivreurFicheResponse> {
+    return this.http
+      .get<ApiResponse<LivreurFicheResponse>>(`${this.url}/livreurs/${id}`)
       .pipe(map((reponse) => reponse.data));
   }
 

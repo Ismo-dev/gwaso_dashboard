@@ -1,17 +1,23 @@
 @use 'points-de-rupture' as ecran;
 
-// La barre reste visible en haut quand le contenu défile
-.topbar {
+// La barre reste visible en haut quand le contenu défile.
+// Le « sticky » est sur l'hôte : posé sur .topbar, il restait enfermé dans <app-header>
+// (même hauteur que la barre) et la barre partait avec le contenu.
+:host {
   position: sticky;
   top: 0;
   z-index: 10;
+  display: block;
+}
+
+.topbar {
   display: flex;
   align-items: center;
   gap: var(--gw-espace-4);
   min-height: var(--gw-hauteur-topbar);
   padding: var(--gw-espace-2) var(--gw-espace-8);
-  background: rgb(255 255 255 / 0.92);
-  backdrop-filter: saturate(1.2) blur(8px);
+  // Fond plein : un flou d'arrière-plan serait recalculé à chaque image du défilement (saccades)
+  background: var(--gw-surface);
   border-bottom: 1px solid var(--gw-bordure);
 
   @include ecran.tablette {

@@ -52,7 +52,7 @@ export class TypesDefiDialog implements OnInit {
 
   protected readonly iconeType = iconeType;
   protected readonly libellesMode = LIBELLES_MODE;
-  protected readonly modes: ModeParticipation[] = ['REALISATION', 'REPONSE'];
+  protected readonly modes: ModeParticipation[] = ['REALISATION', 'REPONSE', 'QUIZ'];
   protected readonly libellesElements = LIBELLES_ELEMENTS;
   protected readonly choixElements: ElementsDefi[] = ['AUCUN', 'INGREDIENTS', 'USTENSILES'];
 

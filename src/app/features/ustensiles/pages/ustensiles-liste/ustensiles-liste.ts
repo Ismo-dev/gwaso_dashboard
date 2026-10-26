@@ -6,6 +6,11 @@ import { MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/
 import { MatInput } from '@angular/material/input';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { NgIcon } from '@ng-icons/core';
+import { estValide } from '../../../ingredients/models/ingredient.model';
+import {
+  PropositionCatalogue,
+  PropositionsCatalogue,
+} from '../../../../shared/components/propositions-catalogue/propositions-catalogue';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { EcranService } from '../../../../core/services/ecran.service';
@@ -37,6 +42,7 @@ import { UstensileService } from '../../services/ustensile.service';
     PageHeader,
     EmptyState,
     CarteCatalogue,
+    PropositionsCatalogue,
   ],
   selector: 'app-ustensiles-liste',
   styleUrl: './ustensiles-liste.scss',
@@ -57,13 +63,79 @@ export class UstensilesListe implements OnInit {
   protected ustensilesFiltres = computed(() => {
     const terme = this.recherche().trim().toLowerCase();
     return terme
-      ? this.ustensiles().filter(
+      ? this.ustensilesValides().filter(
           (u) =>
             u.nom.toLowerCase().includes(terme) ||
             (u.description ?? '').toLowerCase().includes(terme),
         )
-      : this.ustensiles();
+      : this.ustensilesValides();
   });
+
+  // ----- Propositions des chefs -----
+
+  /** Éléments validés : le catalogue proprement dit (les propositions sont à part, les refus masqués). */
+  protected ustensilesValides = computed(() => this.ustensiles().filter(estValide));
+
+  protected propositions = computed<PropositionCatalogue[]>(() =>
+    this.ustensiles()
+      .filter((e) => e.statut === 'EN_ATTENTE')
+      .map((e) => ({
+        id: e.id,
+        nom: e.nom,
+        photoUrl: e.photoUrl,
+        proposeParNom: e.proposeParNom ?? null,
+        detail: e.description,
+      })),
+  );
+
+  /** Proposition en cours de validation ou de refus. */
+  protected propositionEnCours = signal<string | null>(null);
+
+  completerProposition(p: PropositionCatalogue): void {
+    const element = this.ustensiles().find((e) => e.id === p.id);
+    if (element) {
+      void this.modifier(element);
+    }
+  }
+
+  validerProposition(p: PropositionCatalogue): void {
+    this.propositionEnCours.set(p.id);
+    this.ustensileService.valider(p.id).subscribe({
+      next: (valide) => {
+        this.remplacer(valide);
+        this.propositionEnCours.set(null);
+        this.notification.succes(`L'ustensile « ${valide.nom} » rejoint le catalogue.`);
+      },
+      error: () => this.propositionEnCours.set(null),
+    });
+  }
+
+  async refuserProposition(p: PropositionCatalogue): Promise<void> {
+    const motif = await this.confirmation.demanderMotif({
+      titre: `Refuser « ${p.nom} » ?`,
+      message: `${p.proposeParNom ?? 'Le chef'} verra le motif et devra le remplacer dans ses recettes.`,
+      libelle: 'Motif du refus',
+      aide: 'Ex. : il existe déjà sous le nom « Gombo sec ».',
+      texteConfirmer: 'Refuser',
+    });
+    if (!motif) {
+      return;
+    }
+    this.propositionEnCours.set(p.id);
+    this.ustensileService.refuser(p.id, motif).subscribe({
+      next: (refuse) => {
+        this.remplacer(refuse);
+        this.propositionEnCours.set(null);
+        this.notification.succes(`Proposition « ${refuse.nom} » refusée.`);
+      },
+      error: () => this.propositionEnCours.set(null),
+    });
+  }
+
+  private remplacer(element: UstensileResponse): void {
+    this.ustensiles.update((liste) => liste.map((e) => (e.id === element.id ? element : e)));
+  }
+
 
   // ----- Pagination de la grille (12 cartes = des rangées complètes de 2, 3, 4 ou 6) -----
   protected readonly taillesPage = [12, 24, 48];

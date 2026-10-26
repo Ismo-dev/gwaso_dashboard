@@ -1,6 +1,8 @@
+
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
+
 import {
   MAT_DIALOG_DATA,
   MatDialogActions,
@@ -9,6 +11,7 @@ import {
   MatDialogRef,
   MatDialogTitle,
 } from '@angular/material/dialog';
+
 import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
@@ -23,11 +26,13 @@ import { CategorieIngredientResponse } from '../../models/categorie-ingredient.m
 import { CategorieIngredientService } from '../../services/categorie-ingredient.service';
 import { IngredientRequest, IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
 import { IngredientService } from '../../services/ingredient.service';
+import { IngredientFormulaire } from '../ingredient-formulaire/ingredient-formulaire';
+
 
 export interface DonneesIngredientDialog {
   /** Ingrédient à modifier ; absent pour une création. */
   ingredient?: IngredientResponse;
-  /** Nom pré-rempli lors d'une création rapide (ex. depuis l'éditeur d'étape). */
+  /** Nom pré-rempli lors d'une création rapide. */
   nomInitial?: string;
 }
 
@@ -60,9 +65,9 @@ export interface DonneesIngredientDialog {
   ],
   providers: [CategorieIngredientService],
   selector: 'app-ingredient-dialog',
-  styleUrl: './ingredient-dialog.scss',
   templateUrl: './ingredient-dialog.html',
 })
+
 export class IngredientDialog implements OnInit {
   private ingredientService = inject(IngredientService);
   private categorieIngredientService = inject(CategorieIngredientService);
@@ -219,4 +224,9 @@ export class IngredientDialog implements OnInit {
       .envoyerImage(ingredient.id, this.photo)
       .pipe(switchMap(() => this.ingredientService.getById(ingredient.id)));
   }
-}
+
+// export class IngredientDialog {
+//   protected fenetre = inject(MatDialogRef<IngredientDialog, IngredientResponse>);
+//   protected donnees = inject<DonneesIngredientDialog>(MAT_DIALOG_DATA);
+
+ }

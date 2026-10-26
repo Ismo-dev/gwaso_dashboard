@@ -112,7 +112,11 @@
           <p>
             Il se fermera tout seul après le {{ defi.dateFin | date: 'd MMMM' }}.
             @if (defi.noteParAdmin) {
-              Notez les participants au fil de l'eau ; le classement se publie une fois le défi terminé.
+              @if (corrigeAuto()) {
+                Les réponses sont corrigées automatiquement ; le classement se publie une fois le défi terminé.
+              } @else {
+                Notez les participants au fil de l'eau ; le classement se publie une fois le défi terminé.
+              }
             } @else {
               Le chef {{ defi.chefCuisinierNom }} note les participants.
             }
@@ -128,7 +132,7 @@
             <p class="bandeau-titre">Défi terminé · classement à publier</p>
             <p>
               @if (defi.noteParAdmin) {
-                Vérifiez les notes, puis publiez le classement.
+                {{ corrigeAuto() ? 'Les points sont calculés : publiez le classement.' : 'Vérifiez les notes, puis publiez le classement.' }}
               } @else {
                 C'est le chef {{ defi.chefCuisinierNom }}, auteur du défi, qui note et publie le classement.
               }
@@ -207,7 +211,38 @@
             <ng-icon name="lucideKeyRound" size="1.125rem" aria-hidden="true" /> Bonne réponse
           </h2>
           <p>{{ defi.reponseAttendue }}</p>
+          @if (defi.autresReponses.length > 0) {
+            <p class="autres-reponses">Aussi justes : {{ defi.autresReponses.join(' · ') }}</p>
+          }
+          @if (defi.points) {
+            <p class="discret"><ng-icon name="lucideCoins" size="0.875rem" aria-hidden="true" /> {{ defi.points }} points par bonne réponse · correction automatique</p>
+          }
           <p class="discret">Visible seulement par l'auteur du défi et les administrateurs.</p>
+        </section>
+      }
+
+      @if (quiz() && defi.questions.length > 0) {
+        <section class="gw-carte bloc" aria-labelledby="titre-questions">
+          <h2 id="titre-questions" class="bloc-titre">
+            <ng-icon name="lucideListChecks" size="1.125rem" aria-hidden="true" /> Questions du quiz
+          </h2>
+          <p class="discret">
+            {{ defi.nbQuestions }} question{{ defi.nbQuestions > 1 ? 's' : '' }} · {{ defi.dureeQuizSecondes }} s au total ·
+            {{ defi.points }} points
+          </p>
+          <ol class="questions-quiz">
+            @for (q of defi.questions; track q.id) {
+              <li>
+                <p class="question-enonce">{{ q.enonce }}</p>
+                <p class="question-meta">
+                  <ng-icon name="lucideHourglass" size="0.875rem" aria-hidden="true" /> {{ q.dureeSecondes }} s ·
+                  {{ q.points }} pts ·
+                  {{ q.propositions.length > 0 ? 'choix : ' + q.propositions.join(', ') : 'réponse libre' }}
+                </p>
+                <p class="question-reponses"><ng-icon name="lucideCheck" size="0.875rem" aria-hidden="true" /> {{ q.reponsesAcceptees.join(' · ') }}</p>
+              </li>
+            }
+          </ol>
         </section>
       }
 
@@ -261,7 +296,9 @@
         @if (defi.classementPublie) {
           <p class="classement-info">Publié {{ defi.datePublicationClassement | depuis }}</p>
         } @else if (peutNoter() && participants().length > 0) {
-          <p class="classement-info">Notez sur {{ noteMax }} · rang provisoire</p>
+          <p class="classement-info">
+            {{ corrigeAuto() ? 'Points calculés automatiquement' : 'Notez sur ' + noteMax }} · rang provisoire
+          </p>
         } @else if (!defi.noteParAdmin && participants().length > 0) {
           <p class="classement-info">Noté par le chef {{ defi.chefCuisinierNom }}</p>
         } @else if (defi.statut === 'VALIDE' && participants().length > 0) {
@@ -323,15 +360,29 @@
                   <span class="participant-reponse">
                     @if (ligne.participation.reponse) {
                       « {{ ligne.participation.reponse }} »
+                      @if (ligne.participation.reponseCorrecte === true) {
+                        <span class="verdict verdict-juste"><ng-icon name="lucideCircleCheck" size="0.875rem" aria-hidden="true" /> Juste</span>
+                      } @else if (ligne.participation.reponseCorrecte === false) {
+                        <span class="verdict verdict-faux"><ng-icon name="lucideCircleX" size="0.875rem" aria-hidden="true" /> Fausse</span>
+                      }
                     } @else {
                       <em>Réponse masquée</em>
+                    }
+                  </span>
+                }
+                @if (quiz() && ligne.participation.bonnesReponses !== null) {
+                  <span class="participant-reponse">
+                    {{ ligne.participation.bonnesReponses }} / {{ defi.nbQuestions }} bonnes réponses ·
+                    {{ ((ligne.participation.tempsTotalMs ?? 0) / 1000) | number: '1.0-1' : 'fr' }} s
+                    @if (!ligne.participation.dateSoumission) {
+                      · <em>en cours</em>
                     }
                   </span>
                 }
               </div>
 
               <!-- Preuve (photo ou vidéo) : seulement pour un défi « réalisation » -->
-              @if (!devinette() && (ligne.participation.preuveUrl | fichier); as preuve) {
+              @if (!corrigeAuto() && (ligne.participation.preuveUrl | fichier); as preuve) {
                 <a class="preuve" [href]="preuve" target="_blank" rel="noopener" matTooltip="Voir la preuve envoyée" [attr.aria-label]="'Voir la preuve de ' + ligne.participation.participantNom">
                   @if (estVideo(ligne.participation.preuveUrl)) {
                     <ng-icon name="lucidePlay" size="1rem" aria-hidden="true" />
@@ -339,13 +390,13 @@
                     <img [src]="preuve" alt="" loading="lazy" />
                   }
                 </a>
-              } @else if (!devinette()) {
+              } @else if (!corrigeAuto()) {
                 <span class="preuve preuve-vide" matTooltip="Pas de preuve envoyée">
                   <ng-icon name="lucideImageOff" size="1rem" aria-hidden="true" />
                 </span>
               }
 
-              @if (peutNoter()) {
+              @if (saisieNote()) {
                 <label class="note">
                   <span class="sr-only">Note de {{ ligne.participation.participantNom }} sur {{ noteMax }}</span>
                   <input
@@ -368,7 +419,7 @@
                   }
                 </label>
               } @else if (ligne.participation.score !== null) {
-                <span class="note-lecture gw-chiffres">{{ ligne.participation.score | number: '1.0-1' : 'fr' }}</span>
+                <span class="note-lecture gw-chiffres">{{ ligne.participation.score | number: '1.0-1' : 'fr' }}{{ corrigeAuto() ? ' pts' : '' }}</span>
               }
             </li>
           }

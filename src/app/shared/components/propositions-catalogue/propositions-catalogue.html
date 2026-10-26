@@ -1,0 +1,49 @@
+<section class="gw-carte propositions" aria-labelledby="titre-propositions">
+  <header class="entete">
+    <ng-icon name="lucideInbox" size="1.25rem" aria-hidden="true" />
+    <div>
+      <h2 id="titre-propositions">
+        Propositions des chefs <span class="gw-chiffres compte">{{ propositions().length }}</span>
+      </h2>
+      <p>
+        Le chef s'en sert déjà dans ses recettes. Une recette ne se publie qu'une fois ses
+        propositions validées : complétez si besoin, puis validez ou refusez.
+      </p>
+    </div>
+  </header>
+
+  <ul class="lignes">
+    @for (p of propositions(); track p.id) {
+      <li class="ligne">
+        @if (p.photoUrl | fichier; as url) {
+          <img class="photo" [src]="url" alt="" loading="lazy" width="44" height="44" />
+        } @else {
+          <span class="photo vide" aria-hidden="true">
+            <ng-icon name="lucideImageOff" size="1.125rem" />
+          </span>
+        }
+        <div class="texte">
+          <strong>{{ p.nom }}</strong>
+          <span>
+            Proposé par {{ p.proposeParNom ?? 'un chef' }}
+            @if (p.detail) {
+              · {{ p.detail }}
+            }
+          </span>
+        </div>
+        <div class="actions">
+          <button matButton="outlined" type="button" [disabled]="enCours() === p.id" (click)="completer.emit(p)">
+            Compléter
+          </button>
+          <button matButton type="button" class="refuser" [disabled]="enCours() === p.id" (click)="refuser.emit(p)">
+            Refuser
+          </button>
+          <button matButton="filled" type="button" [disabled]="enCours() === p.id" (click)="valider.emit(p)">
+            <ng-icon name="lucideCheck" size="1.125rem" aria-hidden="true" />
+            Valider
+          </button>
+        </div>
+      </li>
+    }
+  </ul>
+</section>

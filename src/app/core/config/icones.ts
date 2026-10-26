@@ -1,4 +1,7 @@
 import {
+  lucidePause,
+  lucideSquare,
+  lucideMic,
   lucideArrowLeft,
   lucideArrowRight,
   lucideBadgeCheck,
@@ -93,6 +96,8 @@ import {
   lucideListChecks,
   lucideScale,
   lucideLock,
+  lucideBike,
+  lucideMapPin,
 } from '@ng-icons/lucide';
 
 /**
@@ -105,6 +110,9 @@ import {
  *   3. l'utiliser : <ng-icon name="lucideChefHat" />
  */
 export const ICONES = {
+  lucidePause,
+  lucideSquare,
+  lucideMic,
   lucideLock,
   lucideArrowLeft,
   lucideArrowRight,
@@ -199,4 +207,6 @@ export const ICONES = {
   lucideSend,
   lucideListChecks,
   lucideScale,
+  lucideBike,
+  lucideMapPin,
 };

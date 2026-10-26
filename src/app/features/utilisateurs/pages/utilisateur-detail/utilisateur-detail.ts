@@ -21,11 +21,18 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
 import {
   FicheUtilisateur,
   ICONES_TYPE_COMPTE,
+  lienCarte,
+  LIBELLES_OPERATEUR,
   LIBELLES_NIVEAU,
   LIBELLES_TYPE_COMPTE,
+  ORDRE_TYPES_COMPTE,
 } from '../../models/utilisateur.model';
 import { DroitsLecture } from '../../../profils/components/droits-lecture/droits-lecture';
-import { DroitAffiche, ProfilDroitsResponse, ProfilResponse } from '../../../profils/models/profil.model';
+import {
+  DroitAffiche,
+  ProfilDroitsResponse,
+  ProfilResponse,
+} from '../../../profils/models/profil.model';
 import { ProfilService } from '../../../profils/services/profil.service';
 import { UtilisateurService } from '../../services/utilisateur.service';
 import { ActiviteChef } from '../../components/activite-chef/activite-chef';
@@ -34,7 +41,7 @@ import { ouvrirJustificatif } from '../../components/justificatif-dialog/ouvrir-
 import { ModifierUtilisateurDialog } from '../../components/modifier-utilisateur-dialog/modifier-utilisateur-dialog';
 import { ProduitsProducteur } from '../../components/produits-producteur/produits-producteur';
 
-const ROLES: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
+const ROLES: TypeCompte[] = ORDRE_TYPES_COMPTE;
 
 /**
  * Fiche d'un membre. Le rôle est passé dans l'adresse (?role=CHEF) car l'API
@@ -79,13 +86,20 @@ export class UtilisateurDetail {
 
   protected readonly libellesRole = LIBELLES_TYPE_COMPTE;
   protected readonly iconesRole = ICONES_TYPE_COMPTE;
+  protected readonly lienCarte = lienCarte;
+  protected readonly libellesOperateur = LIBELLES_OPERATEUR;
   protected readonly libellesNiveau = LIBELLES_NIVEAU;
 
   protected fiche = signal<FicheUtilisateur | null>(null);
   /** Droits du profil de la personne (affichés dans la carte « Profil »). */
   protected droitsProfil = signal<ProfilDroitsResponse[]>([]);
   protected droitsAffiches = computed<DroitAffiche[]>(() =>
-    this.droitsProfil().map((a) => ({ id: a.droitId, action: a.droitAction, description: a.droitDescription, actif: a.droitActif })),
+    this.droitsProfil().map((a) => ({
+      id: a.droitId,
+      action: a.droitAction,
+      description: a.droitDescription,
+      actif: a.droitActif,
+    })),
   );
   /** Profils qu'on peut donner à ce compte : tous les profils actifs. */
   protected profilsPossibles = signal<ProfilResponse[]>([]);
@@ -275,6 +289,8 @@ export class UtilisateurDetail {
         return this.utilisateurService
           .getAdmin(id)
           .pipe(map((a) => ({ ...a, role, statutCompte: a.statut })));
+      case 'LIVREUR':
+        return this.utilisateurService.getLivreur(id).pipe(map((l) => ({ ...l, role })));
     }
   }
 
@@ -290,9 +306,23 @@ export class UtilisateurDetail {
   }
 
   /** Un compte garde son type (cuisinier, admin...) : seuls les profils de ce type sont proposés. */
-  changerProfil(profilId: string): void {
+  async changerProfil(profilId: string, liste: MatSelect): Promise<void> {
     const fiche = this.fiche();
     if (!fiche || profilId === fiche.profilId) {
+      return;
+    }
+    // Les droits du compte changent avec le profil : on fait confirmer, la liste revient en arrière si on annule
+    const nouveau = this.profilsPossibles().find((p) => p.id === profilId);
+    const nbDroits = nouveau?.nbDroits ?? 0;
+    const confirme = await this.confirmation.demander({
+      titre: `Donner le profil « ${nouveau?.nom ?? ''} » à ${fiche.prenom} ${fiche.nom} ?`,
+      message:
+        `${fiche.profilNom ? `Il remplace le profil « ${fiche.profilNom} ». ` : ''}` +
+        `Ses droits deviennent ceux du nouveau profil (${nbDroits} droit${nbDroits > 1 ? 's' : ''}), dès sa prochaine action.`,
+      texteConfirmer: 'Changer le profil',
+    });
+    if (!confirme) {
+      liste.writeValue(fiche.profilId);
       return;
     }
     this.changementProfil.set(true);
@@ -301,10 +331,13 @@ export class UtilisateurDetail {
         this.fiche.set({ ...fiche, profilId: resume.profilId, profilNom: resume.profilNom });
         this.chargerDroits(resume.profilId);
         this.changementProfil.set(false);
-        this.notification.succes(`${fiche.prenom} ${fiche.nom} a maintenant le profil « ${resume.profilNom} ».`);
+        this.notification.succes(
+          `${fiche.prenom} ${fiche.nom} a maintenant le profil « ${resume.profilNom} ».`,
+        );
       },
       error: (erreur: unknown) => {
         this.changementProfil.set(false);
+        liste.writeValue(fiche.profilId);
         this.notification.erreur(messageErreur(erreur, "Le profil n'a pas pu être changé."));
       },
     });

@@ -117,84 +117,100 @@
           <p class="vide">Cette étape n'utilise aucun ingrédient pour l'instant.</p>
         }
 
-        <div class="ajout" role="group" aria-label="Ajouter un ingrédient à l'étape">
-          <mat-form-field class="ajout-principal" subscriptSizing="dynamic">
-            <mat-label>Ingrédient</mat-label>
-            <input
-              matInput
-              [formControl]="champIngredient"
-              [matAutocomplete]="listeIngredients"
-              placeholder="Tapez pour chercher ou créer"
+        @if (creationIngredient(); as nom) {
+          <div class="creation" role="group" aria-labelledby="titre-creation-ingredient">
+            <p class="creation-titre" id="titre-creation-ingredient">
+              <ng-icon name="lucidePlus" size="1rem" aria-hidden="true" />
+              Nouvel ingrédient du catalogue
+            </p>
+            <p class="creation-aide">Il sera ajouté au catalogue, puis choisi pour cette étape.</p>
+            <app-ingredient-formulaire
+              [nomInitial]="nom"
+              texteValider="Créer et choisir"
+              (enregistre)="ingredientCree($event)"
+              (annule)="annulerCreationIngredient($event)"
             />
-            <mat-autocomplete
-              #listeIngredients="matAutocomplete"
-              [displayWith]="nomIngredient"
-              (optionSelected)="choisirIngredient($event.option.value)"
-            >
-              @if (suggestionsIngredients().recette.length > 0) {
-                <mat-optgroup label="Dans la recette">
-                  @for (ingredient of suggestionsIngredients().recette; track ingredient.id) {
-                    <mat-option [value]="ingredient">{{ ingredient.nom }}</mat-option>
-                  }
-                </mat-optgroup>
-              }
-              @if (suggestionsIngredients().autres.length > 0) {
-                <mat-optgroup label="Autres ingrédients (seront ajoutés à la recette)">
-                  @for (ingredient of suggestionsIngredients().autres; track ingredient.id) {
-                    <mat-option [value]="ingredient">{{ ingredient.nom }}</mat-option>
-                  }
-                </mat-optgroup>
-              }
-              @if (peutCreerIngredient()) {
-                <mat-option [value]="{ creer: texteIngredient() }" class="option-creer">
-                  <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
-                  Créer l'ingrédient « {{ texteIngredient() }} »
-                </mat-option>
-              }
-            </mat-autocomplete>
-          </mat-form-field>
-          <mat-form-field class="ajout-quantite" subscriptSizing="dynamic">
-            <mat-label>Quantité</mat-label>
-            <input
-              matInput
-              type="number"
-              min="0"
-              step="0.5"
-              inputmode="decimal"
-              [formControl]="quantiteIngredient"
-            />
-          </mat-form-field>
-          <mat-form-field class="ajout-unite" subscriptSizing="dynamic">
-            <mat-label>Unité</mat-label>
-            <mat-select [formControl]="uniteIngredient">
-              @for (u of unites; track u.valeur) {
-                <mat-option [value]="u.valeur">{{ u.libelle }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <button
-            matIconButton
-            type="button"
-            class="bouton-ajout"
-            aria-label="Ajouter l'ingrédient à l'étape"
-            matTooltip="Ajouter"
-            [disabled]="ajoutIngredient()"
-            (click)="ajouterIngredient()"
-          >
-            <ng-icon name="lucidePlus" size="1.25rem" aria-hidden="true" />
-          </button>
-        </div>
-        @if (horsRecette()) {
-          <p class="aide aide-info" role="status">
-            <ng-icon name="lucideInfo" size="0.875rem" aria-hidden="true" />
-            {{ ingredientChoisi()?.nom }} n'est pas encore dans la recette : il y sera ajouté avec
-            cette quantité.
-          </p>
+          </div>
         } @else {
-          <p class="aide">
-            Pour un ingrédient de la recette, la quantité proposée est celle de la recette :
-            ajustez-la si l'étape n'en utilise qu'une partie.
-          </p>
+          <div class="ajout" role="group" aria-label="Ajouter un ingrédient à l'étape">
+            <mat-form-field class="ajout-principal" subscriptSizing="dynamic">
+              <mat-label>Ingrédient</mat-label>
+              <input
+                matInput
+                [formControl]="champIngredient"
+                [matAutocomplete]="listeIngredients"
+                placeholder="Tapez pour chercher ou créer"
+              />
+              <mat-autocomplete
+                #listeIngredients="matAutocomplete"
+                [displayWith]="nomIngredient"
+                (optionSelected)="choisirIngredient($event.option.value)"
+              >
+                @if (suggestionsIngredients().recette.length > 0) {
+                  <mat-optgroup label="Dans la recette">
+                    @for (ingredient of suggestionsIngredients().recette; track ingredient.id) {
+                      <mat-option [value]="ingredient">{{ ingredient.nom }}</mat-option>
+                    }
+                  </mat-optgroup>
+                }
+                @if (suggestionsIngredients().autres.length > 0) {
+                  <mat-optgroup label="Autres ingrédients (seront ajoutés à la recette)">
+                    @for (ingredient of suggestionsIngredients().autres; track ingredient.id) {
+                      <mat-option [value]="ingredient">{{ ingredient.nom }}</mat-option>
+                    }
+                  </mat-optgroup>
+                }
+                @if (peutCreerIngredient()) {
+                  <mat-option [value]="{ creer: texteIngredient() }" class="option-creer">
+                    <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
+                    Créer l'ingrédient « {{ texteIngredient() }} »
+                  </mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="ajout-quantite" subscriptSizing="dynamic">
+              <mat-label>Quantité</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                step="0.5"
+                inputmode="decimal"
+                [formControl]="quantiteIngredient"
+              />
+            </mat-form-field>
+            <mat-form-field class="ajout-unite" subscriptSizing="dynamic">
+              <mat-label>Unité</mat-label>
+              <mat-select [formControl]="uniteIngredient">
+                @for (u of unites; track u.valeur) {
+                  <mat-option [value]="u.valeur">{{ u.libelle }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <button
+              matIconButton
+              type="button"
+              class="bouton-ajout"
+              aria-label="Ajouter l'ingrédient à l'étape"
+              matTooltip="Ajouter"
+              [disabled]="ajoutIngredient()"
+              (click)="ajouterIngredient()"
+            >
+              <ng-icon name="lucidePlus" size="1.25rem" aria-hidden="true" />
+            </button>
+          </div>
+          @if (horsRecette()) {
+            <p class="aide aide-info" role="status">
+              <ng-icon name="lucideInfo" size="0.875rem" aria-hidden="true" />
+              {{ ingredientChoisi()?.nom }} n'est pas encore dans la recette : il y sera ajouté avec
+              cette quantité.
+            </p>
+          } @else {
+            <p class="aide">
+              Pour un ingrédient de la recette, la quantité proposée est celle de la recette :
+              ajustez-la si l'étape n'en utilise qu'une partie.
+            </p>
+          }
         }
       }
     </section>
@@ -252,57 +268,73 @@
           <p class="vide">Aucun ustensile particulier pour cette étape.</p>
         }
 
-        <div class="ajout" role="group" aria-label="Ajouter un ustensile à l'étape">
-          <mat-form-field class="ajout-principal" subscriptSizing="dynamic">
-            <mat-label>Ustensile</mat-label>
-            <input
-              matInput
-              [formControl]="champUstensile"
-              [matAutocomplete]="listeUstensiles"
-              placeholder="Tapez pour chercher ou créer"
+        @if (creationUstensile(); as nom) {
+          <div class="creation" role="group" aria-labelledby="titre-creation-ustensile">
+            <p class="creation-titre" id="titre-creation-ustensile">
+              <ng-icon name="lucidePlus" size="1rem" aria-hidden="true" />
+              Nouvel ustensile du catalogue
+            </p>
+            <p class="creation-aide">Il sera ajouté au catalogue, puis choisi pour cette étape.</p>
+            <app-ustensile-formulaire
+              [nomInitial]="nom"
+              texteValider="Créer et choisir"
+              (enregistre)="ustensileCree($event)"
+              (annule)="annulerCreationUstensile($event)"
             />
-            <mat-autocomplete
-              #listeUstensiles="matAutocomplete"
-              [displayWith]="nomUstensile"
-              (optionSelected)="choisirUstensile($event.option.value)"
-            >
-              @for (ustensile of suggestionsUstensiles(); track ustensile.id) {
-                <mat-option [value]="ustensile">{{ ustensile.nom }}</mat-option>
-              } @empty {
-                @if (!peutCreerUstensile()) {
-                  <mat-option disabled>Aucun ustensile ne correspond</mat-option>
+          </div>
+        } @else {
+          <div class="ajout" role="group" aria-label="Ajouter un ustensile à l'étape">
+            <mat-form-field class="ajout-principal" subscriptSizing="dynamic">
+              <mat-label>Ustensile</mat-label>
+              <input
+                matInput
+                [formControl]="champUstensile"
+                [matAutocomplete]="listeUstensiles"
+                placeholder="Tapez pour chercher ou créer"
+              />
+              <mat-autocomplete
+                #listeUstensiles="matAutocomplete"
+                [displayWith]="nomUstensile"
+                (optionSelected)="choisirUstensile($event.option.value)"
+              >
+                @for (ustensile of suggestionsUstensiles(); track ustensile.id) {
+                  <mat-option [value]="ustensile">{{ ustensile.nom }}</mat-option>
+                } @empty {
+                  @if (!peutCreerUstensile()) {
+                    <mat-option disabled>Aucun ustensile ne correspond</mat-option>
+                  }
                 }
-              }
-              @if (peutCreerUstensile()) {
-                <mat-option [value]="{ creer: texteUstensile() }" class="option-creer">
-                  <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
-                  Créer l'ustensile « {{ texteUstensile() }} »
-                </mat-option>
-              }
-            </mat-autocomplete>
-          </mat-form-field>
-          <mat-form-field class="ajout-quantite" subscriptSizing="dynamic">
-            <mat-label>Nombre</mat-label>
-            <input
-              matInput
-              type="number"
-              min="1"
-              inputmode="numeric"
-              [formControl]="quantiteUstensile"
-            />
-          </mat-form-field>
-          <button
-            matIconButton
-            type="button"
-            class="bouton-ajout"
-            aria-label="Ajouter l'ustensile à l'étape"
-            matTooltip="Ajouter"
-            [disabled]="ajoutUstensile()"
-            (click)="ajouterUstensile()"
-          >
-            <ng-icon name="lucidePlus" size="1.25rem" aria-hidden="true" />
-          </button>
-        </div>
+                @if (peutCreerUstensile()) {
+                  <mat-option [value]="{ creer: texteUstensile() }" class="option-creer">
+                    <ng-icon name="lucidePlus" size="0.875rem" aria-hidden="true" />
+                    Créer l'ustensile « {{ texteUstensile() }} »
+                  </mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field class="ajout-quantite" subscriptSizing="dynamic">
+              <mat-label>Nombre</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                inputmode="numeric"
+                [formControl]="quantiteUstensile"
+              />
+            </mat-form-field>
+            <button
+              matIconButton
+              type="button"
+              class="bouton-ajout"
+              aria-label="Ajouter l'ustensile à l'étape"
+              matTooltip="Ajouter"
+              [disabled]="ajoutUstensile()"
+              (click)="ajouterUstensile()"
+            >
+              <ng-icon name="lucidePlus" size="1.25rem" aria-hidden="true" />
+            </button>
+          </div>
+        }
       }
     </section>
 
@@ -373,6 +405,44 @@
             }
           </div>
         </div>
+      }
+    </section>
+
+    <!-- ===================== 5. Audio d'explication ===================== -->
+    <section class="section" [class.verrouillee]="!etape()" aria-labelledby="etape-section-5">
+      <h3 class="section-titre" id="etape-section-5">
+        <span
+          class="pastille"
+          [class.pastille-faite]="!!etape()?.audioFrCacheUrl || !!etape()?.audioBambaraCacheUrl"
+          aria-hidden="true"
+        >
+          <ng-icon name="lucideMic" size="0.875rem" />
+        </span>
+        Audio d'explication
+        <span class="facultatif">facultatif</span>
+      </h3>
+
+      @if (etape(); as e) {
+        <p class="aide aide-media">
+          Expliquez l'étape à voix haute : la préparation guidée de l'application la fait écouter.
+          En bambara, c'est le seul moyen pour l'instant de guider ceux qui ne lisent pas le français.
+        </p>
+        <div class="audios">
+          <app-audio-etape
+            [etapeId]="e.id"
+            langue="FR"
+            [audioActuel]="e.audioFrCacheUrl"
+            (audioModifie)="relireEtape()"
+          />
+          <app-audio-etape
+            [etapeId]="e.id"
+            langue="BAMBARA"
+            [audioActuel]="e.audioBambaraCacheUrl"
+            (audioModifie)="relireEtape()"
+          />
+        </div>
+      } @else {
+        <p class="verrou">Enregistrez d'abord l'étape.</p>
       }
     </section>
   </div>

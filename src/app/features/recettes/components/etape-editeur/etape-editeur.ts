@@ -5,31 +5,26 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatOptgroup, MatOption } from '@angular/material/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
 import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSelect } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NgIcon } from '@ng-icons/core';
-import { firstValueFrom, forkJoin, Observable, of, startWith, switchMap } from 'rxjs';
+import { forkJoin, Observable, of, startWith, switchMap } from 'rxjs';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { messageErreur } from '../../../../core/utils/erreurs';
 import { EditeurRiche } from '../../../../shared/components/editeur-riche/editeur-riche';
 import { ImageUpload } from '../../../../shared/components/image-upload/image-upload';
 import { VideoUpload } from '../../../../shared/components/video-upload/video-upload';
+import { AudioEtape } from '../audio-etape/audio-etape';
 import { UnitePipe } from '../../../../shared/pipes/unite.pipe';
-import {
-  DonneesIngredientDialog,
-  IngredientDialog,
-} from '../../../ingredients/components/ingredient-dialog/ingredient-dialog';
+import { IngredientFormulaire } from '../../../ingredients/components/ingredient-formulaire/ingredient-formulaire';
 import { IngredientResponse, Unite, UNITES } from '../../../ingredients/models/ingredient.model';
 import { IngredientService } from '../../../ingredients/services/ingredient.service';
-import {
-  DonneesUstensileDialog,
-  UstensileDialog,
-} from '../../../ustensiles/components/ustensile-dialog/ustensile-dialog';
+import { UstensileFormulaire } from '../../../ustensiles/components/ustensile-formulaire/ustensile-formulaire';
 import { UstensileResponse } from '../../../ustensiles/models/ustensile.model';
 import { UstensileService } from '../../../ustensiles/services/ustensile.service';
 import {
@@ -101,8 +96,11 @@ export interface ResultatEtapeEditeur {
     EditeurRiche,
     ImageUpload,
     VideoUpload,
+    AudioEtape,
     UnitePipe,
     AlternativesEtape,
+    IngredientFormulaire,
+    UstensileFormulaire,
   ],
   selector: 'app-etape-editeur',
   styleUrl: './etape-editeur.scss',
@@ -112,7 +110,6 @@ export class EtapeEditeur implements OnInit {
   private recetteService = inject(RecetteService);
   private ustensileService = inject(UstensileService);
   private ingredientService = inject(IngredientService);
-  private dialog = inject(MatDialog);
   private confirmation = inject(ConfirmationService);
   private notification = inject(NotificationService);
   private fenetre = inject(MatDialogRef<EtapeEditeur, ResultatEtapeEditeur>);
@@ -151,7 +148,9 @@ export class EtapeEditeur implements OnInit {
   // ----- 2. Ingrédients de l'étape -----
   protected ingredientsEtape = signal<EtapeIngredientResponse[]>([]);
   /** Ingrédients de la recette ; la liste grandit si l'étape en ajoute un nouveau. */
-  protected ingredientsRecette = signal<RecetteIngredientResponse[]>(this.donnees.ingredientsRecette);
+  protected ingredientsRecette = signal<RecetteIngredientResponse[]>(
+    this.donnees.ingredientsRecette,
+  );
   private catalogueIngredients = signal<IngredientResponse[]>([]);
   protected champIngredient = new FormControl<string | Choix<IngredientResponse>>('', {
     nonNullable: true,
@@ -199,7 +198,13 @@ export class EtapeEditeur implements OnInit {
     return !!terme && !this.catalogueIngredients().some((i) => i.nom.toLowerCase() === terme);
   });
   protected nomIngredient = (valeur: string | Choix<IngredientResponse> | null): string =>
-    !valeur ? '' : typeof valeur === 'string' ? valeur : 'creer' in valeur ? valeur.creer : valeur.nom;
+    !valeur
+      ? ''
+      : typeof valeur === 'string'
+        ? valeur
+        : 'creer' in valeur
+          ? valeur.creer
+          : valeur.nom;
 
   // ----- 3. Ustensiles de l'étape -----
   protected ustensilesEtape = signal<EtapeUstensileResponse[]>([]);
@@ -228,7 +233,13 @@ export class EtapeEditeur implements OnInit {
     return !!terme && !this.catalogueUstensiles().some((u) => u.nom.toLowerCase() === terme);
   });
   protected nomUstensile = (valeur: string | Choix<UstensileResponse> | null): string =>
-    !valeur ? '' : typeof valeur === 'string' ? valeur : 'creer' in valeur ? valeur.creer : valeur.nom;
+    !valeur
+      ? ''
+      : typeof valeur === 'string'
+        ? valeur
+        : 'creer' in valeur
+          ? valeur.creer
+          : valeur.nom;
 
   // ----- 4. Photo et vidéo -----
   protected photo = signal<File | null>(null);
@@ -251,20 +262,20 @@ export class EtapeEditeur implements OnInit {
           void this.fermer();
         }
       });
-
   }
 
   ngOnInit(): void {
     this.ingredientService.getAll().subscribe({
       next: (ingredients) =>
         this.catalogueIngredients.set(
-          [...ingredients].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+          // Une proposition refusée ne s'utilise plus
+          ingredients.filter((i) => i.statut !== 'REFUSE').sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
         ),
     });
     this.ustensileService.getAll().subscribe({
       next: (ustensiles) =>
         this.catalogueUstensiles.set(
-          [...ustensiles].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+          ustensiles.filter((u) => u.statut !== 'REFUSE').sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
         ),
     });
     const etape = this.etape();
@@ -337,7 +348,11 @@ export class EtapeEditeur implements OnInit {
     const c = this.formulaire.controls;
     const problemes: string[] = [];
     if (c.titre.invalid) {
-      problemes.push(c.titre.hasError('maxlength') ? 'le titre est trop long (120 caractères max.)' : 'le titre est obligatoire');
+      problemes.push(
+        c.titre.hasError('maxlength')
+          ? 'le titre est trop long (120 caractères max.)'
+          : 'le titre est obligatoire',
+      );
     }
     if (c.instructions.invalid) {
       problemes.push(
@@ -355,31 +370,41 @@ export class EtapeEditeur implements OnInit {
 
   // ===================== 2. Ingrédients =====================
 
-  /** L'admin a choisi un ingrédient, ou « Créer … », dans la liste. */
-  async choisirIngredient(choix: Choix<IngredientResponse>): Promise<void> {
-    let ingredient: IngredientResponse;
-    if ('creer' in choix) {
-      const cree = await firstValueFrom(
-        this.dialog
-          .open<IngredientDialog, DonneesIngredientDialog, IngredientResponse>(IngredientDialog, {
-            data: { nomInitial: choix.creer },
-            width: 'min(560px, 96vw)',
-          })
-          .afterClosed(),
-      );
-      if (!cree) {
-        this.champIngredient.setValue(choix.creer);
-        return;
-      }
-      ingredient = cree;
-      this.catalogueIngredients.update((liste) =>
-        [...liste, cree].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
-      );
-      this.champIngredient.setValue(cree);
-    } else {
-      ingredient = choix;
-    }
+  /**
+   * Nouvel ingrédient en cours de création, dans le panneau même (nom saisi), ou null.
+   * Pas de fenêtre par-dessus le panneau : un seul défilement, et l'étape reste sous les yeux.
+   */
+  protected creationIngredient = signal<string | null>(null);
 
+  /** L'admin a choisi un ingrédient, ou « Créer … », dans la liste. */
+  choisirIngredient(choix: Choix<IngredientResponse>): void {
+    if ('creer' in choix) {
+      this.creationIngredient.set(choix.creer);
+      return;
+    }
+    this.utiliserIngredient(choix);
+  }
+
+  /** Ingrédient créé dans le panneau : il rejoint le catalogue et devient le choix courant. */
+  ingredientCree(cree: IngredientResponse): void {
+    this.creationIngredient.set(null);
+    this.catalogueIngredients.update((liste) =>
+      [...liste, cree].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+    );
+    this.champIngredient.setValue(cree);
+    this.utiliserIngredient(cree);
+  }
+
+  annulerCreationIngredient(dejaCree: IngredientResponse | null): void {
+    if (dejaCree) {
+      this.ingredientCree(dejaCree);
+      return;
+    }
+    this.champIngredient.setValue(this.creationIngredient() ?? '');
+    this.creationIngredient.set(null);
+  }
+
+  private utiliserIngredient(ingredient: IngredientResponse): void {
     // Quantité proposée : celle de la recette si l'ingrédient y est déjà, sinon l'unité du catalogue
     const id = ingredient.id;
     const dansRecette = this.ingredientsRecette().find((i) => i.ingredientId === id);
@@ -466,27 +491,31 @@ export class EtapeEditeur implements OnInit {
 
   // ===================== 3. Ustensiles =====================
 
-  /** « Créer … » dans la liste des ustensiles : ouvre la fiche ustensile pré-remplie. */
-  async choisirUstensile(choix: Choix<UstensileResponse>): Promise<void> {
-    if (!('creer' in choix)) {
-      return;
+  /** Nouvel ustensile en cours de création dans le panneau (nom saisi), ou null. */
+  protected creationUstensile = signal<string | null>(null);
+
+  /** « Créer … » dans la liste des ustensiles : la fiche s'ouvre dans le panneau, pré-remplie. */
+  choisirUstensile(choix: Choix<UstensileResponse>): void {
+    if ('creer' in choix) {
+      this.creationUstensile.set(choix.creer);
     }
-    const cree = await firstValueFrom(
-      this.dialog
-        .open<UstensileDialog, DonneesUstensileDialog, UstensileResponse>(UstensileDialog, {
-          data: { nomInitial: choix.creer },
-          width: 'min(520px, 96vw)',
-        })
-        .afterClosed(),
-    );
-    if (!cree) {
-      this.champUstensile.setValue(choix.creer);
-      return;
-    }
+  }
+
+  ustensileCree(cree: UstensileResponse): void {
+    this.creationUstensile.set(null);
     this.catalogueUstensiles.update((liste) =>
       [...liste, cree].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
     );
     this.champUstensile.setValue(cree);
+  }
+
+  annulerCreationUstensile(dejaCree: UstensileResponse | null): void {
+    if (dejaCree) {
+      this.ustensileCree(dejaCree);
+      return;
+    }
+    this.champUstensile.setValue(this.creationUstensile() ?? '');
+    this.creationUstensile.set(null);
   }
 
   ajouterUstensile(): void {
@@ -585,6 +614,21 @@ export class EtapeEditeur implements OnInit {
           messageErreur(erreur, "La vidéo n'a pas pu être envoyée (200 Mo maximum)."),
         );
       },
+    });
+  }
+
+  /** Après l'enregistrement ou le retrait d'un audio : on relit l'étape (adresse de l'audio). */
+  relireEtape(): void {
+    const etape = this.etape();
+    if (!etape) {
+      return;
+    }
+    this.modifie = true;
+    this.recetteService.getEtapes(this.donnees.recetteId).subscribe((etapes) => {
+      const miseAJour = etapes.find((e) => e.id === etape.id);
+      if (miseAJour) {
+        this.etape.set(miseAJour);
+      }
     });
   }
 

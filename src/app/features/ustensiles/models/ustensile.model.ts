@@ -1,5 +1,7 @@
+import { PropositionChef } from '../../ingredients/models/ingredient.model';
+
 /** UstensileResponseDTO côté backend. */
-export interface UstensileResponse {
+export interface UstensileResponse extends PropositionChef {
   id: string;
   nom: string;
   photoUrl: string | null;

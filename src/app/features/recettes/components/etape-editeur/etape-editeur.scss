@@ -22,7 +22,6 @@
   background: var(--gw-cacao);
   color: var(--gw-sidebar-texte);
 
-
   button {
     color: inherit;
   }
@@ -76,9 +75,14 @@
 }
 
 // ----- Corps -----
+// Seule zone qui défile. « position: relative » : les éléments positionnés du corps (champs de fichier
+// cachés, textes pour lecteurs d'écran…) restent dedans au lieu de faire défiler aussi la fenêtre.
 .corps {
+  position: relative;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--gw-espace-2) var(--gw-espace-6) var(--gw-espace-8);
 
   @include ecran.mobile {
@@ -330,7 +334,8 @@
 }
 
 // ----- Médias -----
-.medias {
+.medias,
+.audios {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--gw-espace-5);
@@ -394,4 +399,28 @@
 .option-creer {
   color: var(--gw-action);
   font-weight: 600;
+}
+
+// Création d'un ingrédient / ustensile dans le panneau : même emplacement que la ligne d'ajout,
+// encadrée pour montrer qu'on ajoute au catalogue (pas de fenêtre par-dessus)
+.creation {
+  padding: var(--gw-espace-4) var(--gw-espace-5) var(--gw-espace-5);
+  border: 1px solid var(--gw-terre-cuite-pale-2);
+  border-left: 3px solid var(--gw-action);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-surface);
+}
+
+.creation-titre {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.creation-aide {
+  margin: var(--gw-espace-1) 0 var(--gw-espace-4);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
 }

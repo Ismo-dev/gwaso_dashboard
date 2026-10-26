@@ -58,10 +58,13 @@
       </div>
     </div>
     <div class="entete-droite">
-      <button matButton="outlined" type="button" class="bouton-modifier" (click)="modifier()">
-        <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
-        Modifier
-      </button>
+      <!-- Un livreur est géré par son fournisseur, depuis son espace -->
+      @if (f.role !== 'LIVREUR') {
+        <button matButton="outlined" type="button" class="bouton-modifier" (click)="modifier()">
+          <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+          Modifier
+        </button>
+      }
       <p class="inscription">Membre depuis le {{ f.dateInscription | date: 'd MMMM y' }}</p>
     </div>
   </header>
@@ -105,7 +108,11 @@
           }
 
           @if (f.preuveUrl; as preuve) {
-            <button type="button" class="justificatif" (click)="voirJustificatif(preuve, f.prenom + ' ' + f.nom)">
+            <button
+              type="button"
+              class="justificatif"
+              (click)="voirJustificatif(preuve, f.prenom + ' ' + f.nom)"
+            >
               <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
               <strong>Voir le justificatif</strong>
               <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
@@ -142,9 +149,57 @@
         </section>
       }
 
+      <!-- Livreur : ajouté par son fournisseur, qui répond de lui -->
+      @if (f.role === 'LIVREUR') {
+        <section class="gw-carte panneau" aria-labelledby="titre-livreur">
+          <h2 id="titre-livreur">Livreur</h2>
+          <p class="explication">
+            Ajouté par son fournisseur, qui le gère depuis son espace.
+            {{ f.disponible ? 'Disponible pour les livraisons.' : 'Indisponible pour le moment.' }}
+          </p>
+          <dl class="infos">
+            <div>
+              <dt>Fournisseur</dt>
+              <dd>
+                @if (f.fournisseurId) {
+                  <a [routerLink]="['/utilisateurs', f.fournisseurId]" [queryParams]="{ role: 'PRODUCTEUR' }">{{
+                    f.fournisseurNom
+                  }}</a>
+                } @else {
+                  <span class="vide">Aucun</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Mobile Money</dt>
+              <dd>
+                @if (f.numeroMobileMoney) {
+                  {{ f.numeroMobileMoney }}
+                  @if (f.operateur) {
+                    ({{ libellesOperateur[f.operateur] }})
+                  }
+                } @else {
+                  <span class="vide">Non renseigné</span>
+                }
+              </dd>
+            </div>
+          </dl>
+          @if (f.pieceIdentiteUrl; as piece) {
+            <button type="button" class="justificatif" (click)="voirJustificatif(piece, f.prenom + ' ' + f.nom)">
+              <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
+              <strong>Voir la pièce d'identité</strong>
+              <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
+            </button>
+          }
+        </section>
+      }
+
       <!-- Cuisinier qui demande à devenir chef ou producteur -->
       @if (f.role === 'CUISINIER') {
-        <app-demandes-cuisinier [utilisateurId]="f.id" (valide)="apresChangementDeType(f.id, $event)" />
+        <app-demandes-cuisinier
+          [utilisateurId]="f.id"
+          (valide)="apresChangementDeType(f.id, $event)"
+        />
       }
 
       <!-- Ce que le chef a proposé -->
@@ -190,7 +245,18 @@
           @if (f.localite) {
             <div>
               <dt>Localité</dt>
-              <dd>{{ f.localite }}</dd>
+              <dd>
+                <!-- La localité d'un fournisseur est un lieu choisi sur la carte : on peut l'y voir -->
+                @if (f.latitude != null && f.longitude != null) {
+                  <a class="lien-carte" [href]="lienCarte(f.latitude, f.longitude)" target="_blank" rel="noopener">
+                    <ng-icon name="lucideMapPin" size="0.875rem" aria-hidden="true" />
+                    {{ f.localite }}
+                    <span class="sr-only">(carte, nouvel onglet)</span>
+                  </a>
+                } @else {
+                  {{ f.localite }}
+                }
+              </dd>
             </div>
           }
         </dl>
@@ -199,85 +265,89 @@
 
     <!-- 4. Profil : ce que la personne peut faire -->
     <aside class="colonne-cote">
-    <section class="gw-carte panneau profil" aria-labelledby="titre-profil">
-      <h2 id="titre-profil">Profil</h2>
-      <div class="profil-entete">
-        <span class="profil-icone" aria-hidden="true">
-          <ng-icon [name]="iconesRole[f.role]" size="1.25rem" />
-        </span>
-        <div>
-          <p class="profil-nom">{{ f.profilNom ?? 'Aucun profil' }}</p>
-          <p class="profil-compte gw-chiffres">
-            {{ droitsProfil().length }} droit{{ droitsProfil().length > 1 ? 's' : '' }}
+      <section class="gw-carte panneau profil" aria-labelledby="titre-profil">
+        <h2 id="titre-profil">Profil</h2>
+        <div class="profil-entete">
+          <span class="profil-icone" aria-hidden="true">
+            <ng-icon [name]="iconesRole[f.role]" size="1.25rem" />
+          </span>
+          <div>
+            <p class="profil-nom">{{ f.profilNom ?? 'Aucun profil' }}</p>
+            <p class="profil-compte gw-chiffres">
+              {{ droitsProfil().length }} droit{{ droitsProfil().length > 1 ? 's' : '' }}
+            </p>
+          </div>
+        </div>
+        @if (profilsPossibles().length > 1) {
+          <mat-form-field class="profil-choix" subscriptSizing="dynamic">
+            <mat-label>Changer de profil</mat-label>
+            <mat-select
+              [value]="f.profilId"
+              [disabled]="changementProfil()"
+              (selectionChange)="changerProfil($event.value, $event.source)"
+            >
+              @for (p of profilsPossibles(); track p.id) {
+                <mat-option [value]="p.id">{{ p.nom }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+        @if (droitsProfil().length > 0) {
+          <app-droits-lecture class="profil-droits" [droits]="droitsAffiches()" [compact]="true" />
+        }
+        @if (session.aLeDroit('PROFIL_GERER')) {
+          <a matButton routerLink="/profils" class="profil-lien">
+            Gérer les profils
+            <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
+          </a>
+        }
+      </section>
+
+      <!-- 5. Gestion du compte : actions sensibles, à part -->
+      <section class="gw-carte panneau compte" aria-labelledby="titre-compte">
+        <h2 id="titre-compte">Compte</h2>
+        <p class="statut-actuel">Statut actuel : <app-status-badge [statut]="f.statutCompte" /></p>
+
+        @if (estMoi()) {
+          <p class="explication">Vous ne pouvez pas suspendre ni désactiver votre propre compte.</p>
+        } @else if (f.statutCompte === 'ACTIF') {
+          <p class="explication">
+            Suspendez un compte en cas d'abus. La personne ne pourra plus se connecter.
           </p>
-        </div>
-      </div>
-      @if (profilsPossibles().length > 1) {
-        <mat-form-field class="profil-choix" subscriptSizing="dynamic">
-          <mat-label>Changer de profil</mat-label>
-          <mat-select [value]="f.profilId" [disabled]="changementProfil()" (selectionChange)="changerProfil($event.value)">
-            @for (p of profilsPossibles(); track p.id) {
-              <mat-option [value]="p.id">{{ p.nom }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      }
-      @if (droitsProfil().length > 0) {
-        <app-droits-lecture class="profil-droits" [droits]="droitsAffiches()" [compact]="true" />
-      }
-      @if (session.aLeDroit('PROFIL_GERER')) {
-      <a matButton routerLink="/profils" class="profil-lien">
-        Gérer les profils
-        <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
-      </a>
-      }
-    </section>
-
-    <!-- 5. Gestion du compte : actions sensibles, à part -->
-    <section class="gw-carte panneau compte" aria-labelledby="titre-compte">
-      <h2 id="titre-compte">Compte</h2>
-      <p class="statut-actuel">Statut actuel : <app-status-badge [statut]="f.statutCompte" /></p>
-
-      @if (estMoi()) {
-        <p class="explication">Vous ne pouvez pas suspendre ni désactiver votre propre compte.</p>
-      } @else if (f.statutCompte === 'ACTIF') {
-        <p class="explication">
-          Suspendez un compte en cas d'abus. La personne ne pourra plus se connecter.
-        </p>
-        <div class="actions-compte">
-          <button
-            matButton="outlined"
-            type="button"
-            class="gw-bouton-danger"
-            [disabled]="actionEnCours()"
-            (click)="changerStatut('SUSPENDU')"
-          >
-            Suspendre le compte…
-          </button>
-          <button
-            matButton
-            type="button"
-            [disabled]="actionEnCours()"
-            (click)="changerStatut('INACTIF')"
-          >
-            Désactiver le compte…
-          </button>
-        </div>
-      } @else {
-        <p class="explication">Ce compte ne peut plus se connecter.</p>
-        <div class="actions-compte">
-          <button
-            matButton="filled"
-            type="button"
-            [disabled]="actionEnCours()"
-            (click)="changerStatut('ACTIF')"
-          >
-            <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
-            Réactiver le compte
-          </button>
-        </div>
-      }
-    </section>
+          <div class="actions-compte">
+            <button
+              matButton="outlined"
+              type="button"
+              class="gw-bouton-danger"
+              [disabled]="actionEnCours()"
+              (click)="changerStatut('SUSPENDU')"
+            >
+              Suspendre le compte…
+            </button>
+            <button
+              matButton
+              type="button"
+              [disabled]="actionEnCours()"
+              (click)="changerStatut('INACTIF')"
+            >
+              Désactiver le compte…
+            </button>
+          </div>
+        } @else {
+          <p class="explication">Ce compte ne peut plus se connecter.</p>
+          <div class="actions-compte">
+            <button
+              matButton="filled"
+              type="button"
+              [disabled]="actionEnCours()"
+              (click)="changerStatut('ACTIF')"
+            >
+              <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
+              Réactiver le compte
+            </button>
+          </div>
+        }
+      </section>
     </aside>
   </div>
 }

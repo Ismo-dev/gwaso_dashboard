@@ -37,7 +37,7 @@ import {
   LIBELLES_NIVEAU,
   LIBELLES_TYPE_COMPTE,
   NiveauCuisine,
-  ORDRE_TYPES_COMPTE, JUSTIFICATIFS_ATTENDUS } from '../../models/utilisateur.model';
+  TYPES_COMPTE_CREABLES, JUSTIFICATIFS_ATTENDUS } from '../../models/utilisateur.model';
 import { UtilisateurService } from '../../services/utilisateur.service';
 
 /** Il faut un email ou un téléphone pour se connecter ; l'email est obligatoire pour un administrateur. */
@@ -94,7 +94,7 @@ export class NouvelUtilisateurDialog implements OnInit {
   private profilService = inject(ProfilService);
   private fenetre = inject(MatDialogRef<NouvelUtilisateurDialog, ResultatNouvelUtilisateur>);
 
-  protected readonly typesCompte = ORDRE_TYPES_COMPTE;
+  protected readonly typesCompte = TYPES_COMPTE_CREABLES;
   protected readonly libellesType = LIBELLES_TYPE_COMPTE;
   protected readonly iconesType = ICONES_TYPE_COMPTE;
   protected readonly aidesType = AIDES_TYPE_COMPTE;

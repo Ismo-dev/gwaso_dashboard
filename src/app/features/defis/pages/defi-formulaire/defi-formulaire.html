@@ -96,7 +96,7 @@
                 }
               </mat-autocomplete>
             </mat-form-field>
-          } @else {
+          } @else if (type.modeParticipation === 'REPONSE') {
             <mat-form-field class="large">
               <mat-label>Bonne réponse</mat-label>
               <ng-icon matPrefix class="icone-champ" name="lucideKeyRound" size="1.125rem" aria-hidden="true" />
@@ -104,11 +104,28 @@
                 matInput
                 formControlName="reponseAttendue"
                 maxlength="1000"
-                required
                 [placeholder]="elements() === 'INGREDIENTS' ? 'Ex. Le mafé' : elements() === 'USTENSILES' ? 'Ex. Le mortier et son pilon' : 'Ex. Le fourneau malgache'"
               />
               <mat-error>Indiquez la bonne réponse.</mat-error>
             </mat-form-field>
+            <!-- Un plat peut avoir plusieurs noms : toutes ces réponses rapportent les points -->
+            <app-liste-reponses
+              class="large"
+              libelle="Autres bonnes réponses (facultatif)"
+              placeholder="Ex. Tigadèguèna"
+              aide="Entrée pour ajouter · majuscules, accents et petites fautes de frappe ne comptent pas"
+              [(valeurs)]="autresReponses"
+            />
+            <mat-form-field class="champ-points">
+              <mat-label>Points pour une bonne réponse</mat-label>
+              <ng-icon matPrefix class="icone-champ" name="lucideCoins" size="1.125rem" aria-hidden="true" />
+              <input matInput type="number" formControlName="points" min="1" max="1000" />
+              <mat-error>Entre 1 et 1000 points.</mat-error>
+            </mat-form-field>
+            <p class="aide-correction">
+              <ng-icon name="lucideSparkles" size="1rem" aria-hidden="true" />
+              Les réponses sont corrigées automatiquement : un participant gagne ses points dès qu'il trouve.
+            </p>
           }
         }
 
@@ -160,6 +177,24 @@
           [longueurMax]="3000"
         />
       </section>
+
+      <!-- ===================== Questions du quiz ===================== -->
+      @if (quiz()) {
+        <section class="gw-carte bloc" aria-labelledby="titre-quiz">
+          <h2 id="titre-quiz" class="bloc-titre">
+            <ng-icon name="lucideListChecks" size="1.25rem" aria-hidden="true" />
+            Questions du quiz
+          </h2>
+          <p class="aide-correction">
+            Chaque question a son temps pour répondre : passé ce délai, la réponse ne rapporte rien.
+            Les réponses sont corrigées automatiquement.
+          </p>
+          @if (questionsVerrouillees()) {
+            <p class="erreur">Des participants ont déjà joué : les questions ne peuvent plus changer.</p>
+          }
+          <app-editeur-questions [(questions)]="questions" />
+        </section>
+      }
 
       <!-- ===================== Photos ===================== -->
       <section class="gw-carte bloc" aria-labelledby="titre-photos">

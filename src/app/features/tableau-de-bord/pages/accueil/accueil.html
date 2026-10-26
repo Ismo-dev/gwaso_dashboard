@@ -1,7 +1,10 @@
+
 @if (estProducteur()) {
   <app-accueil-producteur />
 } @else if (chargement()) {
  
+<!-- @if (chargement()) { -->
+
   <div class="squelette" aria-busy="true" aria-label="Chargement du tableau de bord">
     <div class="gw-squelette sq-bandeau"></div>
     <div class="grille-files">
@@ -30,7 +33,6 @@
     </app-empty-state>
   </div>
 } @else if (statistiques(); as stats) {
-  
   <section class="bienvenue" aria-labelledby="titre-bienvenue">
     <div class="bienvenue-ligne">
       <div>
@@ -39,7 +41,12 @@
       </div>
       @if (files()[0]; as premiere) {
         @if (premiere.nombre > 0) {
-          <a matButton="filled" class="bouton-revue" [routerLink]="premiere.lien" [queryParams]="premiere.parametres">
+          <a
+            matButton="filled"
+            class="bouton-revue"
+            [routerLink]="premiere.lien"
+            [queryParams]="premiere.parametres"
+          >
             Commencer par les {{ premiere.libelle | lowercase }}
             <ng-icon name="lucideArrowRight" size="1.125rem" aria-hidden="true" />
           </a>
@@ -48,14 +55,19 @@
     </div>
 
     @if (totalATraiter() > 0) {
-      
       <p class="resume">
         <strong class="total gw-chiffres">{{ totalATraiter() }}</strong>
-        <span>{{ totalATraiter() > 1 ? 'éléments attendent' : 'élément attend' }} votre décision</span>
+        <span
+          >{{ totalATraiter() > 1 ? 'éléments attendent' : 'élément attend' }} votre décision</span
+        >
       </p>
       <div class="repartition" role="img" [attr.aria-label]="resumeRepartition()">
         @for (file of filesNonVides(); track file.libelle; let i = $index) {
-          <span class="segment" [class]="'segment-' + (i % 4)" [style.flex-grow]="file.nombre"></span>
+          <span
+            class="segment"
+            [class]="'segment-' + (i % 4)"
+            [style.flex-grow]="file.nombre"
+          ></span>
         }
       </div>
       <ul class="legende">
@@ -127,10 +139,26 @@
         [valeur]="stats.utilisateurs.total"
         icone="lucideUsers"
         [segments]="[
-          { libelle: pluriel(stats.utilisateurs.cuisiniers, 'cuisinier'), valeur: stats.utilisateurs.cuisiniers, ton: 'terre' },
-          { libelle: pluriel(stats.utilisateurs.chefs, 'chef'), valeur: stats.utilisateurs.chefs, ton: 'karite' },
-          { libelle: pluriel(stats.utilisateurs.producteurs, 'producteur'), valeur: stats.utilisateurs.producteurs, ton: 'cacao' },
-          { libelle: pluriel(stats.utilisateurs.admins, 'admin'), valeur: stats.utilisateurs.admins, ton: 'sable' }
+          {
+            libelle: pluriel(stats.utilisateurs.cuisiniers, 'cuisinier'),
+            valeur: stats.utilisateurs.cuisiniers,
+            ton: 'terre',
+          },
+          {
+            libelle: pluriel(stats.utilisateurs.chefs, 'chef'),
+            valeur: stats.utilisateurs.chefs,
+            ton: 'karite',
+          },
+          {
+            libelle: pluriel(stats.utilisateurs.producteurs, 'producteur'),
+            valeur: stats.utilisateurs.producteurs,
+            ton: 'cacao',
+          },
+          {
+            libelle: pluriel(stats.utilisateurs.admins, 'admin'),
+            valeur: stats.utilisateurs.admins,
+            ton: 'sable',
+          },
         ]"
       />
       <app-stat-card
@@ -138,9 +166,17 @@
         [valeur]="stats.recettes.publiees"
         icone="lucideBookOpen"
         [segments]="[
-          { libelle: pluriel(stats.recettes.publiees, 'publiée'), valeur: stats.recettes.publiees, ton: 'terre' },
+          {
+            libelle: pluriel(stats.recettes.publiees, 'publiée'),
+            valeur: stats.recettes.publiees,
+            ton: 'terre',
+          },
           { libelle: 'en attente', valeur: stats.recettes.enAttente, ton: 'karite' },
-          { libelle: pluriel(stats.recettes.brouillons, 'brouillon'), valeur: stats.recettes.brouillons, ton: 'sable' }
+          {
+            libelle: pluriel(stats.recettes.brouillons, 'brouillon'),
+            valeur: stats.recettes.brouillons,
+            ton: 'sable',
+          },
         ]"
       />
       <app-stat-card
@@ -148,9 +184,17 @@
         [valeur]="stats.videos.publiees"
         icone="lucideClapperboard"
         [segments]="[
-          { libelle: pluriel(stats.videos.publiees, 'publiée'), valeur: stats.videos.publiees, ton: 'terre' },
+          {
+            libelle: pluriel(stats.videos.publiees, 'publiée'),
+            valeur: stats.videos.publiees,
+            ton: 'terre',
+          },
           { libelle: 'en attente', valeur: stats.videos.enAttente, ton: 'karite' },
-          { libelle: pluriel(stats.videos.desactivees, 'retirée'), valeur: stats.videos.desactivees, ton: 'cacao' }
+          {
+            libelle: pluriel(stats.videos.desactivees, 'retirée'),
+            valeur: stats.videos.desactivees,
+            ton: 'cacao',
+          },
         ]"
       />
       <app-stat-card
@@ -160,7 +204,11 @@
         [segments]="[
           { libelle: 'en cours', valeur: stats.defis.enCours, ton: 'terre' },
           { libelle: 'à venir', valeur: stats.defis.valides, ton: 'karite' },
-          { libelle: pluriel(stats.defis.termines, 'terminé'), valeur: stats.defis.termines, ton: 'cacao' }
+          {
+            libelle: pluriel(stats.defis.termines, 'terminé'),
+            valeur: stats.defis.termines,
+            ton: 'cacao',
+          },
         ]"
         [detail]="'Aucun défi pour le moment'"
       />
@@ -202,8 +250,8 @@
                 }}</a>
                 <p class="recette-meta">
                   {{ recette.auteurNom ?? 'Auteur inconnu' }}
-                  @if (recette.categorieNom) {
-                    · {{ recette.categorieNom }}
+                  @if (nomsCategories(recette)) {
+                    · {{ nomsCategories(recette) }}
                   }
                 </p>
               </div>

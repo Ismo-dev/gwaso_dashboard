@@ -1,0 +1,97 @@
+.audio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-3);
+  border: 1px dashed var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+
+  &.a-un-audio {
+    border-style: solid;
+    background: var(--gw-succes-fond);
+  }
+}
+
+.langue {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  margin: 0;
+  font-weight: 600;
+}
+
+.etat {
+  color: var(--gw-succes);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+}
+
+.lecteur {
+  width: 100%;
+  height: 40px;
+}
+
+.boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+}
+
+.en-cours {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-3);
+}
+
+.voyant {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gw-danger);
+  animation: clignote 1s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes clignote {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.bouton-fichier {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-2);
+  min-height: 40px;
+  padding: 0 var(--gw-espace-4);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-pilule);
+  cursor: pointer;
+  font-weight: 500;
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--gw-action);
+    outline-offset: 2px;
+  }
+}
+
+.retirer,
+.erreur {
+  color: var(--gw-danger);
+}
+
+.erreur {
+  margin: 0;
+  font-size: var(--gw-taille-petit);
+}

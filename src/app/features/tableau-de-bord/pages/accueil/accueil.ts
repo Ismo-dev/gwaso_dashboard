@@ -9,7 +9,7 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import { StatCard } from '../../../../shared/components/stat-card/stat-card';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
-import { RecetteResponse } from '../../../recettes/models/recette.model';
+import { RecetteResponse, nomsCategories } from '../../../recettes/models/recette.model';
 import { RecetteService } from '../../../recettes/services/recette.service';
 import { Statistiques } from '../../models/statistiques.model';
 import { StatistiquesService } from '../../services/statistiques.service';
@@ -60,6 +60,7 @@ const NB_APERCU = 5;
   templateUrl: './accueil.html',
 })
 export class Accueil implements OnInit {
+  protected readonly nomsCategories = nomsCategories;
   private statistiquesService = inject(StatistiquesService);
   private recetteService = inject(RecetteService);
   private aValider = inject(AValiderService);
@@ -95,7 +96,11 @@ export class Accueil implements OnInit {
 
   /** Ce que dit la barre, pour les lecteurs d'écran. */
   protected resumeRepartition = computed(
-    () => 'Répartition : ' + this.filesNonVides().map((f) => `${f.nombre} ${f.libelle.toLowerCase()}`).join(', '),
+    () =>
+      'Répartition : ' +
+      this.filesNonVides()
+        .map((f) => `${f.nombre} ${f.libelle.toLowerCase()}`)
+        .join(', '),
   );
 
   /** Files de travail, les plus chargées en premier. */

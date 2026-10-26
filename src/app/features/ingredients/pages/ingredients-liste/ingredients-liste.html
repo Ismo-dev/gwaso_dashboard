@@ -33,7 +33,7 @@
       <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
     </app-empty-state>
   </div>
-} @else if (ingredients().length === 0) {
+} @else if (ingredients().length === 0 || (ingredientsValides().length === 0 && propositions().length === 0)) {
   <div class="gw-carte">
     <app-empty-state
       titre="Aucun ingrédient pour le moment"
@@ -44,6 +44,16 @@
     </app-empty-state>
   </div>
 } @else {
+  @if (propositions().length > 0) {
+    <app-propositions-catalogue
+      quoi="ingrédient"
+      [propositions]="propositions()"
+      [enCours]="propositionEnCours()"
+      (completer)="completerProposition($event)"
+      (valider)="validerProposition($event)"
+      (refuser)="refuserProposition($event)"
+    />
+  }
   @if (sansPrix() > 0) {
     <p class="conseil">
       <ng-icon name="lucideCoins" size="1.125rem" aria-hidden="true" />
