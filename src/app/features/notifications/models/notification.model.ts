@@ -12,6 +12,7 @@ export type TypeNotification =
   | 'DEFI_A_VALIDER'
   | 'PARTICIPATION_DEFI'
   | 'DEFI_TERMINE'
+  | 'INGREDIENT_PROPOSE'
   | 'CATALOGUE_A_VALIDER'
   // Reçus par les membres (application mobile) ; un administrateur auteur d'une recette peut aussi en recevoir
   | 'RECETTE_PUBLIEE'
@@ -72,6 +73,7 @@ export const INFOS_TYPES: Record<TypeNotification, InfosType> = {
   DEFI_A_VALIDER: { categorie: 'Défi proposé', icone: 'lucideTrophy', ton: 'terre', action: 'Examiner le défi', aDecider: true },
   PARTICIPATION_DEFI: { categorie: 'Participation', icone: 'lucideUsers', ton: 'karite', action: 'Voir le défi', aDecider: false },
   DEFI_TERMINE: { categorie: 'Défi terminé', icone: 'lucideMedal', ton: 'karite', action: 'Voir le classement', aDecider: false },
+  INGREDIENT_PROPOSE: { categorie: 'Ingrédient proposé', icone: 'lucideCarrot', ton: 'terre', action: 'Consulter le catalogue', aDecider: true },
   CATALOGUE_A_VALIDER: { categorie: 'Proposition de chef', icone: 'lucideCarrot', ton: 'terre', action: 'Examiner la proposition', aDecider: true },
   RECETTE_PUBLIEE: { categorie: 'Recette publiée', icone: 'lucideBookOpen', ton: 'vert', action: 'Voir la recette', aDecider: false },
   RECETTE_REFUSEE: { categorie: 'Recette refusée', icone: 'lucideBookOpen', ton: 'terre', action: 'Voir la recette', aDecider: false },
@@ -118,6 +120,8 @@ export function lienCible(n: NotificationResponse): { lien: string[]; parametres
     case 'DEFI_REFUSE':
     case 'CLASSEMENT_PUBLIE':
       return { lien: ['/defis', n.cibleId] };
+    case 'INGREDIENT_PROPOSE':
+      return { lien: ['/ingredients'] };
     // Un cuisinier qui demande à devenir chef / producteur reste cuisinier tant que ce n'est pas validé :
     // on ouvre la fiche avec son type actuel
     case 'DEMANDE_CHEF':

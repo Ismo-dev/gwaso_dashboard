@@ -13,6 +13,7 @@ import { RecetteResponse, nomsCategories } from '../../../recettes/models/recett
 import { RecetteService } from '../../../recettes/services/recette.service';
 import { Statistiques } from '../../models/statistiques.model';
 import { StatistiquesService } from '../../services/statistiques.service';
+import { AccueilProducteur } from '../../../espace-producteur/components/accueil-producteur/accueil-producteur';
 
 /** Une file de travail « à traiter » (recettes, vidéos, défis, comptes). */
 interface FileATraiter {
@@ -52,6 +53,7 @@ const NB_APERCU = 5;
     LowerCasePipe,
     DepuisPipe,
     FichierPipe,
+    AccueilProducteur,
   ],
   selector: 'app-accueil',
   styleUrl: './accueil.scss',
@@ -63,6 +65,12 @@ export class Accueil implements OnInit {
   private recetteService = inject(RecetteService);
   private aValider = inject(AValiderService);
   protected session = inject(SessionService);
+
+  /** Détecte si l'utilisateur connecté est un producteur (n'a pas les droits de modération admin). */
+  protected estProducteur = computed(() => {
+    const user = this.session.utilisateur();
+    return user?.role === 'PRODUCTEUR' || (!this.session.aLeDroit('UTILISATEUR_GERER') && this.session.aLeDroit('PRODUIT_GERER'));
+  });
 
   protected statistiques = signal<Statistiques | null>(null);
   protected recettesEnAttente = signal<RecetteResponse[]>([]);
@@ -181,6 +189,11 @@ export class Accueil implements OnInit {
   }
 
   charger(): void {
+    if (this.estProducteur()) {
+      this.chargement.set(false);
+      return;
+    }
+
     this.chargement.set(true);
     this.erreur.set(false);
 

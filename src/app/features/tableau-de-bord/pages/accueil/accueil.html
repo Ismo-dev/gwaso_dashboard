@@ -1,4 +1,10 @@
-@if (chargement()) {
+
+@if (estProducteur()) {
+  <app-accueil-producteur />
+} @else if (chargement()) {
+ 
+<!-- @if (chargement()) { -->
+
   <div class="squelette" aria-busy="true" aria-label="Chargement du tableau de bord">
     <div class="gw-squelette sq-bandeau"></div>
     <div class="grille-files">

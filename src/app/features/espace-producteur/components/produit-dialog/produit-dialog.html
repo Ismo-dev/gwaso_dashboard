@@ -1,0 +1,356 @@
+<h2 mat-dialog-title>
+  {{ donnees.produit ? 'Modifier mon offre' : 'Mettre un produit en vente' }}
+</h2>
+
+<form class="formulaire" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+  <mat-dialog-content>
+    @if (erreur()) {
+      <p class="erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    <!-- 1. Sélection de l'ingrédient -->
+    <div class="section-champ">
+      <label class="label-section">1. Ingrédient du catalogue</label>
+
+      @if (modeNouvelIngredient()) {
+        <!-- Formulaire de proposition d'un nouvel ingrédient -->
+        <div class="carte-nouvel-ingredient">
+          <div class="entete-nouveau">
+            <div class="titre-nouveau">
+              <ng-icon name="lucideSparkles" class="icone-etincelle" />
+              <div>
+                <strong>Proposition d'un nouvel ingrédient</strong>
+                <p class="sous-titre-nouveau">
+                  Il sera soumis aux administrateurs pour validation et intégration officielle au catalogue.
+                </p>
+              </div>
+            </div>
+            <button
+              matButton="outlined"
+              type="button"
+              class="btn-annuler-nouveau"
+              (click)="annulerPropositionNouvelIngredient()"
+            >
+              Annuler
+            </button>
+          </div>
+
+          <div class="champs-nouveau-grille">
+            <mat-form-field class="champ-nom-nouveau" subscriptSizing="dynamic">
+              <mat-label>Nom de l'ingrédient</mat-label>
+              <input matInput [formControl]="nomNouveau" placeholder="Ex. Gombo rouge, Fonio blanc" />
+              <mat-error>Le nom est obligatoire.</mat-error>
+            </mat-form-field>
+
+            <div class="ligne-secondaire-nouveau">
+              <mat-form-field class="champ-rayon-nouveau" subscriptSizing="dynamic">
+                <mat-label>Rayon suggéré</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [formControl]="champRechercheCategorieNouveau"
+                  [matAutocomplete]="autoCatNouveau"
+                  placeholder="Ex. Légumes, Céréales..."
+                />
+                <ng-icon matSuffix name="lucideChevronDown" />
+                <mat-autocomplete
+                  #autoCatNouveau="matAutocomplete"
+                  [displayWith]="afficherNomCategorie"
+                  (optionSelected)="choisirCategorieNouveau($event)"
+                >
+                  <mat-option [value]="null">
+                    <span class="option-non-classe">Je ne sais pas / Autres (À classer)</span>
+                  </mat-option>
+                  @for (cat of categoriesNouveauFiltrees(); track cat.id) {
+                    <mat-option [value]="cat">
+                      <span class="nom-cat">{{ cat.nom }}</span>
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+              </mat-form-field>
+
+              <mat-form-field class="champ-unite-nouveau" subscriptSizing="dynamic">
+                <mat-label>Unité de vente</mat-label>
+                <mat-select [formControl]="uniteNouveau">
+                  @for (unite of unites; track unite.valeur) {
+                    <mat-option [value]="unite.valeur">{{ unite.libelle }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <p class="info-guide-nouveau">
+            <ng-icon name="lucideInfo" size="0.875rem" />
+            Si vous hésitez sur le rayon, laissez <em>« Je ne sais pas / Autres »</em> : l'équipe d'administration l'assignera plus tard.
+          </p>
+        </div>
+      } @else if (!ingredientSelectionne()) {
+        <div class="ligne-recherche">
+          <!-- Filtre de rayon avec recherche autocomplétée -->
+          @if (!donnees.produit && categories().length > 0) {
+            <mat-form-field class="champ-rayon" subscriptSizing="dynamic">
+              <mat-label>Rayon / Catégorie</mat-label>
+              <input
+                matInput
+                type="text"
+                [formControl]="champRechercheCategorie"
+                [matAutocomplete]="autoCategorie"
+                placeholder="Tous les rayons"
+              />
+              @if (categorieFiltre() || champRechercheCategorie.value) {
+                <button
+                  matIconButton
+                  matSuffix
+                  type="button"
+                  aria-label="Effacer le filtre de rayon"
+                  (click)="effacerFiltreCategorie()"
+                >
+                  <ng-icon name="lucideX" size="1rem" />
+                </button>
+              } @else {
+                <ng-icon matSuffix name="lucideChevronDown" />
+              }
+              <mat-autocomplete
+                #autoCategorie="matAutocomplete"
+                [displayWith]="afficherNomCategorie"
+                (optionSelected)="choisirCategorieFiltre($event)"
+              >
+                <mat-option [value]="null">
+                  <span class="option-tous-rayons">Tous les rayons</span>
+                </mat-option>
+                @for (cat of categoriesFiltrees(); track cat.id) {
+                  <mat-option [value]="cat">
+                    <span class="nom-cat">{{ cat.nom }}</span>
+                  </mat-option>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+          }
+
+          <!-- Champ de recherche autocomplété -->
+          <mat-form-field class="champ-recherche-ing" subscriptSizing="dynamic">
+            <mat-label>Rechercher un ingrédient</mat-label>
+            <input
+              matInput
+              type="text"
+              [formControl]="champRecherche"
+              [matAutocomplete]="autoIngredient"
+              placeholder="Ex. Gombo, Fonio, Arachide, Oignon..."
+            />
+            @if (chargementIngredients()) {
+              <mat-progress-spinner matSuffix mode="indeterminate" diameter="18" />
+            } @else {
+              <ng-icon matSuffix name="lucideSearch" />
+            }
+            <mat-autocomplete
+              #autoIngredient="matAutocomplete"
+              [displayWith]="afficherNomIngredient"
+              (optionSelected)="choisirIngredient($event)"
+            >
+              @for (ing of ingredientsFiltres(); track ing.id) {
+                <mat-option [value]="ing" class="option-ingredient">
+                  <div class="option-contenu">
+                    @if (ing.photoUrl) {
+                      <img [src]="ing.photoUrl | fichier" [alt]="ing.nom" class="miniature-option" />
+                    } @else {
+                      <div class="miniature-vide">
+                        <ng-icon name="lucideCarrot" />
+                      </div>
+                    }
+                    <span class="nom-ing">{{ ing.nom }}</span>
+                    @if (categorieNomDe(ing); as catNom) {
+                      <span class="badge-cat-option">{{ catNom }}</span>
+                    }
+                    @if (ing.unite) {
+                      <span class="unite-ing">({{ ing.unite | unite }})</span>
+                    }
+                  </div>
+                </mat-option>
+              }
+
+              @if (texteRecherche().trim().length >= 2) {
+                <mat-option
+                  [value]="null"
+                  class="option-proposer-nouveau"
+                  (click)="activerPropositionNouvelIngredient(texteRecherche())"
+                >
+                  <div class="option-contenu-proposer">
+                    <ng-icon name="lucidePlus" />
+                    <span>Proposer <strong>« {{ texteRecherche() }} »</strong> comme nouvel ingrédient</span>
+                  </div>
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+
+        <!-- Alerte si l'ingrédient existe dans un autre rayon -->
+        @if (premierDansAutreRayon(); as autreIng) {
+          <div class="alerte-autre-rayon">
+            <div class="texte-alerte">
+              <ng-icon name="lucideTriangleAlert" size="1.125rem" />
+              <span>
+                <strong>« {{ autreIng.nom }} »</strong> existe déjà dans le rayon
+                <strong>{{ categorieNomDe(autreIng) ?? 'Autre' }}</strong>.
+              </span>
+            </div>
+            <button type="button" class="btn-action-rayon" (click)="basculerRayonEtChoisir(autreIng)">
+              Basculer sur ce rayon et sélectionner
+            </button>
+          </div>
+        }
+
+        <!-- Lien de création directe si aucun résultat ou si souhaité -->
+        @if (!donnees.produit && (aucunIngredientTrouve() || (texteRecherche().length >= 2 && ingredientsFiltres().length === 0))) {
+          <div class="zone-action-nouveau">
+            <span class="texte-aide">Cet ingrédient ne figure pas encore dans le catalogue ?</span>
+            <button
+              type="button"
+              class="btn-proposer-nouveau"
+              (click)="activerPropositionNouvelIngredient()"
+            >
+              <ng-icon name="lucidePlus" size="1rem" />
+              Proposer « {{ texteRecherche() || 'cet ingrédient' }} » au catalogue
+            </button>
+          </div>
+        }
+      } @else {
+        <!-- Fiche Ingrédient Sélectionné (style carte admin) -->
+        <div class="carte-ingredient-selectionne">
+          <div class="apercu-gauche">
+            @if (ingredientSelectionne()?.photoUrl; as photo) {
+              <img [src]="photo | fichier" [alt]="ingredientSelectionne()?.nom" class="photo-apercu" />
+            } @else {
+              <div class="photo-apercu photo-vide">
+                <ng-icon name="lucideCarrot" size="1.5rem" />
+              </div>
+            }
+            <div class="details-apercu">
+              <div class="titre-avec-badge">
+                <strong class="titre-ing">{{ ingredientSelectionne()?.nom }}</strong>
+                @if (ingredientSelectionne()?.categorieNom || donnees.produit?.categorieNom; as catNom) {
+                  <span class="badge-cat-tag">{{ catNom }}</span>
+                }
+              </div>
+              @if (ingredientSelectionne()?.prixMin || ingredientSelectionne()?.prixMax) {
+                <p class="prix-marche">
+                  <ng-icon name="lucideTrendingUp" size="0.875rem" />
+                  Prix indicatif au marché :
+                  <strong>
+                    @if (ingredientSelectionne()?.prixMin && ingredientSelectionne()?.prixMax) {
+                      {{ ingredientSelectionne()?.prixMin | number: '1.0-0' : 'fr' }} - {{ ingredientSelectionne()?.prixMax | number: '1.0-0' : 'fr' }} FCFA
+                    } @else if (ingredientSelectionne()?.prixMin) {
+                      dès {{ ingredientSelectionne()?.prixMin | number: '1.0-0' : 'fr' }} FCFA
+                    } @else {
+                      jusqu'à {{ ingredientSelectionne()?.prixMax | number: '1.0-0' : 'fr' }} FCFA
+                    }
+                  </strong>
+                </p>
+              }
+              @if (aPhotoCatalogue()) {
+                <span class="badge-photo-officielle">
+                  <ng-icon name="lucideCheck" size="0.75rem" /> Photo officielle catalogue
+                </span>
+              }
+            </div>
+          </div>
+
+          @if (!donnees.produit) {
+            <button
+              matButton="outlined"
+              type="button"
+              class="bouton-changer"
+              (click)="changerIngredient()"
+            >
+              Changer
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- 2. Conditions de vente -->
+    <fieldset class="conditions-vente">
+      <legend>2. Conditions de vente</legend>
+
+      <div class="champ-prix-conteneur">
+        <mat-form-field class="champ-prix">
+          <mat-label>Prix indicatif</mat-label>
+          <input
+            matInput
+            type="number"
+            min="1"
+            [max]="prixPlafond() ?? null"
+            step="25"
+            inputmode="numeric"
+            formControlName="prixIndicatif"
+          />
+          <span matSuffix>FCFA</span>
+          @if (prixPlafond(); as max) {
+            <mat-hint>Plafond autorisé : <strong>{{ max | number: '1.0-0' : 'fr' }} FCFA</strong> (prix indicatif catalogue)</mat-hint>
+          } @else {
+            <mat-hint>Prix proposé aux cuisiniers dans l'annuaire</mat-hint>
+          }
+          @if (formulaire.controls.prixIndicatif.hasError('max')) {
+            <mat-error>
+              Le prix ne peut pas dépasser {{ prixPlafond() | number: '1.0-0' : 'fr' }} FCFA.
+            </mat-error>
+          } @else {
+            <mat-error>Le prix doit être supérieur à 0 FCFA.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <div class="ligne">
+        <mat-form-field class="champ-quantite">
+          <mat-label>Quantité disponible</mat-label>
+          <input
+            matInput
+            type="number"
+            min="0.1"
+            step="0.5"
+            inputmode="decimal"
+            formControlName="quantite"
+          />
+          <mat-hint>Stock actuel</mat-hint>
+          <mat-error>La quantité doit être supérieure à 0.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="champ-unite">
+          <mat-label>Unité de mesure</mat-label>
+          <mat-select formControlName="unite">
+            @for (unite of unites; track unite.valeur) {
+              <mat-option [value]="unite.valeur">{{ unite.libelle }}</mat-option>
+            }
+          </mat-select>
+          <mat-error>L'unité est obligatoire.</mat-error>
+        </mat-form-field>
+      </div>
+    </fieldset>
+
+    <!-- 3. Photo personnalisée du produit (masquée si l'ingrédient a déjà une photo officielle) -->
+    @if (!aPhotoCatalogue()) {
+      <div class="section-photo">
+        <app-image-upload
+          libelle="Photo personnalisée de votre produit (facultatif)"
+          format="carre"
+          [imageActuelle]="donnees.produit?.imageUrl ?? null"
+          (fichierChoisi)="photo = $event"
+        />
+      </div>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton="outlined" type="button" [mat-dialog-close]="undefined">
+      Annuler
+    </button>
+    <button matButton="filled" type="submit" [disabled]="enCours()">
+      @if (enCours()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+      }
+      {{ donnees.produit ? 'Enregistrer les modifications' : 'Mettre en vente' }}
+    </button>
+  </mat-dialog-actions>
+</form>

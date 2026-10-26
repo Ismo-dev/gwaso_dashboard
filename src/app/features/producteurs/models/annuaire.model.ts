@@ -11,6 +11,8 @@ export interface ProduitAnnuaire {
   prixIndicatif: number | null;
   quantite: number | null;
   unite: string | null;
+  categorieId?: string | null;
+  categorieNom?: string | null;
 }
 
 /** AnnuaireProducteurDTO côté backend : un producteur validé et ce qu'il vend. */
@@ -29,5 +31,6 @@ export interface FiltresAnnuaire extends Pagination {
   /** Nom, localité ou produit (« gombo » retrouve ceux qui en vendent). */
   recherche?: string;
   ingredientId?: string;
+  categorieId?: string;
   localite?: string;
 }

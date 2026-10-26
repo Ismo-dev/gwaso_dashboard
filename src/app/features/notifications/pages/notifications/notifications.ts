@@ -23,6 +23,7 @@ import { StatusBadge } from '../../../../shared/components/status-badge/status-b
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import { DefiService } from '../../../defis/services/defi.service';
+import { IngredientService } from '../../../ingredients/services/ingredient.service';
 import { RecetteService } from '../../../recettes/services/recette.service';
 import { LIBELLES_TYPE_COMPTE } from '../../../utilisateurs/models/utilisateur.model';
 import { UtilisateurService } from '../../../utilisateurs/services/utilisateur.service';
@@ -30,7 +31,7 @@ import { formaterDuree } from '../../../videos/models/video.model';
 import { VideoService } from '../../../videos/services/video.service';
 import { estPropositionUstensile, INFOS_TYPES, lienCible, NotificationResponse } from '../../models/notification.model';
 import { IngredientResponse } from '../../../ingredients/models/ingredient.model';
-import { IngredientService } from '../../../ingredients/services/ingredient.service';
+//import { IngredientService } from '../../../ingredients/services/ingredient.service';
 import { UstensileResponse } from '../../../ustensiles/models/ustensile.model';
 import { UstensileService } from '../../../ustensiles/services/ustensile.service';
 import { NotificationsService } from '../../services/notifications.service';

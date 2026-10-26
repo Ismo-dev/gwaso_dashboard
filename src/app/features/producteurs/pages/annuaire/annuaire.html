@@ -17,6 +17,16 @@
   </mat-form-field>
 
   <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Rayon / Catégorie</mat-label>
+    <mat-select [formControl]="categorie">
+      <mat-option [value]="null">Tous les rayons</mat-option>
+      @for (c of categories(); track c.id) {
+        <mat-option [value]="c.id">{{ c.nom }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field subscriptSizing="dynamic">
     <mat-label>Ingrédient vendu</mat-label>
     <mat-select [formControl]="ingredient">
       <mat-option [value]="null">Tous les ingrédients</mat-option>
@@ -84,48 +94,53 @@
           </div>
         </header>
 
+        <!-- Catégories de produits vendus par ce producteur -->
+        <div class="section-categories-vendeur">
+          <span class="titre-categories">
+            <ng-icon name="lucideShoppingBasket" size="0.875rem" aria-hidden="true" />
+            Catégories disponibles :
+          </span>
+          <div class="tags-categories" aria-label="Rayons proposés">
+            @for (cat of categoriesDuProducteurAvecCompte(p); track cat.id) {
+              <span class="tag-cat" [class.cat-active]="cat.id === categorie.value">
+                {{ cat.nom }}
+                <small class="compte-cat">({{ cat.compte }})</small>
+              </span>
+            } @empty {
+              <span class="aucun-rayon">Aucun produit pour le moment</span>
+            }
+          </div>
+        </div>
+
         <ul class="contacts">
           @if (p.telephone) {
-            <li><a [href]="'tel:' + p.telephone" class="gw-chiffres">{{ p.telephone }}</a></li>
+            <li>
+              <a [href]="'tel:' + p.telephone" class="contact-lien">
+                <ng-icon name="lucidePhone" size="0.875rem" aria-hidden="true" />
+                <span class="gw-chiffres">{{ p.telephone }}</span>
+              </a>
+            </li>
           }
           @if (p.email) {
-            <li><a [href]="'mailto:' + p.email">{{ p.email }}</a></li>
-          }
-        </ul>
-
-        <p class="produits-titre">
-          {{ p.produits.length }} produit{{ p.produits.length > 1 ? 's' : '' }}
-        </p>
-        <ul class="produits">
-          @for (prod of p.produits; track prod.id) {
-            <li class="produit" [class.produit-cherche]="prod.ingredientId === ingredient.value">
-              <span class="vignette">
-                @if ((prod.imageUrl ?? prod.ingredientPhotoUrl) | fichier; as photo) {
-                  <img [src]="photo" alt="" loading="lazy" />
-                } @else {
-                  <ng-icon name="lucideCarrot" size="1rem" aria-hidden="true" />
-                }
-              </span>
-              <span class="produit-nom">{{ prod.ingredientNom }}</span>
-              <span class="produit-prix gw-chiffres">
-                @if (prod.prixIndicatif !== null) {
-                  {{ prod.prixIndicatif | number: '1.0-0' : 'fr' }} FCFA<span class="unite"> / {{ prod.unite | unite }}</span>
-                } @else {
-                  Prix à demander
-                }
-              </span>
+            <li>
+              <a [href]="'mailto:' + p.email" class="contact-lien">
+                <ng-icon name="lucideMail" size="0.875rem" aria-hidden="true" />
+                <span>{{ p.email }}</span>
+              </a>
             </li>
-          } @empty {
-            <li class="aucun-produit">Aucun produit pour le moment.</li>
           }
         </ul>
 
-        @if (session.aLeDroit('UTILISATEUR_GERER')) {
-          <a matButton class="fiche" [routerLink]="['/utilisateurs', p.id]" [queryParams]="{ role: 'PRODUCTEUR' }">
+        <footer class="carte-pied">
+          <span class="total-produits-badge">
+            <strong class="gw-chiffres">{{ p.produits.length }}</strong> produit{{ p.produits.length > 1 ? 's' : '' }}
+          </span>
+
+          <button matButton="filled" type="button" class="bouton-voir-fiche" (click)="ouvrirFiche(p)">
             Voir la fiche
             <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
-          </a>
-        }
+          </button>
+        </footer>
       </li>
     }
   </ul>

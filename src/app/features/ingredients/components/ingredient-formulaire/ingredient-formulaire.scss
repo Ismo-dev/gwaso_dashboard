@@ -30,11 +30,20 @@
 }
 
 .champ-nom {
-  flex: 3;
+  flex: 2.2;
+}
+
+.champ-categorie {
+  flex: 1.8;
 }
 
 .champ-unite {
-  flex: 2;
+  flex: 1.4;
+}
+
+.option-non-classe {
+  font-style: italic;
+  color: var(--gw-texte-doux);
 }
 
 .prix {

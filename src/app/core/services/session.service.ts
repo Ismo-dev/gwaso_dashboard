@@ -72,9 +72,14 @@ export class SessionService {
     return this.utilisateur()?.droits.includes(droit) ?? false;
   }
 
-  /** Le dashboard s'ouvre avec le droit ACCES_DASHBOARD (quel que soit le type de compte). */
+  /** Le dashboard s'ouvre avec le droit ACCES_DASHBOARD ou pour un producteur (PRODUIT_GERER). */
   peutOuvrirLeDashboard(): boolean {
-    return this.estConnecte() && this.aLeDroit('ACCES_DASHBOARD');
+    return (
+      this.estConnecte() &&
+      (this.aLeDroit('ACCES_DASHBOARD') ||
+        this.aLeDroit('PRODUIT_GERER') ||
+        this.utilisateur()?.role === 'PRODUCTEUR')
+    );
   }
 
   /** Le jeton d'accès est expiré (ou va l'être dans quelques secondes) : il faut le renouveler. */

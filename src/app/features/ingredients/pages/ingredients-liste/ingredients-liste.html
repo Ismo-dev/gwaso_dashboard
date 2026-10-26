@@ -3,6 +3,10 @@
   titre="Ingrédients"
   description="Les ingrédients proposés aux auteurs de recettes, avec leur prix indicatif au marché pour estimer le budget d'un plat."
 >
+  <button matButton="outlined" type="button" (click)="gererRayons()">
+    <ng-icon name="lucideLayoutGrid" size="1.125rem" aria-hidden="true" />
+    Gérer les rayons
+  </button>
   <button matButton="filled" type="button" (click)="nouveau()">
     <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
     Nouvel ingrédient
@@ -92,6 +96,15 @@
         }
       </mat-form-field>
       <mat-form-field class="filtre" subscriptSizing="dynamic">
+        <mat-label>Rayon / Catégorie</mat-label>
+        <mat-select [value]="categorieFiltre()" (selectionChange)="filtrerCategorie($event.value)">
+          <mat-option [value]="null">Tous les rayons</mat-option>
+          @for (cat of categoriesAvecComptes(); track cat.id) {
+            <mat-option [value]="cat.id">{{ cat.nom }} ({{ cat.compte }})</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field class="filtre filtre-unite" subscriptSizing="dynamic">
         <mat-label>Unité</mat-label>
         <mat-select [value]="uniteFiltre()" (selectionChange)="filtrerUnite($event.value)">
           <mat-option [value]="null">Toutes les unités</mat-option>
@@ -113,7 +126,7 @@
     @if (ingredientsFiltres().length === 0) {
       <app-empty-state
         titre="Aucun ingrédient ne correspond"
-        message="Essayez un autre nom ou une autre unité."
+        message="Essayez un autre nom, rayon ou unité."
         icone="lucideSearch"
       >
         <button matButton="outlined" type="button" (click)="effacerFiltres()">
@@ -128,7 +141,12 @@
             <li class="carte">
               <ng-container *ngTemplateOutlet="photo; context: { $implicit: ingredient }" />
               <div class="carte-textes">
-                <span class="nom">{{ ingredient.nom }}</span>
+                <div class="carte-entete">
+                  <span class="nom">{{ ingredient.nom }}</span>
+                  @if (ingredient.categorieNom) {
+                    <span class="badge-rayon badge-rayon-mobile">{{ ingredient.categorieNom }}</span>
+                  }
+                </div>
                 <span class="carte-prix">
                   <ng-container *ngTemplateOutlet="prix; context: { $implicit: ingredient }" />
                 </span>
@@ -155,6 +173,17 @@
                   <ng-container *ngTemplateOutlet="photo; context: { $implicit: ingredient }" />
                   <span class="nom">{{ ingredient.nom }}</span>
                 </div>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="categorie">
+              <th mat-header-cell *matHeaderCellDef scope="col">Rayon</th>
+              <td mat-cell *matCellDef="let ingredient">
+                @if (ingredient.categorieNom) {
+                  <span class="badge-rayon">{{ ingredient.categorieNom }}</span>
+                } @else {
+                  <span class="sans-rayon">—</span>
+                }
               </td>
             </ng-container>
 

@@ -1,0 +1,150 @@
+<h2 mat-dialog-title>Gestion des rayons d'ingrédients</h2>
+
+<mat-dialog-content class="contenu-dialogue">
+  @if (erreur()) {
+    <p class="erreur" role="alert">{{ erreur() }}</p>
+  }
+
+  <p class="description-dialog">
+    Les rayons permettent de structurer le catalogue des ingrédients pour les producteurs, cuisiniers et administrateurs (ex. <em>Légumes & Tubercules, Épices, Céréales, Viandes</em>).
+  </p>
+
+  <!-- 1. Formulaire d'ajout rapide d'un nouveau rayon -->
+  <section class="section-nouveau">
+    <h3 class="titre-section">Ajouter un nouveau rayon</h3>
+    <div class="formulaire-ajout">
+      <div class="ligne-champs">
+        <mat-form-field class="champ-nom" subscriptSizing="dynamic">
+          <mat-label>Nom du rayon</mat-label>
+          <input
+            matInput
+            [formControl]="nomNouveau"
+            placeholder="Ex. Céréales & Grains"
+            maxlength="80"
+            (keyup.enter)="ajouter()"
+          />
+          <mat-error>Le nom est obligatoire.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="champ-desc" subscriptSizing="dynamic">
+          <mat-label>Description (facultative)</mat-label>
+          <input
+            matInput
+            [formControl]="descriptionNouvelle"
+            placeholder="Ex. Riz, mil, fonio, sorgho..."
+            maxlength="255"
+            (keyup.enter)="ajouter()"
+          />
+        </mat-form-field>
+      </div>
+
+      <button
+        matButton="filled"
+        type="button"
+        class="bouton-ajouter"
+        [disabled]="chargement() || nomNouveau.invalid || !nomNouveau.value.trim()"
+        (click)="ajouter()"
+      >
+        <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+        Ajouter le rayon
+      </button>
+    </div>
+  </section>
+
+  <!-- 2. Liste des rayons existants -->
+  <section class="section-liste">
+    <div class="entete-liste">
+      <h3 class="titre-section">
+        Rayons enregistrés ({{ categories().length }})
+      </h3>
+      @if (chargement()) {
+        <mat-progress-spinner mode="indeterminate" diameter="18" />
+      }
+    </div>
+
+    @if (categories().length === 0 && !chargement()) {
+      <app-empty-state
+        titre="Aucun rayon d'ingrédient"
+        message="Ajoutez votre premier rayon ci-dessus pour classifier les ingrédients."
+        icone="lucideLayoutGrid"
+      />
+    } @else {
+      <ul class="liste-rayons">
+        @for (cat of categories(); track cat.id) {
+          <li class="item-rayon" [class.en-edition]="enEditionId() === cat.id">
+            @if (enEditionId() === cat.id) {
+              <!-- Mode édition inline -->
+              <div class="formulaire-edition">
+                <div class="ligne-champs">
+                  <mat-form-field class="champ-nom" subscriptSizing="dynamic">
+                    <mat-label>Nom</mat-label>
+                    <input matInput [formControl]="nomEdition" maxlength="80" (keyup.enter)="enregistrerEdition(cat)" />
+                  </mat-form-field>
+                  <mat-form-field class="champ-desc" subscriptSizing="dynamic">
+                    <mat-label>Description</mat-label>
+                    <input matInput [formControl]="descriptionEdition" maxlength="255" (keyup.enter)="enregistrerEdition(cat)" />
+                  </mat-form-field>
+                </div>
+
+                <div class="actions-edition">
+                  <button
+                    matButton="filled"
+                    type="button"
+                    [disabled]="chargement() || nomEdition.invalid || !nomEdition.value.trim()"
+                    (click)="enregistrerEdition(cat)"
+                  >
+                    Enregistrer
+                  </button>
+                  <button matButton="outlined" type="button" (click)="annulerEdition()">
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <!-- Mode affichage standard -->
+              <div class="infos-rayon">
+                <div class="ligne-titre-cat">
+                  <strong class="nom-rayon">{{ cat.nom }}</strong>
+                  <span class="badge-compte">
+                    {{ compteIngredients(cat.id) }} ingrédient{{ compteIngredients(cat.id) > 1 ? 's' : '' }}
+                  </span>
+                </div>
+                @if (cat.description) {
+                  <p class="description-rayon">{{ cat.description }}</p>
+                }
+              </div>
+
+              <div class="actions-rayon">
+                <button
+                  matIconButton
+                  type="button"
+                  matTooltip="Modifier ce rayon"
+                  [attr.aria-label]="'Modifier ' + cat.nom"
+                  (click)="commencerEdition(cat)"
+                >
+                  <ng-icon name="lucidePencil" size="1.125rem" />
+                </button>
+                <button
+                  matIconButton
+                  type="button"
+                  class="btn-danger-icone"
+                  matTooltip="Supprimer ce rayon"
+                  [attr.aria-label]="'Supprimer ' + cat.nom"
+                  (click)="supprimer(cat)"
+                >
+                  <ng-icon name="lucideTrash2" size="1.125rem" />
+                </button>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton="filled" type="button" (click)="fermer()">
+    Fermer
+  </button>
+</mat-dialog-actions>

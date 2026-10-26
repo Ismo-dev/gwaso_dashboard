@@ -1,0 +1,208 @@
+@use 'points-de-rupture' as ecran;
+
+.contenu-dialogue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+  max-height: 75vh;
+  overflow-y: auto;
+  padding-top: var(--gw-espace-2);
+}
+
+.erreur {
+  margin: 0;
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+}
+
+.description-dialog {
+  margin: 0;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-corps);
+  line-height: 1.45;
+
+  em {
+    color: var(--gw-cacao);
+    font-style: normal;
+    font-weight: 500;
+  }
+}
+
+.titre-section {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--gw-cacao);
+  margin: 0 0 var(--gw-espace-3);
+}
+
+// ----- 1. Section Ajout d'un nouveau rayon -----
+.section-nouveau {
+  padding: var(--gw-espace-4);
+  background: var(--gw-fond-accent);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+
+  .formulaire-ajout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gw-espace-3);
+  }
+
+  .ligne-champs {
+    display: flex;
+    gap: var(--gw-espace-3);
+
+    .champ-nom {
+      flex: 2;
+      min-width: 0;
+    }
+
+    .champ-desc {
+      flex: 3;
+      min-width: 0;
+    }
+
+    @include ecran.mobile {
+      flex-direction: column;
+      gap: var(--gw-espace-2);
+    }
+  }
+
+  .bouton-ajouter {
+    align-self: flex-start;
+  }
+}
+
+// ----- 2. Section Liste des rayons existants -----
+.section-liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+
+  .entete-liste {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .titre-section {
+      margin: 0;
+    }
+  }
+
+  .liste-rayons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gw-espace-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .item-rayon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gw-espace-3);
+    padding: var(--gw-espace-3) var(--gw-espace-4);
+    background: var(--gw-surface);
+    border: 1px solid var(--gw-bordure);
+    border-radius: var(--gw-rayon);
+    transition: background var(--gw-duree) var(--gw-courbe);
+
+    &:hover {
+      background: var(--gw-fond-survol);
+    }
+
+    &.en-edition {
+      background: var(--gw-fond-accent);
+      border-color: var(--gw-action);
+    }
+  }
+
+  .infos-rayon {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    .ligne-titre-cat {
+      display: flex;
+      align-items: center;
+      gap: var(--gw-espace-2);
+      flex-wrap: wrap;
+
+      .nom-rayon {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--gw-cacao);
+      }
+
+      .badge-compte {
+        padding: 2px 8px;
+        border-radius: var(--gw-rayon-pilule);
+        background: var(--gw-fond-accent);
+        border: 1px solid var(--gw-bordure);
+        color: var(--gw-texte-doux);
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+    }
+
+    .description-rayon {
+      margin: 0;
+      color: var(--gw-texte-doux);
+      font-size: var(--gw-taille-petit);
+    }
+  }
+
+  .actions-rayon {
+    display: flex;
+    align-items: center;
+    gap: var(--gw-espace-1);
+    flex-shrink: 0;
+
+    .btn-danger-icone {
+      color: var(--gw-danger);
+
+      &:hover {
+        background: var(--gw-danger-fond);
+      }
+    }
+  }
+
+  // Formulaire d'édition inline
+  .formulaire-edition {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gw-espace-3);
+    width: 100%;
+
+    .ligne-champs {
+      display: flex;
+      gap: var(--gw-espace-3);
+
+      .champ-nom {
+        flex: 2;
+      }
+
+      .champ-desc {
+        flex: 3;
+      }
+
+      @include ecran.mobile {
+        flex-direction: column;
+        gap: var(--gw-espace-2);
+      }
+    }
+
+    .actions-edition {
+      display: flex;
+      gap: var(--gw-espace-2);
+      justify-content: flex-end;
+    }
+  }
+}

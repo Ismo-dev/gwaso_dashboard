@@ -1,0 +1,242 @@
+@if (chargement()) {
+  <div class="squelette" aria-busy="true" aria-label="Chargement de votre espace producteur">
+    <div class="gw-squelette sq-bandeau"></div>
+    <div class="grille-chiffres">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="gw-squelette sq-chiffre"></div>
+      }
+    </div>
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger votre tableau de bord"
+      message="Vérifiez votre connexion au serveur puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">
+        <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+        Réessayer
+      </button>
+    </app-empty-state>
+  </div>
+} @else {
+  <!-- 1. En-tête de bienvenue éditorial (style journal GWASO) -->
+  <section class="bienvenue" aria-labelledby="titre-bienvenue">
+    <div class="bienvenue-ligne">
+      <div>
+        <p class="date">{{ aujourdhui | date: 'EEEE d MMMM y' }}</p>
+        <h1 id="titre-bienvenue">{{ salutation() }}, {{ utilisateur()?.prenom }}.</h1>
+      </div>
+      <div class="bienvenue-actions">
+        <button matButton="filled" type="button" (click)="ajouterProduit()">
+          <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
+          Mettre en vente un produit
+        </button>
+        <a matButton="outlined" routerLink="/espace-producteur">
+          <ng-icon name="lucideStore" size="1.125rem" aria-hidden="true" />
+          Mon catalogue
+        </a>
+      </div>
+    </div>
+
+    @if (totalProduits() > 0) {
+      <div class="resume">
+        <strong class="total gw-chiffres">{{ totalProduits() }}</strong>
+        <span>{{ totalProduits() > 1 ? 'produits proposés' : 'produit proposé' }} dans l'annuaire GWASO</span>
+      </div>
+    } @else {
+      <p class="resume resume-calme">
+        <ng-icon name="lucideStore" size="1.25rem" aria-hidden="true" />
+        Votre catalogue est encore vide. Ajoutez votre premier produit pour être visible auprès des cuisiniers.
+      </p>
+    }
+  </section>
+
+  <!-- 2. Chiffres clés (KPIs) -->
+  <section class="section" aria-labelledby="titre-chiffres">
+    <div class="section-entete">
+      <h2 id="titre-chiffres">Vue d'ensemble de votre activité</h2>
+      <p>Indicateurs de vente et valorisation de votre stock.</p>
+    </div>
+    <div class="grille-chiffres">
+      <app-stat-card
+        libelle="Produits en vente"
+        [valeur]="totalProduits()"
+        icone="lucideStore"
+        detail="Visibles dans l'annuaire"
+      />
+      <app-stat-card
+        libelle="Stock disponible"
+        [valeur]="produitsEnStock()"
+        icone="lucideCircleCheck"
+        detail="Approvisionnement optimal"
+      />
+      <app-stat-card
+        libelle="Stocks faibles (≤ 5)"
+        [valeur]="stocksCritiques().length"
+        icone="lucideTriangleAlert"
+        detail="À réapprovisionner"
+      />
+      <app-stat-card
+        libelle="Valeur estimée du stock"
+        [valeur]="valeurTotaleStock()"
+        icone="lucideCoins"
+        detail="Valorisation globale (FCFA)"
+      />
+    </div>
+  </section>
+
+  <!-- 3. Disposition en 2 colonnes (Panneaux conformes GWASO) -->
+  <div class="colonnes">
+    <!-- Colonne Principale -->
+    <div class="colonne-principale">
+      <!-- A. Alertes de stock si nécessaires -->
+      @if (stocksCritiques().length > 0) {
+        <section class="gw-carte panneau panneau-alerte" aria-labelledby="titre-alertes">
+          <div class="panneau-entete">
+            <div>
+              <h2 id="titre-alertes">Stocks à réapprovisionner</h2>
+              <p>Ces denrées sont en quantité critique (≤ 5 unités).</p>
+            </div>
+          </div>
+
+          <ul class="liste-produits">
+            @for (produit of stocksCritiques(); track produit.id) {
+              <li class="item-produit">
+                @if ((produit.imageUrl ?? produit.ingredientPhotoUrl) | fichier; as photo) {
+                  <img class="produit-photo" [src]="photo" [alt]="produit.ingredientNom" loading="lazy" />
+                } @else {
+                  <span class="produit-photo produit-photo-vide" aria-hidden="true">
+                    <ng-icon name="lucideCarrot" size="1.25rem" />
+                  </span>
+                }
+                <div class="produit-infos">
+                  <span class="produit-nom">{{ produit.ingredientNom }}</span>
+                  <p class="produit-meta texte-danger">
+                    Reste : <strong class="gw-chiffres">{{ produit.quantite | number }} {{ produit.unite | unite }}</strong>
+                  </p>
+                </div>
+                <div class="produit-actions">
+                  <strong class="prix-badge gw-chiffres">{{ produit.prixIndicatif | number }} FCFA</strong>
+                  <button matButton="outlined" type="button" (click)="modifierProduit(produit)">
+                    <ng-icon name="lucidePencil" size="1rem" aria-hidden="true" />
+                    Réapprovisionner
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <!-- B. Mes derniers produits en vente -->
+      <section class="gw-carte panneau" aria-labelledby="titre-catalogue-apercu">
+        <div class="panneau-entete">
+          <div>
+            <h2 id="titre-catalogue-apercu">Mes dernières offres</h2>
+            <p>Aperçu rapide de vos denrées en vente.</p>
+          </div>
+          <a matButton routerLink="/espace-producteur">
+            Catalogue complet
+            <ng-icon name="lucideArrowRight" size="1rem" aria-hidden="true" />
+          </a>
+        </div>
+
+        @if (categoriesActives().length > 0) {
+          <div class="tags-rayons">
+            <span class="label-rayons">Rayons actifs :</span>
+            @for (cat of categoriesActives(); track cat.id) {
+              <span class="badge-cat-tag">{{ cat.nom }} ({{ cat.compte }})</span>
+            }
+          </div>
+        }
+
+        @if (produits().length === 0) {
+          <app-empty-state
+            icone="lucideStore"
+            titre="Aucun produit en vente pour le moment"
+            message="Ajoutez votre premier ingrédient pour apparaître dans l'annuaire des producteurs locaux GWASO."
+            texteBouton="Mettre en vente mon premier produit"
+            (action)="ajouterProduit()"
+          />
+        } @else {
+          <ul class="liste-produits">
+            @for (produit of derniersProduits(); track produit.id) {
+              <li class="item-produit">
+                @if ((produit.imageUrl ?? produit.ingredientPhotoUrl) | fichier; as photo) {
+                  <img class="produit-photo" [src]="photo" [alt]="produit.ingredientNom" loading="lazy" />
+                } @else {
+                  <span class="produit-photo produit-photo-vide" aria-hidden="true">
+                    <ng-icon name="lucideCarrot" size="1.25rem" />
+                  </span>
+                }
+                <div class="produit-infos">
+                  <span class="produit-nom">{{ produit.ingredientNom }}</span>
+                  <p class="produit-meta">
+                    {{ produit.categorieNom ?? 'Sans catégorie' }} ·
+                    <strong class="gw-chiffres">{{ produit.prixIndicatif | number }} FCFA</strong>
+                  </p>
+                </div>
+                <div class="produit-actions">
+                  <span class="stock-info">
+                    <strong class="gw-chiffres">{{ produit.quantite | number }}</strong> {{ produit.unite | unite }}
+                  </span>
+                  <button matIconButton matTooltip="Modifier" type="button" (click)="modifierProduit(produit)">
+                    <ng-icon name="lucidePencil" size="1.125rem" aria-hidden="true" />
+                  </button>
+                  <button matIconButton class="item-danger-btn" matTooltip="Retirer" type="button" (click)="supprimerProduit(produit)">
+                    <ng-icon name="lucideTrash2" size="1.125rem" aria-hidden="true" />
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+
+    <!-- Colonne Latérale -->
+    <div class="colonne-laterale">
+      <!-- Fiche Annuaire / Contact -->
+      <section class="gw-carte panneau" aria-labelledby="titre-annuaire">
+        <div class="panneau-entete">
+          <div>
+            <h2 id="titre-annuaire">Fiche Annuaire Public</h2>
+            <p>Visible par les cuisiniers pour vous contacter.</p>
+          </div>
+        </div>
+
+        <div class="profil-identite">
+          <div class="nom-producteur">
+            <ng-icon name="lucideStore" class="icone-role" />
+            <h3>{{ utilisateur()?.prenom }} {{ utilisateur()?.nom }}</h3>
+          </div>
+        </div>
+
+        <ul class="liste-contacts">
+          @if (utilisateur()?.telephone) {
+            <li class="ligne-contact">
+              <ng-icon name="lucidePhone" size="1rem" />
+              <span class="gw-chiffres">{{ utilisateur()?.telephone }}</span>
+            </li>
+          }
+          @if (utilisateur()?.email) {
+            <li class="ligne-contact">
+              <ng-icon name="lucideMail" size="1rem" />
+              <span>{{ utilisateur()?.email }}</span>
+            </li>
+          }
+        </ul>
+
+        <div class="action-annuaire-box">
+          <a matButton="outlined" class="bouton-pleine-largeur" routerLink="/annuaire">
+            <ng-icon name="lucideSearch" size="1rem" aria-hidden="true" />
+            Consulter l'annuaire des producteurs
+          </a>
+        </div>
+      </section>
+    </div>
+  </div>
+}

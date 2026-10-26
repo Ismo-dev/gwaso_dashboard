@@ -21,7 +21,7 @@ import {
 } from '@angular/material/table';
 import { MatTooltip } from '@angular/material/tooltip';
 import { NgIcon } from '@ng-icons/core';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, forkJoin, of } from 'rxjs';
 import { ConfirmationService } from '../../../../core/services/confirmation.service';
 import { EcranService } from '../../../../core/services/ecran.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -31,19 +31,27 @@ import { PageHeader } from '../../../../shared/components/page-header/page-heade
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import { UnitePipe } from '../../../../shared/pipes/unite.pipe';
 import {
+  CategoriesIngredientsDialog,
+  DonneesCategoriesIngredientsDialog,
+} from '../../components/categories-ingredients-dialog/categories-ingredients-dialog';
+import {
   DonneesIngredientDialog,
   IngredientDialog,
 } from '../../components/ingredient-dialog/ingredient-dialog';
+
+import { CategorieIngredientResponse } from '../../models/categorie-ingredient.model';
+import { CategorieIngredientService } from '../../services/categorie-ingredient.service';
+
 import { estValide, IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
 import {
   PropositionCatalogue,
   PropositionsCatalogue,
 } from '../../../../shared/components/propositions-catalogue/propositions-catalogue';
+
 import { IngredientService } from '../../services/ingredient.service';
 
 /**
- * Ingrédients : liste en lignes alignées (photo, nom, unité, prix), car ici le prix
- * et l'unité comptent autant que l'image.
+ * Ingrédients : catalogue d'ingrédients de référence avec leur unité, prix indicatif et rayon.
  */
 @Component({
   imports: [
@@ -78,12 +86,14 @@ import { IngredientService } from '../../services/ingredient.service';
     FichierPipe,
     UnitePipe,
   ],
+  providers: [CategorieIngredientService],
   selector: 'app-ingredients-liste',
   styleUrl: './ingredients-liste.scss',
   templateUrl: './ingredients-liste.html',
 })
 export class IngredientsListe implements OnInit {
   private ingredientService = inject(IngredientService);
+  private categorieIngredientService = inject(CategorieIngredientService);
   private dialog = inject(MatDialog);
   private confirmation = inject(ConfirmationService);
   private notification = inject(NotificationService);
@@ -92,10 +102,39 @@ export class IngredientsListe implements OnInit {
   protected readonly unites = UNITES;
 
   protected ingredients = signal<IngredientResponse[]>([]);
+  protected categories = signal<CategorieIngredientResponse[]>([]);
   protected chargement = signal(true);
   protected erreur = signal(false);
   protected recherche = signal('');
   protected uniteFiltre = signal<Unite | null>(null);
+  protected categorieFiltre = signal<string | null>(null);
+
+  /** Catégories avec comptage des ingrédients associés */
+  protected categoriesAvecComptes = computed(() => {
+    const ings = this.ingredients();
+    const cats = this.categories();
+    const map = new Map<string, { id: string; nom: string; compte: number }>();
+
+    // Initialisation avec les catégories existantes
+    for (const c of cats) {
+      map.set(c.id, { id: c.id, nom: c.nom, compte: 0 });
+    }
+
+    let sansRayonCompte = 0;
+    for (const i of ings) {
+      if (i.categorieId && map.has(i.categorieId)) {
+        map.get(i.categorieId)!.compte++;
+      } else {
+        sansRayonCompte++;
+      }
+    }
+
+    const liste = Array.from(map.values()).sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+    if (sansRayonCompte > 0) {
+      liste.push({ id: 'sans-rayon', nom: 'Non classifié (sans rayon)', compte: sansRayonCompte });
+    }
+    return liste;
+  });
 
   protected ingredientsFiltres = computed(() => {
     const terme = this.recherche().trim().toLowerCase();
@@ -105,7 +144,10 @@ export class IngredientsListe implements OnInit {
     );
   });
 
-  protected filtresActifs = computed(() => !!this.recherche().trim() || !!this.uniteFiltre());
+  protected filtresActifs = computed(
+    () => !!this.recherche().trim() || !!this.uniteFiltre() || !!this.categorieFiltre(),
+  );
+
   /** Ingrédients sans prix : à compléter pour que l'estimation du budget des recettes soit juste. */
   protected sansPrix = computed(
     () => this.ingredientsValides().filter((i) => i.prixMin === null && i.prixMax === null).length,
@@ -179,7 +221,7 @@ export class IngredientsListe implements OnInit {
 
   // ----- Pagination (la liste est chargée en entier, on la découpe ici) -----
   protected readonly taillesPage = TAILLES_PAGE;
-  protected readonly colonnes = ['ingredient', 'unite', 'prix', 'actions'];
+  protected readonly colonnes = ['ingredient', 'categorie', 'unite', 'prix', 'actions'];
   private pageDemandee = signal(0);
   protected taille = signal(TAILLES_PAGE[0]);
   protected page = computed(() =>
@@ -195,7 +237,6 @@ export class IngredientsListe implements OnInit {
     this.charger();
   }
 
-  // Un nouveau filtre ramène toujours à la première page
   rechercher(texte: string): void {
     this.recherche.set(texte);
     this.pageDemandee.set(0);
@@ -203,6 +244,11 @@ export class IngredientsListe implements OnInit {
 
   filtrerUnite(unite: Unite | null): void {
     this.uniteFiltre.set(unite);
+    this.pageDemandee.set(0);
+  }
+
+  filtrerCategorie(categorieId: string | null): void {
+    this.categorieFiltre.set(categorieId);
     this.pageDemandee.set(0);
   }
 
@@ -214,9 +260,19 @@ export class IngredientsListe implements OnInit {
   charger(): void {
     this.chargement.set(true);
     this.erreur.set(false);
-    this.ingredientService.getAll().subscribe({
-      next: (ingredients) => {
-        this.ingredients.set(this.trier(ingredients));
+
+    forkJoin({
+      ingredients: this.ingredientService.getAll(),
+      categories: this.categorieIngredientService.getAll().pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ ingredients, categories }) => {
+        const catMap = new Map(categories.map((c) => [c.id, c.nom]));
+        const enrichis = ingredients.map((i) => ({
+          ...i,
+          categorieNom: i.categorieNom || (i.categorieId ? catMap.get(i.categorieId) ?? null : null),
+        }));
+        this.categories.set(categories.sort((a, b) => a.nom.localeCompare(b.nom, 'fr')));
+        this.ingredients.set(this.trier(enrichis));
         this.chargement.set(false);
       },
       error: () => {
@@ -229,13 +285,19 @@ export class IngredientsListe implements OnInit {
   effacerFiltres(): void {
     this.recherche.set('');
     this.uniteFiltre.set(null);
+    this.categorieFiltre.set(null);
     this.pageDemandee.set(0);
   }
 
   async nouveau(): Promise<void> {
     const ingredient = await this.ouvrirDialogue({});
     if (ingredient) {
-      this.ingredients.update((liste) => this.trier([...liste, ingredient]));
+      const cat = this.categories().find((c) => c.id === ingredient.categorieId);
+      const enrichi: IngredientResponse = {
+        ...ingredient,
+        categorieNom: ingredient.categorieNom || cat?.nom || null,
+      };
+      this.ingredients.update((liste) => this.trier([...liste, enrichi]));
       this.notification.succes(`L'ingrédient « ${ingredient.nom} » est créé.`);
     }
   }
@@ -243,10 +305,43 @@ export class IngredientsListe implements OnInit {
   async modifier(ingredient: IngredientResponse): Promise<void> {
     const resultat = await this.ouvrirDialogue({ ingredient });
     if (resultat) {
+      const cat = this.categories().find((c) => c.id === resultat.categorieId);
+      const enrichi: IngredientResponse = {
+        ...resultat,
+        categorieNom: resultat.categorieNom || cat?.nom || null,
+      };
       this.ingredients.update((liste) =>
-        this.trier(liste.map((i) => (i.id === resultat.id ? resultat : i))),
+        this.trier(liste.map((i) => (i.id === enrichi.id ? enrichi : i))),
       );
       this.notification.succes(`L'ingrédient « ${resultat.nom} » est enregistré.`);
+    }
+  }
+
+  async gererRayons(): Promise<void> {
+    const fenetre = this.dialog.open<
+      CategoriesIngredientsDialog,
+      DonneesCategoriesIngredientsDialog,
+      CategorieIngredientResponse[]
+    >(CategoriesIngredientsDialog, {
+      data: {
+        categories: this.categories(),
+        ingredients: this.ingredients(),
+      },
+      width: '680px',
+      maxWidth: 'calc(100vw - 2rem)',
+    });
+
+    const categoriesAjour = await firstValueFrom(fenetre.afterClosed());
+    if (categoriesAjour) {
+      this.categories.set(categoriesAjour);
+      // Re-synchronisation des noms de catégories
+      const catMap = new Map(categoriesAjour.map((c) => [c.id, c.nom]));
+      this.ingredients.update((liste) =>
+        liste.map((i) => ({
+          ...i,
+          categorieNom: i.categorieId ? catMap.get(i.categorieId) ?? null : null,
+        })),
+      );
     }
   }
 

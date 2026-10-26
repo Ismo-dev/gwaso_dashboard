@@ -48,6 +48,8 @@ export interface IngredientResponse extends PropositionChef {
   unite: Unite | null;
   prixMin: number | null;
   prixMax: number | null;
+  categorieId?: string | null;
+  categorieNom?: string | null;
 }
 
 /** L'élément fait partie du catalogue validé (les anciens n'ont pas de statut). */
@@ -62,4 +64,5 @@ export interface IngredientRequest {
   unite: Unite;
   prixMin?: number | null;
   prixMax?: number | null;
+  categorieId?: string | null;
 }
