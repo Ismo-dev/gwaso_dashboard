@@ -1,0 +1,33 @@
+:host {
+  display: block;
+}
+
+.carte {
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond-accent);
+
+  iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}
+
+.agrandir {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  margin-top: var(--gw-espace-2);
+  color: var(--gw-action);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

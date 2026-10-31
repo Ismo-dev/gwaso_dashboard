@@ -22,6 +22,10 @@ export interface ProducteurAnnuaire {
   prenom: string;
   photoProfil: string | null;
   localite: string | null;
+  /** Point de retrait choisi sur la carte (null s'il ne l'a pas encore placé). */
+  latitude: number | null;
+  longitude: number | null;
+  /** Renvoyés seulement à ceux qui gèrent les comptes. */
   telephone: string | null;
   email: string | null;
   produits: ProduitAnnuaire[];

@@ -1,7 +1,6 @@
-
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButton } from '@angular/material/button';
 
 import {
   MAT_DIALOG_DATA,
@@ -12,13 +11,11 @@ import {
   MatDialogTitle,
 } from '@angular/material/dialog';
 
-import { MatError, MatFormField, MatHint, MatLabel, MatSuffix } from '@angular/material/form-field';
+import { MatError, MatFormField, MatHint, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatOption, MatSelect } from '@angular/material/select';
-import { MatAutocomplete, MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { NgIcon } from '@ng-icons/core';
-import { Observable, of, startWith, switchMap } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 import { messageErreur } from '../../../../core/utils/erreurs';
 import { fourchetteDePrix } from '../../../../core/utils/validateurs';
 import { ImageUpload } from '../../../../shared/components/image-upload/image-upload';
@@ -26,8 +23,6 @@ import { CategorieIngredientResponse } from '../../models/categorie-ingredient.m
 import { CategorieIngredientService } from '../../services/categorie-ingredient.service';
 import { IngredientRequest, IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
 import { IngredientService } from '../../services/ingredient.service';
-import { IngredientFormulaire } from '../ingredient-formulaire/ingredient-formulaire';
-
 
 export interface DonneesIngredientDialog {
   /** Ingrédient à modifier ; absent pour une création. */
@@ -48,26 +43,21 @@ export interface DonneesIngredientDialog {
     MatDialogActions,
     MatDialogClose,
     MatButton,
-    MatIconButton,
     MatFormField,
     MatLabel,
     MatInput,
     MatHint,
     MatError,
-    MatSuffix,
     MatSelect,
     MatOption,
-    MatAutocomplete,
-    MatAutocompleteTrigger,
-    NgIcon,
     MatProgressSpinner,
     ImageUpload,
   ],
   providers: [CategorieIngredientService],
   selector: 'app-ingredient-dialog',
+  styleUrl: './ingredient-dialog.scss',
   templateUrl: './ingredient-dialog.html',
 })
-
 export class IngredientDialog implements OnInit {
   private ingredientService = inject(IngredientService);
   private categorieIngredientService = inject(CategorieIngredientService);
@@ -76,26 +66,6 @@ export class IngredientDialog implements OnInit {
 
   protected readonly unites = UNITES;
   protected categories = signal<CategorieIngredientResponse[]>([]);
-
-  /** Recherche autocomplétée de rayon / catégorie */
-  protected champRechercheCategorie = new FormControl<CategorieIngredientResponse | string | null>('');
-  protected texteRechercheCategorie = signal('');
-
-  protected categoriesFiltrees = computed(() => {
-    const terme = this.texteRechercheCategorie().trim().toLowerCase();
-    const liste = this.categories();
-    if (!terme) {
-      return liste;
-    }
-    return liste.filter((c) => c.nom.toLowerCase().includes(terme));
-  });
-
-  afficherNomCategorie = (cat: CategorieIngredientResponse | string | null): string => {
-    if (!cat) {
-      return '';
-    }
-    return typeof cat === 'string' ? cat : cat.nom;
-  };
 
   protected formulaire = inject(FormBuilder).group(
     {
@@ -114,55 +84,9 @@ export class IngredientDialog implements OnInit {
   protected erreur = signal('');
 
   ngOnInit(): void {
-    this.champRechercheCategorie.valueChanges
-      .pipe(startWith(this.champRechercheCategorie.value))
-      .subscribe((val) => {
-        let texte = '';
-        if (typeof val === 'string') {
-          texte = val;
-        } else if (val && typeof val === 'object' && 'nom' in val) {
-          texte = val.nom;
-        }
-        this.texteRechercheCategorie.set(texte);
-
-        if (!texte) {
-          this.formulaire.controls.categorieId.setValue(null);
-        } else {
-          const match = this.categories().find((c) => c.nom.toLowerCase() === texte.trim().toLowerCase());
-          this.formulaire.controls.categorieId.setValue(match ? match.id : null);
-        }
-      });
-
     this.categorieIngredientService.getAll().subscribe({
-      next: (liste) => {
-        const triees = [...liste].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
-        this.categories.set(triees);
-
-        const catId = this.donnees.ingredient?.categorieId;
-        if (catId) {
-          const cat = triees.find((c) => c.id === catId);
-          if (cat) {
-            this.champRechercheCategorie.setValue(cat);
-          }
-        }
-      },
+      next: (liste) => this.categories.set([...liste].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))),
     });
-  }
-
-  choisirCategorie(evenement: MatAutocompleteSelectedEvent): void {
-    const valeur = evenement.option.value as CategorieIngredientResponse | null;
-    if (valeur) {
-      this.formulaire.controls.categorieId.setValue(valeur.id);
-      this.champRechercheCategorie.setValue(valeur);
-    } else {
-      this.formulaire.controls.categorieId.setValue(null);
-      this.champRechercheCategorie.setValue('');
-    }
-  }
-
-  effacerCategorie(): void {
-    this.champRechercheCategorie.setValue('');
-    this.formulaire.controls.categorieId.setValue(null);
   }
 
   /** Libellé court de l'unité choisie, pour le suffixe « FCFA / kg ». */
@@ -225,8 +149,4 @@ export class IngredientDialog implements OnInit {
       .pipe(switchMap(() => this.ingredientService.getById(ingredient.id)));
   }
 
-// export class IngredientDialog {
-//   protected fenetre = inject(MatDialogRef<IngredientDialog, IngredientResponse>);
-//   protected donnees = inject<DonneesIngredientDialog>(MAT_DIALOG_DATA);
-
- }
+}

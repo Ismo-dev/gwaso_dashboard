@@ -1,0 +1,75 @@
+@use 'points-de-rupture' as ecran;
+
+// Petit espace en haut : le libellé flottant du premier champ n'est pas rogné dans une fenêtre
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+  padding-top: var(--gw-espace-3);
+}
+
+.erreur {
+  margin: 0 0 var(--gw-espace-2);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+}
+
+.champ-plein {
+  width: 100%;
+}
+
+// Deux champs côte à côte (un sous l'autre sur téléphone)
+.ligne {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gw-espace-3);
+
+  @include ecran.mobile {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gw-espace-2);
+  }
+}
+
+.option-non-classe {
+  color: var(--gw-texte-doux);
+  font-style: italic;
+}
+
+.prix {
+  min-width: 0; // un fieldset garde sinon la largeur de son contenu (débordement)
+  margin: var(--gw-espace-2) 0 var(--gw-espace-3);
+  padding: var(--gw-espace-3) var(--gw-espace-4) var(--gw-espace-3);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+
+  legend {
+    padding: 0 var(--gw-espace-2);
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-label);
+    font-weight: 500;
+  }
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.facultatif {
+  color: var(--gw-texte-doux);
+  font-weight: 400;
+}
+
+.erreur-groupe {
+  margin: 0 0 var(--gw-espace-2);
+  color: var(--gw-danger);
+  font-size: var(--gw-taille-petit);
+  font-weight: 500;
+}
+
+.aide {
+  margin: var(--gw-espace-1) 0 0;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}

@@ -3,10 +3,12 @@
   titre="Ingrédients"
   description="Les ingrédients proposés aux auteurs de recettes, avec leur prix indicatif au marché pour estimer le budget d'un plat."
 >
-  <button matButton="outlined" type="button" (click)="gererRayons()">
-    <ng-icon name="lucideLayoutGrid" size="1.125rem" aria-hidden="true" />
-    Gérer les rayons
-  </button>
+  @if (peutGererRayons()) {
+    <button matButton="outlined" type="button" (click)="gererRayons()">
+      <ng-icon name="lucideStore" size="1.125rem" aria-hidden="true" />
+      Gérer les rayons
+    </button>
+  }
   <button matButton="filled" type="button" (click)="nouveau()">
     <ng-icon name="lucidePlus" size="1.125rem" aria-hidden="true" />
     Nouvel ingrédient
@@ -96,7 +98,7 @@
         }
       </mat-form-field>
       <mat-form-field class="filtre" subscriptSizing="dynamic">
-        <mat-label>Rayon / Catégorie</mat-label>
+        <mat-label>Rayon</mat-label>
         <mat-select [value]="categorieFiltre()" (selectionChange)="filtrerCategorie($event.value)">
           <mat-option [value]="null">Tous les rayons</mat-option>
           @for (cat of categoriesAvecComptes(); track cat.id) {
@@ -113,6 +115,33 @@
           }
         </mat-select>
       </mat-form-field>
+
+      @if (!ecran.mobile()) {
+        <div class="bascule-vue" role="group" aria-label="Affichage des ingrédients">
+          <button
+            type="button"
+            class="bouton-vue"
+            [class.bouton-vue-actif]="vue() === 'galerie'"
+            [attr.aria-pressed]="vue() === 'galerie'"
+            matTooltip="Galerie"
+            (click)="changerVue('galerie')"
+          >
+            <ng-icon name="lucideLayoutGrid" size="1.125rem" aria-hidden="true" />
+            <span class="sr-only">Galerie</span>
+          </button>
+          <button
+            type="button"
+            class="bouton-vue"
+            [class.bouton-vue-actif]="vue() === 'liste'"
+            [attr.aria-pressed]="vue() === 'liste'"
+            matTooltip="Tableau"
+            (click)="changerVue('liste')"
+          >
+            <ng-icon name="lucideList" size="1.125rem" aria-hidden="true" />
+            <span class="sr-only">Tableau</span>
+          </button>
+        </div>
+      }
     </div>
 
     <p class="resume" aria-live="polite">
@@ -152,6 +181,39 @@
                 </span>
               </div>
               <ng-container *ngTemplateOutlet="actions; context: { $implicit: ingredient }" />
+            </li>
+          }
+        </ul>
+      } @else if (vue() === 'galerie') {
+        <!-- Ordinateur et tablette : galerie, la photo d'abord -->
+        <ul class="galerie">
+          @for (ingredient of elementsPage(); track ingredient.id) {
+            <li class="fiche">
+              <div class="fiche-photo">
+                @if (ingredient.photoUrl | fichier; as url) {
+                  <img [src]="url" alt="" loading="lazy" />
+                } @else {
+                  <span class="fiche-photo-vide"><ng-icon name="lucideCarrot" size="2rem" /></span>
+                }
+              </div>
+              @if (ingredient.categorieNom) {
+                <span class="badge-rayon fiche-rayon">{{ ingredient.categorieNom }}</span>
+              }
+              <div class="fiche-corps">
+                <span class="nom">{{ ingredient.nom }}</span>
+                <p class="fiche-meta">
+                  {{ ingredient.unite ? 'Unité : ' + (ingredient.unite | unite) : 'Sans unité' }}
+                  @if (!ingredient.categorieNom) {
+                    · Sans rayon
+                  }
+                </p>
+                <p class="fiche-prix">
+                  <ng-container *ngTemplateOutlet="prix; context: { $implicit: ingredient }" />
+                </p>
+              </div>
+              <div class="fiche-actions">
+                <ng-container *ngTemplateOutlet="actions; context: { $implicit: ingredient }" />
+              </div>
             </li>
           }
         </ul>

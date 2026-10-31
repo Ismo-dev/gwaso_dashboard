@@ -1,164 +1,138 @@
-<header class="entete-dialog">
-  <div class="identite-dialog">
-    <app-avatar
-      [prenom]="producteur().prenom"
-      [nom]="producteur().nom"
-      [photo]="producteur().photoProfil"
-      taille="lg"
-    />
-    <div class="texte-identite">
-      <div class="badge-role">
-        <ng-icon name="lucideStore" /> Producteur / Fournisseur validé
-      </div>
-      <h2>{{ producteur().prenom }} {{ producteur().nom }}</h2>
-      @if (producteur().localite) {
-        <p class="localite">
-          <ng-icon name="lucideMapPin" size="0.95rem" aria-hidden="true" />
-          {{ producteur().localite }}
-        </p>
-      }
-    </div>
+<header class="entete">
+  <app-avatar
+    [prenom]="producteur().prenom"
+    [nom]="producteur().nom"
+    [photo]="producteur().photoProfil"
+    taille="lg"
+  />
+  <div class="identite">
+    <span class="badge-role"><ng-icon name="lucideStore" size="0.875rem" aria-hidden="true" /> Producteur validé</span>
+    <h2 mat-dialog-title class="nom">{{ producteur().prenom }} {{ producteur().nom }}</h2>
+    @if (producteur().localite) {
+      <p class="localite">
+        <ng-icon name="lucideMapPin" size="0.95rem" aria-hidden="true" />
+        {{ producteur().localite }}
+      </p>
+    }
   </div>
-
-  <button matIconButton mat-dialog-close type="button" aria-label="Fermer la fiche">
-    <ng-icon name="lucideX" />
+  <button matIconButton mat-dialog-close type="button" class="fermer" aria-label="Fermer la fiche">
+    <ng-icon name="lucideX" size="1.25rem" aria-hidden="true" />
   </button>
 </header>
 
-<mat-dialog-content class="corps-dialog">
-  <!-- Bloc Contact direct -->
-  <section class="bloc-contact" aria-label="Coordonnées de contact">
-    <div class="ligne-contacts">
-      @if (producteur().telephone) {
-        <a [href]="'tel:' + producteur().telephone" class="bouton-contact tel">
-          <ng-icon name="lucidePhone" />
-          <span>Appeler : <strong class="gw-chiffres">{{ producteur().telephone }}</strong></span>
-        </a>
-      }
-      @if (producteur().email) {
-        <a [href]="'mailto:' + producteur().email" class="bouton-contact email">
-          <ng-icon name="lucideMail" />
-          <span>Écrire : <strong>{{ producteur().email }}</strong></span>
-        </a>
-      }
-    </div>
-  </section>
-
-  <!-- Filtres et recherche des produits du producteur -->
-  <section class="section-produits">
-    <div class="entete-section-produits">
-      <div>
-        <h3>Catalogue de produits</h3>
-        <p class="sous-titre-produits">
-          {{ producteur().produits.length }} produit{{ producteur().produits.length > 1 ? 's' : '' }} proposé{{ producteur().produits.length > 1 ? 's' : '' }} aux cuisiniers
-        </p>
-      </div>
-
-      <mat-form-field class="champ-recherche" subscriptSizing="dynamic">
-        <mat-label>Rechercher dans ce catalogue</mat-label>
-        <input
-          matInput
-          type="text"
-          [ngModel]="recherche()"
-          (ngModelChange)="recherche.set($event)"
-          placeholder="Ex. Gombo, Arachide..."
+<mat-dialog-content class="corps">
+  <!-- Colonne de gauche : où récupérer les produits, et comment joindre le producteur -->
+  <aside class="colonne-infos">
+    <section aria-labelledby="titre-retrait">
+      <h3 id="titre-retrait" class="titre-bloc">Point de retrait</h3>
+      @if (producteur().latitude != null && producteur().longitude != null) {
+        <app-carte-point
+          [latitude]="producteur().latitude!"
+          [longitude]="producteur().longitude!"
+          [libelle]="'Point de retrait de ' + producteur().prenom + ' ' + producteur().nom"
         />
-        <ng-icon matPrefix name="lucideSearch" />
-        @if (recherche()) {
-          <button matIconButton matSuffix type="button" (click)="recherche.set('')" aria-label="Effacer">
-            <ng-icon name="lucideX" />
-          </button>
-        }
-      </mat-form-field>
+      } @else {
+        <p class="sans-point">
+          <ng-icon name="lucideMapPin" size="1.125rem" aria-hidden="true" />
+          Pas encore placé sur la carte.
+        </p>
+      }
+    </section>
+
+    @if (producteur().telephone || producteur().email) {
+      <section aria-labelledby="titre-contact">
+        <h3 id="titre-contact" class="titre-bloc">Contact</h3>
+        <ul class="contacts">
+          @if (producteur().telephone) {
+            <li>
+              <a [href]="'tel:' + producteur().telephone">
+                <ng-icon name="lucidePhone" size="1rem" aria-hidden="true" />
+                <span class="gw-chiffres">{{ producteur().telephone }}</span>
+              </a>
+            </li>
+          }
+          @if (producteur().email) {
+            <li>
+              <a [href]="'mailto:' + producteur().email">
+                <ng-icon name="lucideMail" size="1rem" aria-hidden="true" />
+                <span>{{ producteur().email }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </aside>
+
+  <!-- Colonne de droite : ce qu'il vend -->
+  <section class="colonne-produits" aria-labelledby="titre-produits">
+    <div class="entete-produits">
+      <h3 id="titre-produits" class="titre-bloc">
+        Produits <span class="compte gw-chiffres">{{ producteur().produits.length }}</span>
+      </h3>
+      @if (producteur().produits.length > 4) {
+        <mat-form-field class="recherche" subscriptSizing="dynamic">
+          <ng-icon matPrefix class="icone-champ" name="lucideSearch" size="1rem" aria-hidden="true" />
+          <input matInput type="search" placeholder="Rechercher un produit" aria-label="Rechercher un produit"
+            [ngModel]="recherche()" (ngModelChange)="recherche.set($event)" />
+        </mat-form-field>
+      }
     </div>
 
-    <!-- Filtre par catégorie -->
-    @if (categories().length > 0) {
-      <div class="filtre-categories" aria-label="Filtrer par catégorie">
-        <button
-          type="button"
-          class="pill-cat"
-          [class.active]="categorieFiltre() === null"
-          (click)="filtrerCategorie(null)"
-        >
-          Tous les rayons ({{ producteur().produits.length }})
+    @if (categories().length > 1) {
+      <div class="filtres" role="group" aria-label="Filtrer par rayon">
+        <button type="button" class="pastille" [class.active]="categorieFiltre() === null" (click)="filtrerCategorie(null)">
+          Tous ({{ producteur().produits.length }})
         </button>
         @for (cat of categories(); track cat.id) {
-          <button
-            type="button"
-            class="pill-cat"
-            [class.active]="categorieFiltre() === cat.id"
-            (click)="filtrerCategorie(cat.id)"
-          >
+          <button type="button" class="pastille" [class.active]="categorieFiltre() === cat.id" (click)="filtrerCategorie(cat.id)">
             {{ cat.nom }} ({{ cat.compte }})
           </button>
         }
       </div>
     }
 
-    <!-- Grille des produits détaillés -->
     @if (produitsFiltres().length === 0) {
-      <div class="vide-produits">
-        <app-empty-state
-          titre="Aucun produit ne correspond"
-          message="Modifiez votre recherche ou sélectionnez un autre rayon."
-          icone="lucideSearch"
-        />
-      </div>
+      <app-empty-state
+        titre="Aucun produit ne correspond"
+        message="Modifiez la recherche ou choisissez un autre rayon."
+        icone="lucideSearch"
+      />
     } @else {
-      <div class="grille-produits-detail">
+      <ul class="produits">
         @for (prod of produitsFiltres(); track prod.id) {
-          <article class="carte-produit-detail">
-            <div class="visuel-produit">
-              @if ((prod.imageUrl ?? prod.ingredientPhotoUrl) | fichier; as photo) {
-                <img [src]="photo" [alt]="prod.ingredientNom" loading="lazy" />
-              } @else {
-                <div class="visuel-vide">
-                  <ng-icon name="lucideCarrot" />
-                </div>
+          <li class="produit">
+            @if ((prod.imageUrl ?? prod.ingredientPhotoUrl) | fichier; as photo) {
+              <img class="vignette" [src]="photo" alt="" loading="lazy" width="56" height="56" />
+            } @else {
+              <span class="vignette vignette-vide" aria-hidden="true"><ng-icon name="lucideCarrot" size="1.25rem" /></span>
+            }
+            <div class="produit-textes">
+              <span class="produit-nom">{{ prod.ingredientNom }}</span>
+              @if (prod.categorieNom) {
+                <span class="produit-rayon">{{ prod.categorieNom }}</span>
               }
             </div>
-
-            <div class="info-produit-detail">
-              <div class="titre-ligne">
-                <h4>{{ prod.ingredientNom }}</h4>
-                @if (prod.categorieNom) {
-                  <span class="badge-cat">{{ prod.categorieNom }}</span>
+            <div class="produit-chiffres">
+              <strong class="gw-chiffres">
+                @if (prod.prixIndicatif !== null) {
+                  {{ prod.prixIndicatif | number: '1.0-0' : 'fr' }} FCFA<small> / {{ prod.unite | unite }}</small>
+                } @else {
+                  Prix non indiqué
                 }
-              </div>
-
-              <div class="caracteristiques">
-                <div class="item-caract">
-                  <span class="label">Prix indicatif</span>
-                  <strong class="valeur gw-chiffres">
-                    @if (prod.prixIndicatif !== null) {
-                      {{ prod.prixIndicatif | number: '1.0-0' : 'fr' }} FCFA<small> / {{ prod.unite | unite }}</small>
-                    } @else {
-                      Prix à demander
-                    }
-                  </strong>
-                </div>
-
-                <div class="item-caract">
-                  <span class="label">Quantité disponible</span>
-                  <span class="valeur-stock gw-chiffres">
-                    @if (prod.quantite !== null) {
-                      {{ prod.quantite | number }} {{ prod.unite | unite }}
-                    } @else {
-                      Disponible
-                    }
-                  </span>
-                </div>
-              </div>
+              </strong>
+              @if (prod.quantite !== null) {
+                <span class="stock gw-chiffres">{{ prod.quantite | number: '1.0-1' : 'fr' }} {{ prod.unite | unite }} disponibles</span>
+              }
             </div>
-          </article>
+          </li>
         }
-      </div>
+      </ul>
     }
   </section>
 </mat-dialog-content>
 
-<mat-dialog-actions class="actions-dialog">
+<mat-dialog-actions align="end">
   @if (session.aLeDroit('UTILISATEUR_GERER')) {
     <a
       matButton="outlined"
@@ -166,13 +140,8 @@
       [queryParams]="{ role: 'PRODUCTEUR' }"
       mat-dialog-close
     >
-      <ng-icon name="lucideSettings" /> Gérer ce compte (Admin)
+      <ng-icon name="lucideSettings" size="1rem" aria-hidden="true" /> Gérer le compte
     </a>
-  } @else {
-    <span></span>
   }
-
-  <button matButton="filled" type="button" mat-dialog-close>
-    Fermer
-  </button>
+  <button matButton="filled" type="button" mat-dialog-close>Fermer</button>
 </mat-dialog-actions>

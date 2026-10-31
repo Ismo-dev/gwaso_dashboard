@@ -66,10 +66,10 @@ export class Accueil implements OnInit {
   private aValider = inject(AValiderService);
   protected session = inject(SessionService);
 
-  /** Détecte si l'utilisateur connecté est un producteur (n'a pas les droits de modération admin). */
+  /** Accueil du producteur : son espace (ESPACE_PRODUCTEUR) sans l'administration (ACCES_DASHBOARD). */
   protected estProducteur = computed(() => {
-    const user = this.session.utilisateur();
-    return user?.role === 'PRODUCTEUR' || (!this.session.aLeDroit('UTILISATEUR_GERER') && this.session.aLeDroit('PRODUIT_GERER'));
+    this.session.utilisateur();
+    return this.session.aLeDroit('ESPACE_PRODUCTEUR') && !this.session.aLeDroit('ACCES_DASHBOARD');
   });
 
   protected statistiques = signal<Statistiques | null>(null);
