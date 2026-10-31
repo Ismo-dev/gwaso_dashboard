@@ -217,3 +217,149 @@
 .carte-prix {
   font-size: var(--gw-taille-petit);
 }
+
+// ----- Bascule galerie / tableau (comme les recettes) -----
+.bascule-vue {
+  display: inline-flex;
+  align-self: center;
+  padding: 3px;
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond);
+}
+
+.bouton-vue {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--gw-rayon-sm);
+  background: transparent;
+  color: var(--gw-texte-doux);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--gw-cacao);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--gw-action);
+    outline-offset: 1px;
+  }
+}
+
+.bouton-vue-actif {
+  background: var(--gw-surface);
+  color: var(--gw-cacao);
+  box-shadow: var(--gw-ombre-1);
+}
+
+// ----- Galerie -----
+.galerie {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--gw-espace-5);
+  margin: 0;
+  padding: var(--gw-espace-2) var(--gw-espace-5) var(--gw-espace-5);
+  list-style: none;
+}
+
+.fiche {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-lg);
+  background: var(--gw-surface);
+  transition:
+    box-shadow var(--gw-duree) var(--gw-courbe),
+    transform var(--gw-duree) var(--gw-courbe);
+
+  &:hover {
+    box-shadow: var(--gw-ombre-2);
+    transform: translateY(-2px);
+
+    .fiche-photo img {
+      transform: scale(1.04);
+    }
+  }
+
+  &:focus-within {
+    box-shadow: var(--gw-ombre-2);
+  }
+}
+
+.fiche-photo {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--gw-fond-accent);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 400ms var(--gw-courbe);
+  }
+}
+
+.fiche-photo-vide {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--gw-karite);
+}
+
+// Le rayon sur la photo, lisible sur toute image
+.fiche-rayon {
+  position: absolute;
+  top: var(--gw-espace-3);
+  left: var(--gw-espace-3);
+  max-width: calc(100% - 2 * var(--gw-espace-3));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--gw-surface);
+  box-shadow: var(--gw-ombre-1);
+}
+
+.fiche-corps {
+  flex: 1;
+  padding: var(--gw-espace-4) var(--gw-espace-4) var(--gw-espace-1);
+
+  .nom {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+.fiche-meta {
+  margin-top: var(--gw-espace-1);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.fiche-prix {
+  margin-top: var(--gw-espace-2);
+}
+
+.fiche-actions {
+  padding: 0 var(--gw-espace-3) var(--gw-espace-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiche,
+  .fiche-photo img {
+    transition: none;
+  }
+
+  .fiche:hover {
+    transform: none;
+
+    .fiche-photo img {
+      transform: none;
+    }
+  }
+}

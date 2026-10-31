@@ -98,6 +98,9 @@ import {
   lucideLock,
   lucideBike,
   lucideMapPin,
+  lucidePhone,
+  lucideMail,
+  lucideSettings,
 } from '@ng-icons/lucide';
 
 /**
@@ -209,4 +212,7 @@ export const ICONES = {
   lucideScale,
   lucideBike,
   lucideMapPin,
+  lucidePhone,
+  lucideMail,
+  lucideSettings,
 };

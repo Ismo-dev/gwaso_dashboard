@@ -1,0 +1,7 @@
+<div class="carte">
+  <iframe [src]="urlCarte()" [title]="libelle()" loading="lazy" referrerpolicy="no-referrer"></iframe>
+</div>
+<a class="agrandir" [href]="lienAgrandir()" target="_blank" rel="noopener">
+  <ng-icon name="lucideExternalLink" size="0.875rem" aria-hidden="true" />
+  Agrandir la carte<span class="sr-only"> (nouvel onglet)</span>
+</a>

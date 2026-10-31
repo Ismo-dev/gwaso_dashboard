@@ -8,7 +8,7 @@ import {
   MatDialogRef,
   MatDialogTitle,
 } from '@angular/material/dialog';
-import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -44,7 +44,6 @@ export interface DonneesCategoriesIngredientsDialog {
     MatFormField,
     MatLabel,
     MatInput,
-    MatError,
     MatProgressSpinner,
     MatTooltip,
     NgIcon,
@@ -69,10 +68,11 @@ export class CategoriesIngredientsDialog implements OnInit {
   protected chargement = signal(false);
   protected erreur = signal('');
 
-  // Formulaire d'ajout d'un nouveau rayon
+  // Formulaire d'ajout d'un nouveau rayon (le bouton reste inactif tant que le nom est vide :
+  // pas d'erreur rouge dès qu'on quitte le champ)
   protected nomNouveau = new FormControl('', {
     nonNullable: true,
-    validators: [Validators.required, Validators.maxLength(80)],
+    validators: [Validators.maxLength(80)],
   });
   protected descriptionNouvelle = new FormControl('', {
     nonNullable: true,

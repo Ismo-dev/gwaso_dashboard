@@ -69,7 +69,7 @@ export const routes: Routes = [
         // Espace Producteur : gestion du catalogue et des stocks (réservé aux producteurs validés)
         path: 'espace-producteur',
         canActivate: [droitGuard],
-        data: { filAriane: 'Mon Catalogue', droit: 'PRODUIT_GERER' },
+        data: { filAriane: 'Mon Catalogue', droit: 'ESPACE_PRODUCTEUR' },
         loadChildren: () =>
           import('./features/espace-producteur/espace-producteur.routes').then(
             (m) => m.ESPACE_PRODUCTEUR_ROUTES,

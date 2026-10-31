@@ -59,8 +59,10 @@ export class Login {
     this.authService.connecter(this.formulaire.getRawValue()).subscribe({
       next: (reponse) => {
         this.enCours.set(false);
-        // Le dashboard s'ouvre avec le droit ACCES_DASHBOARD du profil
-        if (!reponse.utilisateur.droits.includes('ACCES_DASHBOARD')) {
+        // Le dashboard s'ouvre avec le droit ACCES_DASHBOARD (administration)
+        // ou ESPACE_PRODUCTEUR (l'espace d'un producteur : son catalogue et ses stocks)
+        const droits = reponse.utilisateur.droits;
+        if (!droits.includes('ACCES_DASHBOARD') && !droits.includes('ESPACE_PRODUCTEUR')) {
           this.erreur.set("Votre profil ne donne pas accès au dashboard d'administration.");
           return;
         }

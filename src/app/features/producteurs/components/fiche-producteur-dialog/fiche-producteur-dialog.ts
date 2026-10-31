@@ -7,13 +7,15 @@ import {
   MatDialogActions,
   MatDialogClose,
   MatDialogContent,
+  MatDialogTitle,
 } from '@angular/material/dialog';
-import { MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/form-field';
+import { MatFormField, MatPrefix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { SessionService } from '../../../../core/services/session.service';
 import { Avatar } from '../../../../shared/components/avatar/avatar';
+import { CartePoint } from '../../../../shared/components/carte-point/carte-point';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
 import { UnitePipe } from '../../../../shared/pipes/unite.pipe';
@@ -25,8 +27,8 @@ export interface DonneesFicheProducteurDialog {
 }
 
 /**
- * Dialogue modal affichant la fiche complète d'un producteur :
- * coordonnées, détails de tous les produits, prix indicatifs, stocks et filtres par catégorie.
+ * Fiche d'un producteur de l'annuaire : son point de retrait sur la carte, ses coordonnées
+ * (pour qui gère les comptes) et ses produits, avec prix indicatifs, stocks et filtre par rayon.
  */
 @Component({
   imports: [
@@ -36,15 +38,15 @@ export interface DonneesFicheProducteurDialog {
     MatDialogContent,
     MatDialogActions,
     MatDialogClose,
+    MatDialogTitle,
     MatButton,
     MatIconButton,
     MatFormField,
-    MatLabel,
     MatPrefix,
-    MatSuffix,
     MatInput,
     NgIcon,
     Avatar,
+    CartePoint,
     EmptyState,
     FichierPipe,
     UnitePipe,

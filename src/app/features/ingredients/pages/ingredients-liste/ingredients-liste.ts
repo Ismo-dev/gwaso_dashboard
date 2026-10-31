@@ -43,6 +43,7 @@ import { CategorieIngredientResponse } from '../../models/categorie-ingredient.m
 import { CategorieIngredientService } from '../../services/categorie-ingredient.service';
 
 import { estValide, IngredientResponse, Unite, UNITES } from '../../models/ingredient.model';
+import { SessionService } from '../../../../core/services/session.service';
 import {
   PropositionCatalogue,
   PropositionsCatalogue,
@@ -98,6 +99,33 @@ export class IngredientsListe implements OnInit {
   private confirmation = inject(ConfirmationService);
   private notification = inject(NotificationService);
   protected ecran = inject(EcranService);
+  private session = inject(SessionService);
+
+  /** Rayons du marché : droit RAYON_GERER. */
+  protected peutGererRayons = computed(() => {
+    this.session.utilisateur();
+    return this.session.aLeDroit('RAYON_GERER');
+  });
+
+  /** Affichage : galerie de photos (par défaut) ou tableau ; retenu sur ce navigateur. */
+  protected vue = signal<'galerie' | 'liste'>(IngredientsListe.lireVue());
+
+  private static lireVue(): 'galerie' | 'liste' {
+    try {
+      return localStorage.getItem('gw-ingredients-vue') === 'liste' ? 'liste' : 'galerie';
+    } catch {
+      return 'galerie';
+    }
+  }
+
+  changerVue(vue: 'galerie' | 'liste'): void {
+    this.vue.set(vue);
+    try {
+      localStorage.setItem('gw-ingredients-vue', vue);
+    } catch {
+      // Stockage indisponible (navigation privée) : le choix vaut pour cette visite
+    }
+  }
 
   protected readonly unites = UNITES;
 
@@ -139,8 +167,13 @@ export class IngredientsListe implements OnInit {
   protected ingredientsFiltres = computed(() => {
     const terme = this.recherche().trim().toLowerCase();
     const unite = this.uniteFiltre();
+    const rayon = this.categorieFiltre();
     return this.ingredientsValides().filter(
-      (i) => (!terme || i.nom.toLowerCase().includes(terme)) && (!unite || i.unite === unite),
+      (i) =>
+        (!terme || i.nom.toLowerCase().includes(terme)) &&
+        (!unite || i.unite === unite) &&
+        // « sans-rayon » : les ingrédients pas encore classés
+        (!rayon || (rayon === 'sans-rayon' ? !i.categorieId : i.categorieId === rayon)),
     );
   });
 

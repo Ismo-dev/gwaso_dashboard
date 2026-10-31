@@ -194,7 +194,7 @@ export class Annuaire implements OnInit {
           producteur,
           categorieInitialeId: this.categorie.value,
         },
-        width: '720px',
+        width: '860px',
         maxWidth: 'calc(100vw - 2rem)',
       },
     );

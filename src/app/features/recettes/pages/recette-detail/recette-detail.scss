@@ -524,3 +524,39 @@ h1 {
     font-weight: 600;
   }
 }
+
+// ----- Audios d'explication de l'étape -----
+.etape-audios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--gw-espace-3);
+  margin-top: var(--gw-espace-3);
+
+  @include ecran.mobile {
+    margin-left: calc(-36px - var(--gw-espace-4));
+  }
+}
+
+.etape-audio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-3);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-fond-accent);
+
+  audio {
+    width: 100%;
+    height: 40px;
+  }
+}
+
+.etape-audio-langue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gw-espace-1);
+  color: var(--gw-cacao);
+  font-size: var(--gw-taille-petit);
+  font-weight: 600;
+}

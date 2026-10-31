@@ -342,6 +342,38 @@
                     }
                   </div>
                 }
+
+                <!-- Audios d'explication enregistrés par le chef (la préparation guidée les fait écouter) -->
+                @if (etape.audioFrCacheUrl || etape.audioBambaraCacheUrl) {
+                  <div class="etape-audios">
+                    @if (etape.audioFrCacheUrl | fichier; as audio) {
+                      <div class="etape-audio">
+                        <span class="etape-audio-langue">
+                          <ng-icon name="lucideMic" size="1rem" aria-hidden="true" /> En français
+                        </span>
+                        <audio
+                          controls
+                          preload="metadata"
+                          [src]="audio"
+                          [attr.aria-label]="'Audio de l\'étape ' + etape.ordre + ' en français'"
+                        ></audio>
+                      </div>
+                    }
+                    @if (etape.audioBambaraCacheUrl | fichier; as audio) {
+                      <div class="etape-audio">
+                        <span class="etape-audio-langue">
+                          <ng-icon name="lucideMic" size="1rem" aria-hidden="true" /> En bambara
+                        </span>
+                        <audio
+                          controls
+                          preload="metadata"
+                          [src]="audio"
+                          [attr.aria-label]="'Audio de l\'étape ' + etape.ordre + ' en bambara'"
+                        ></audio>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
             </li>
           }

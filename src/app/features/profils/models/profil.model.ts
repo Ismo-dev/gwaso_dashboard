@@ -76,7 +76,10 @@ const DOMAINES: Record<string, { libelle: string; icone: string }> = {
   UTILISATEUR: { libelle: 'Utilisateurs', icone: 'lucideUsers' },
   USER: { libelle: 'Utilisateurs', icone: 'lucideUsers' },
   PROFIL: { libelle: 'Profils et droits', icone: 'lucideShieldCheck' },
-  PRODUIT: { libelle: 'Produits', icone: 'lucideStore' },
+  PRODUIT: { libelle: 'Producteurs', icone: 'lucideStore' },
+  ESPACE: { libelle: 'Producteurs', icone: 'lucideStore' },
+  RAYON: { libelle: 'Marché', icone: 'lucideShoppingBasket' },
+  COMMISSION: { libelle: 'Marché', icone: 'lucideShoppingBasket' },
   CATEGORIE: { libelle: 'Catégories', icone: 'lucideLayoutGrid' },
   INGREDIENT: { libelle: 'Ingrédients', icone: 'lucideCarrot' },
   USTENSILE: { libelle: 'Ustensiles', icone: 'lucideUtensilsCrossed' },
@@ -126,6 +129,9 @@ export const DROITS = {
   UTILISATEUR_GERER: 'UTILISATEUR_GERER',
   PROFIL_GERER: 'PROFIL_GERER',
   PRODUIT_GERER: 'PRODUIT_GERER',
+  RAYON_GERER: 'RAYON_GERER',
+  COMMISSION_GERER: 'COMMISSION_GERER',
+  ESPACE_PRODUCTEUR: 'ESPACE_PRODUCTEUR',
 } as const;
 
 /** Droits que le profil système garde toujours (sinon plus personne ne pourrait administrer Gwaso). */

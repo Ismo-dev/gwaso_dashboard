@@ -4,8 +4,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--gw-espace-4);
-  max-height: 75vh;
-  overflow-y: auto;
   padding-top: var(--gw-espace-2);
 }
 
@@ -46,34 +44,32 @@
   border: 1px solid var(--gw-bordure);
   border-radius: var(--gw-rayon);
 
+  // Nom et description côte à côte, le bouton dessous à droite ; tout empilé sur téléphone
   .formulaire-ajout {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
     gap: var(--gw-espace-3);
+
+    @include ecran.mobile {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .ligne-champs {
-    display: flex;
-    gap: var(--gw-espace-3);
+    display: contents;
 
-    .champ-nom {
-      flex: 2;
-      min-width: 0;
-    }
-
-    .champ-desc {
-      flex: 3;
-      min-width: 0;
-    }
-
-    @include ecran.mobile {
-      flex-direction: column;
-      gap: var(--gw-espace-2);
+    mat-form-field {
+      width: 100%;
     }
   }
 
   .bouton-ajouter {
-    align-self: flex-start;
+    grid-column: 1 / -1;
+    justify-self: end;
+
+    @include ecran.mobile {
+      justify-self: stretch;
+    }
   }
 }
 
@@ -125,6 +121,7 @@
 
   .infos-rayon {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 2px;
     min-width: 0;
@@ -187,10 +184,12 @@
 
       .champ-nom {
         flex: 2;
+        min-width: 0;
       }
 
       .champ-desc {
         flex: 3;
+        min-width: 0;
       }
 
       @include ecran.mobile {
