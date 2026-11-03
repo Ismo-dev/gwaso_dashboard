@@ -269,13 +269,17 @@ export class EtapeEditeur implements OnInit {
       next: (ingredients) =>
         this.catalogueIngredients.set(
           // Une proposition refusée ne s'utilise plus
-          ingredients.filter((i) => i.statut !== 'REFUSE').sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+          ingredients
+            .filter((i) => i.statut !== 'REFUSE')
+            .sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
         ),
     });
     this.ustensileService.getAll().subscribe({
       next: (ustensiles) =>
         this.catalogueUstensiles.set(
-          ustensiles.filter((u) => u.statut !== 'REFUSE').sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+          ustensiles
+            .filter((u) => u.statut !== 'REFUSE')
+            .sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
         ),
     });
     const etape = this.etape();
@@ -612,6 +616,43 @@ export class EtapeEditeur implements OnInit {
         this.envoiVideo.set(false);
         this.notification.erreur(
           messageErreur(erreur, "La vidéo n'a pas pu être envoyée (200 Mo maximum)."),
+        );
+      },
+    });
+  }
+
+  async retirerMedia(media: 'photo' | 'video'): Promise<void> {
+    const etape = this.etape();
+    if (!etape) {
+      return;
+    }
+    const libelle = media === 'photo' ? 'la photo' : 'la vidéo';
+    const confirme = await this.confirmation.demander({
+      titre: `Retirer ${libelle} de l'étape ?`,
+      message: 'Le fichier sera supprimé. Vous pourrez en envoyer un autre.',
+      texteConfirmer: `Retirer ${libelle}`,
+      danger: true,
+    });
+    if (!confirme) {
+      return;
+    }
+    const enCours = media === 'photo' ? this.envoiPhoto : this.envoiVideo;
+    enCours.set(true);
+    this.recetteService.supprimerMediaEtape(etape.id, media).subscribe({
+      next: () =>
+        this.apresEnvoi(
+          etape.id,
+          `${media === 'photo' ? 'La photo' : 'La vidéo'} de l’étape est retirée.`,
+          () => {},
+          enCours,
+        ),
+      error: (erreur: unknown) => {
+        enCours.set(false);
+        this.notification.erreur(
+          messageErreur(
+            erreur,
+            `${media === 'photo' ? 'La photo' : 'La vidéo'} n'a pas pu être retirée.`,
+          ),
         );
       },
     });

@@ -248,6 +248,13 @@ export class RecetteService {
     return this.envoyerFichier(`${environment.apiUrl}/fichiers/etapes/${etapeId}/video`, fichier);
   }
 
+  /** Retire la photo ou la vidéo d'une étape (le fichier est supprimé). */
+  supprimerMediaEtape(etapeId: string, media: 'photo' | 'video'): Observable<void> {
+    return this.http
+      .delete<ApiResponse<null>>(`${environment.apiUrl}/fichiers/etapes/${etapeId}/${media}`)
+      .pipe(map(() => undefined));
+  }
+
   private envoyerFichier(url: string, fichier: File): Observable<void> {
     const formulaire = new FormData();
     formulaire.append('file', fichier);
