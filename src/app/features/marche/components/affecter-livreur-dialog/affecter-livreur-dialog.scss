@@ -1,0 +1,53 @@
+.aide {
+  margin: 0 0 var(--gw-espace-4);
+  color: var(--gw-texte-doux);
+}
+
+.etat {
+  display: flex;
+  justify-content: center;
+  padding: var(--gw-espace-5);
+}
+
+.vide {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-attention-fond);
+  color: var(--gw-attention);
+  font-weight: 500;
+}
+
+.livreurs {
+  display: flex;
+  flex-direction: column;
+}
+
+.livreur {
+  padding: var(--gw-espace-2) 0;
+  border-top: 1px solid var(--gw-bordure);
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.nom {
+  display: block;
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.meta {
+  display: block;
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.erreur {
+  margin: var(--gw-espace-2) 0;
+  color: var(--gw-danger);
+  font-weight: 600;
+}

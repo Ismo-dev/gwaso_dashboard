@@ -1,0 +1,92 @@
+<h2 mat-dialog-title>Litige sur la commande {{ litige.referenceCommande }}</h2>
+
+<mat-dialog-content>
+  <dl class="resume">
+    <div>
+      <dt>Problème</dt>
+      <dd>{{ motifs[litige.motif] }}</dd>
+    </div>
+    <div>
+      <dt>Signalé le</dt>
+      <dd>{{ litige.dateOuverture | date: 'd MMM y, HH:mm' }}</dd>
+    </div>
+    <div>
+      <dt>Client</dt>
+      <dd>{{ litige.clientNom ?? '—' }}</dd>
+    </div>
+    <div>
+      <dt>Fournisseur</dt>
+      <dd>{{ litige.fournisseurNom ?? '—' }}</dd>
+    </div>
+    <div>
+      <dt>Payé par le client</dt>
+      <dd class="gw-chiffres">{{ paye | number: '1.0-0' }} F</dd>
+    </div>
+  </dl>
+
+  @if (litige.description) {
+    <blockquote class="description">« {{ litige.description }} »</blockquote>
+  }
+  @if (litige.photoUrl | fichier; as photo) {
+    <a class="photo" [href]="photo" target="_blank" rel="noopener">
+      <img [src]="photo" alt="Photo envoyée par le client" loading="lazy" />
+    </a>
+  }
+
+  <fieldset class="choix">
+    <legend>Décision</legend>
+    <mat-radio-group [formControl]="decision" aria-label="Décision">
+      @for (d of decisions; track d[0]) {
+        <mat-radio-button [value]="d[0]">{{ d[1] }}</mat-radio-button>
+      }
+    </mat-radio-group>
+    @if (decision.touched && decision.invalid) {
+      <p class="erreur" role="alert">Choisissez une décision.</p>
+    }
+  </fieldset>
+
+  @if (partiel()) {
+    <mat-form-field class="champ">
+      <mat-label>Montant remboursé</mat-label>
+      <input
+        matInput
+        type="number"
+        [formControl]="montant"
+        min="1"
+        [max]="paye"
+        step="50"
+        cdkFocusInitial
+      />
+      <span matTextSuffix>FCFA</span>
+      <mat-hint>Au plus {{ paye | number: '1.0-0' }} F (ce que le client a payé).</mat-hint>
+      <mat-error>Entre 1 et {{ paye | number: '1.0-0' }} F.</mat-error>
+    </mat-form-field>
+  }
+
+  @if (nonLivre && decision.value && decision.value !== 'REJETE') {
+    <fieldset class="choix">
+      <legend>Qui supporte d'abord le remboursement ?</legend>
+      <mat-radio-group [formControl]="aChargeDe" aria-label="Qui supporte d'abord le remboursement">
+        <mat-radio-button value="FOURNISSEUR">Le fournisseur</mat-radio-button>
+        <mat-radio-button value="LIVREUR">Le livreur</mat-radio-button>
+      </mat-radio-group>
+    </fieldset>
+  }
+
+  @if (consequence()) {
+    <p class="consequence">{{ consequence() }}</p>
+  }
+  @if (erreur()) {
+    <p class="erreur" role="alert">{{ erreur() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton="outlined" type="button" mat-dialog-close>Annuler</button>
+  <button matButton="filled" type="button" [disabled]="enCours()" (click)="confirmer()">
+    @if (enCours()) {
+      <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+    }
+    Trancher
+  </button>
+</mat-dialog-actions>

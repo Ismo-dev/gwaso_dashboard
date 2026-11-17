@@ -1,0 +1,565 @@
+<a class="retour" routerLink="/marche/commandes">
+  <ng-icon name="lucideArrowLeft" size="1rem" aria-hidden="true" />
+  Retour aux commandes
+</a>
+
+@if (chargement() && !fiche()) {
+  <div class="squelette" aria-busy="true" aria-label="Chargement de la commande">
+    <div class="gw-squelette sq-entete"></div>
+    <div class="gw-squelette sq-bloc"></div>
+  </div>
+} @else if (introuvable()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Commande introuvable"
+      message="L'adresse est peut-être incorrecte."
+      icone="lucideFileQuestion"
+    >
+      <a matButton="filled" routerLink="/marche/commandes">Voir les commandes</a>
+    </app-empty-state>
+  </div>
+} @else if (erreur()) {
+  <div class="gw-carte">
+    <app-empty-state
+      titre="Impossible de charger la commande"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
+    </app-empty-state>
+  </div>
+} @else if (fiche(); as f) {
+  <!-- En-tête : référence, statut, montant, actions -->
+  <header class="gw-carte entete">
+    <div class="identite">
+      <p class="surtitre">Commande du marché</p>
+      <h1>{{ f.resume.reference }}</h1>
+      <p class="sous-titre">
+        <span class="gw-etiquette ton-{{ statut()?.ton }}">{{ statut()?.libelle }}</span>
+        Passée le {{ f.resume.dateCreation | date: "d MMMM y 'à' HH:mm" }}
+        @if (annulation()) {
+          · annulée par {{ annulation() }}
+        }
+      </p>
+    </div>
+    <div class="total">
+      <span class="total-montant gw-chiffres"
+        >{{ f.resume.montant ?? f.resume.montantProduits | number: '1.0-0' : 'fr' }} F</span
+      >
+      <span class="meta">{{
+        f.resume.montant ? 'produits + livraison' : 'produits (livraison à fixer)'
+      }}</span>
+    </div>
+    @if (f.resume.actionPossible) {
+      <div class="alerte-action">
+        <p>
+          <ng-icon name="lucideTriangleAlert" size="1.125rem" aria-hidden="true" />
+          Payée, mais aucun livreur ne l'a prise : confiez-la à un livreur, ou annulez-la pour
+          rembourser le client.
+        </p>
+        <div class="boutons">
+          <button
+            matButton="outlined"
+            type="button"
+            class="danger"
+            [disabled]="enAction()"
+            (click)="annuler()"
+          >
+            Annuler et rembourser
+          </button>
+          <button matButton="filled" type="button" [disabled]="enAction()" (click)="affecter()">
+            <ng-icon name="lucideBike" size="1rem" aria-hidden="true" />
+            Confier à un livreur
+          </button>
+        </div>
+      </div>
+    }
+  </header>
+
+  <div class="colonnes">
+    <div class="colonne-principale">
+      <!-- Produits -->
+      <section class="gw-carte panneau" aria-labelledby="titre-produits">
+        <h2 id="titre-produits">
+          <ng-icon name="lucideShoppingBasket" size="1.125rem" aria-hidden="true" />
+          Produits
+        </h2>
+        <table class="gw-tableau produits">
+          <thead>
+            <tr>
+              <th scope="col">Produit</th>
+              <th scope="col" class="gw-col-centre">Quantité</th>
+              <th scope="col" class="gw-col-centre">Prix accepté</th>
+              <th scope="col" class="droite">Sous-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of f.resume.lignes; track l.id) {
+              <tr>
+                <td>{{ l.ingredientNom }}</td>
+                <td class="gw-col-centre gw-chiffres">
+                  {{ l.quantiteDemandee | number: '1.0-2' : 'fr' }} {{ l.unite | unite }}
+                </td>
+                <td class="gw-col-centre gw-chiffres">
+                  {{ l.prixUnitaire | number: '1.0-0' : 'fr' }} F{{
+                    l.unite ? ' / ' + (l.unite | unite) : ''
+                  }}
+                </td>
+                <td class="droite gw-chiffres">{{ l.sousTotal | number: '1.0-0' : 'fr' }} F</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <dl class="totaux">
+          <div>
+            <dt>Produits</dt>
+            <dd class="gw-chiffres">{{ f.resume.montantProduits | number: '1.0-0' : 'fr' }} F</dd>
+          </div>
+          <div>
+            <dt>Livraison</dt>
+            <dd class="gw-chiffres">
+              @if (f.resume.prixLivraison !== null) {
+                {{ f.resume.prixLivraison | number: '1.0-0' : 'fr' }} F
+                @if (f.resume.distanceLivraisonKm !== null) {
+                  <span class="meta"
+                    >({{ f.resume.distanceLivraisonKm | number: '1.0-1' : 'fr' }} km)</span
+                  >
+                }
+              } @else {
+                <span class="vide">Pas encore fixée</span>
+              }
+            </dd>
+          </div>
+          <div class="ligne-total">
+            <dt>Total payé par le client</dt>
+            <dd class="gw-chiffres">
+              @if (f.resume.montant !== null) {
+                {{ f.resume.montant | number: '1.0-0' : 'fr' }} F
+              } @else {
+                <span class="vide">—</span>
+              }
+            </dd>
+          </div>
+        </dl>
+        @if (f.noteAcheteur) {
+          <blockquote class="citation">
+            <span class="meta">Note du client</span>
+            « {{ f.noteAcheteur }} »
+          </blockquote>
+        }
+      </section>
+
+      <!-- Suivi -->
+      <section class="gw-carte panneau" aria-labelledby="titre-suivi">
+        <h2 id="titre-suivi">
+          <ng-icon name="lucideClock" size="1.125rem" aria-hidden="true" />
+          Suivi
+        </h2>
+        <ol class="frise">
+          @for (e of etapes(); track e.libelle) {
+            <li [class.faite]="e.date">
+              <span class="point" aria-hidden="true"></span>
+              <span class="etape-libelle">{{ e.libelle }}</span>
+              @if (e.date) {
+                <span class="meta gw-chiffres"
+                  >{{ e.date | date: 'd MMM y, HH:mm' }}{{ e.detail ? ' · ' + e.detail : '' }}</span
+                >
+              } @else {
+                <span class="meta">Pas encore</span>
+              }
+            </li>
+          }
+        </ol>
+      </section>
+
+      <!-- Livraison -->
+      <section class="gw-carte panneau" aria-labelledby="titre-livraison">
+        <h2 id="titre-livraison">
+          <ng-icon name="lucideBike" size="1.125rem" aria-hidden="true" />
+          Livraison
+        </h2>
+        @if (f.livraison; as l) {
+          <dl class="infos">
+            <div>
+              <dt>Statut</dt>
+              <dd>{{ libellesLivraison[l.statut] }}</dd>
+            </div>
+            <div>
+              <dt>Livreur</dt>
+              <dd>
+                @if (l.livreurNom) {
+                  {{ l.livreurNom }}
+                  <span class="meta">
+                    ·
+                    {{
+                      l.mode === 'LIVREUR_INDEPENDANT' ? 'indépendant' : 'livreur du fournisseur'
+                    }}
+                  </span>
+                  @if (l.livreurTelephone) {
+                    <br /><a [href]="'tel:' + l.livreurTelephone">{{ l.livreurTelephone }}</a>
+                  }
+                } @else {
+                  <span class="vide">Aucun pour le moment</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Distance, prix</dt>
+              <dd class="gw-chiffres">
+                {{ l.distanceKm ?? 0 | number: '1.0-1' : 'fr' }} km ·
+                {{ l.prix ?? 0 | number: '1.0-0' : 'fr' }} F
+              </dd>
+            </div>
+            @if (l.nbEssaisCode) {
+              <div>
+                <dt>Codes erronés</dt>
+                <dd class="gw-chiffres">{{ l.nbEssaisCode }}</dd>
+              </div>
+            }
+            @if (l.motifEchec) {
+              <div>
+                <dt>Motif de l'échec</dt>
+                <dd class="texte-danger">{{ l.motifEchec }}</dd>
+              </div>
+            }
+            @if (l.photoPreuveUrl | fichier; as photo) {
+              <div>
+                <dt>Photo</dt>
+                <dd>
+                  <a [href]="photo" target="_blank" rel="noopener">
+                    <img
+                      class="vignette"
+                      [src]="photo"
+                      alt="Photo prise par le livreur"
+                      loading="lazy"
+                    />
+                  </a>
+                </dd>
+              </div>
+            }
+          </dl>
+        } @else {
+          <p class="vide">Pas encore de livraison : elle est créée au paiement.</p>
+        }
+      </section>
+
+      <!-- Réclamation -->
+      @if (f.litige; as r) {
+        <section
+          class="gw-carte panneau"
+          [class.panneau-alerte]="r.statut === 'OUVERT'"
+          aria-labelledby="titre-litige"
+        >
+          <h2 id="titre-litige">
+            <ng-icon name="lucideGavel" size="1.125rem" aria-hidden="true" />
+            Réclamation
+          </h2>
+          <dl class="infos">
+            <div>
+              <dt>Problème</dt>
+              <dd>
+                {{ motifs[r.motif] ?? r.motif }}
+                <span class="meta"
+                  >· signalé le {{ r.dateOuverture | date: 'd MMM y, HH:mm' }}</span
+                >
+              </dd>
+            </div>
+            @if (r.montantDemande) {
+              <div>
+                <dt>Demandé</dt>
+                <dd class="gw-chiffres">{{ r.montantDemande | number: '1.0-0' : 'fr' }} F</dd>
+              </div>
+            }
+            @if (r.lignes?.length) {
+              <div>
+                <dt>Produits</dt>
+                <dd>
+                  <ul class="liste-simple">
+                    @for (lg of r.lignes; track lg.ligneCommandeId) {
+                      <li>
+                        {{ lg.ingredientNom }} :
+                        <span class="gw-chiffres"
+                          >{{ lg.quantite | number: '1.0-2' : 'fr' }} {{ lg.unite | unite }} ·
+                          {{ lg.montant | number: '1.0-0' : 'fr' }} F</span
+                        >
+                      </li>
+                    }
+                  </ul>
+                </dd>
+              </div>
+            }
+            <div>
+              <dt>Fournisseur</dt>
+              <dd>
+                @if (r.fournisseurAccepte === true) {
+                  A accepté
+                } @else if (r.fournisseurAccepte === false) {
+                  Conteste
+                } @else {
+                  <span class="vide">Pas de réponse</span>
+                }
+                @if (r.reponseFournisseur) {
+                  <span class="meta">· « {{ r.reponseFournisseur }} »</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Décision</dt>
+              <dd>
+                @if (r.decision) {
+                  {{ decisions[r.decision] }}
+                  @if (r.montantRembourse) {
+                    <span class="meta gw-chiffres"
+                      >· {{ r.montantRembourse | number: '1.0-0' : 'fr' }} F remboursés</span
+                    >
+                  }
+                } @else {
+                  <span class="gw-etiquette ton-attente">À trancher</span>
+                }
+              </dd>
+            </div>
+          </dl>
+          @if (r.description) {
+            <blockquote class="citation">« {{ r.description }} »</blockquote>
+          }
+          @if (r.photos?.length) {
+            <div class="photos">
+              @for (p of r.photos; track p) {
+                @if (p | fichier; as url) {
+                  <a [href]="url" target="_blank" rel="noopener">
+                    <img
+                      class="vignette"
+                      [src]="url"
+                      alt="Photo envoyée par le client"
+                      loading="lazy"
+                    />
+                  </a>
+                }
+              }
+            </div>
+          }
+          @if (r.statut === 'OUVERT') {
+            <a matButton="filled" routerLink="/marche/litiges" class="bouton-gauche">
+              <ng-icon name="lucideGavel" size="1rem" aria-hidden="true" />
+              Trancher dans Litiges
+            </a>
+          }
+        </section>
+      }
+
+      <!-- Avis -->
+      @if (f.avis.length) {
+        <section class="gw-carte panneau" aria-labelledby="titre-avis">
+          <h2 id="titre-avis">
+            <ng-icon name="lucideStar" size="1.125rem" aria-hidden="true" />
+            Avis du client
+          </h2>
+          <ul class="avis">
+            @for (a of f.avis; track a.id) {
+              <li>
+                <span class="avis-cible">
+                  {{ a.cible === 'FOURNISSEUR' ? 'Fournisseur' : 'Livreur' }} ·
+                  <span class="gw-chiffres">{{ a.note }}/5</span>
+                  @if (!a.visible) {
+                    <span class="gw-etiquette ton-neutre">masqué</span>
+                  }
+                </span>
+                @if (a.commentaire) {
+                  <span>« {{ a.commentaire }} »</span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+
+    <div class="colonne-laterale">
+      <!-- Client -->
+      <section class="gw-carte panneau" aria-labelledby="titre-client">
+        <h2 id="titre-client">
+          <ng-icon name="lucideUser" size="1.125rem" aria-hidden="true" />
+          Client
+        </h2>
+        <dl class="infos">
+          <div>
+            <dt>Nom</dt>
+            <dd>
+              {{ f.client.nom }}
+              @if (f.client.invite) {
+                <span class="gw-etiquette ton-neutre">sans compte</span>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Téléphone</dt>
+            <dd>
+              @if (f.client.telephone) {
+                <a [href]="'tel:' + f.client.telephone">{{ f.client.telephone }}</a>
+              } @else {
+                <span class="vide">Non renseigné</span>
+              }
+            </dd>
+          </div>
+          @if (f.client.email) {
+            <div>
+              <dt>Email</dt>
+              <dd>
+                <a [href]="'mailto:' + f.client.email">{{ f.client.email }}</a>
+              </dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <!-- Lieu de livraison -->
+      <section class="gw-carte panneau" aria-labelledby="titre-lieu">
+        <h2 id="titre-lieu">
+          <ng-icon name="lucideMapPin" size="1.125rem" aria-hidden="true" />
+          Lieu de livraison
+        </h2>
+        @if (f.destination; as d) {
+          <app-carte-point
+            [latitude]="d.latitude"
+            [longitude]="d.longitude"
+            libelle="Lieu de livraison"
+          />
+          <dl class="infos">
+            <div>
+              <dt>À appeler</dt>
+              <dd>
+                @if (d.contactTelephone) {
+                  {{ d.contactNom ?? '' }}
+                  <a [href]="'tel:' + d.contactTelephone">{{ d.contactTelephone }}</a>
+                } @else {
+                  <span class="vide">Le client</span>
+                }
+              </dd>
+            </div>
+          </dl>
+        } @else {
+          <p class="vide">Lieu inconnu.</p>
+        }
+      </section>
+
+      <!-- Fournisseur -->
+      <section class="gw-carte panneau" aria-labelledby="titre-fournisseur">
+        <h2 id="titre-fournisseur">
+          <ng-icon name="lucideStore" size="1.125rem" aria-hidden="true" />
+          Fournisseur
+        </h2>
+        @if (f.fournisseur; as fo) {
+          <dl class="infos">
+            <div>
+              <dt>Nom</dt>
+              <dd>{{ fo.nom }}</dd>
+            </div>
+            @if (fo.telephone) {
+              <div>
+                <dt>Téléphone</dt>
+                <dd>
+                  <a [href]="'tel:' + fo.telephone">{{ fo.telephone }}</a>
+                </dd>
+              </div>
+            }
+            @if (fo.localite) {
+              <div>
+                <dt>Localité</dt>
+                <dd>{{ fo.localite }}</dd>
+              </div>
+            }
+          </dl>
+        } @else {
+          <p class="vide">Aucun fournisseur n'a encore accepté.</p>
+        }
+      </section>
+
+      <!-- Paiement -->
+      <section class="gw-carte panneau" aria-labelledby="titre-paiement">
+        <h2 id="titre-paiement">
+          <ng-icon name="lucideSmartphone" size="1.125rem" aria-hidden="true" />
+          Paiement
+        </h2>
+        @if (f.paiement; as p) {
+          <dl class="infos">
+            <div>
+              <dt>Statut</dt>
+              <dd>{{ libellesPaiement[p.statut] }}</dd>
+            </div>
+            <div>
+              <dt>Montant</dt>
+              <dd class="gw-chiffres">{{ p.montant | number: '1.0-0' : 'fr' }} F</dd>
+            </div>
+            <div>
+              <dt>Payé avec</dt>
+              <dd>
+                {{ operateurs[p.operateur ?? ''] ?? '—' }}
+                @if (p.telephone) {
+                  <span class="meta">· {{ p.telephone }}</span>
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Référence</dt>
+              <dd class="gw-chiffres">
+                {{ p.reference }}
+                @if (p.referenceAgregateur) {
+                  <span class="meta">· {{ p.referenceAgregateur }}</span>
+                }
+              </dd>
+            </div>
+            @if (p.motifEchec) {
+              <div>
+                <dt>Motif</dt>
+                <dd class="texte-danger">{{ p.motifEchec }}</dd>
+              </div>
+            }
+          </dl>
+        } @else {
+          <p class="vide">Pas encore de paiement.</p>
+        }
+      </section>
+
+      <!-- Versements -->
+      <section class="gw-carte panneau" aria-labelledby="titre-versements">
+        <h2 id="titre-versements">
+          <ng-icon name="lucideCoins" size="1.125rem" aria-hidden="true" />
+          Versements
+        </h2>
+        @if (f.versements.length) {
+          <ul class="versements">
+            @for (v of f.versements; track $index) {
+              <li>
+                <span class="versement-entete">
+                  <span>
+                    {{ v.beneficiaireNom }}
+                    <span class="meta"
+                      >· {{ v.pour === 'FOURNISSEUR' ? 'fournisseur' : 'livreur' }}</span
+                    >
+                  </span>
+                  <strong class="gw-chiffres">{{ v.montantNet | number: '1.0-0' : 'fr' }} F</strong>
+                </span>
+                <span class="meta gw-chiffres">
+                  {{ libellesVersement[v.statut] }}
+                  @if (v.commission > 0) {
+                    · {{ v.montantBrut | number: '1.0-0' : 'fr' }} F −
+                    {{ v.commission | number: '1.0-0' : 'fr' }} F de commission
+                  }
+                  @if (v.dateExecution) {
+                    · le {{ v.dateExecution | date: 'd MMM y, HH:mm' }}
+                  }
+                </span>
+                @if (v.motifEchec) {
+                  <span class="meta texte-danger">{{ v.motifEchec }}</span>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="vide">Rien n'est versé avant la clôture de la commande.</p>
+        }
+      </section>
+    </div>
+  </div>
+}

@@ -72,6 +72,15 @@ export class Sidebar {
       ],
     },
     {
+      titre: 'Marché',
+      liens: [
+        { libelle: 'Commandes', lien: '/marche/commandes', icone: 'lucideShoppingBasket', droit: 'MARCHE_GERER' },
+        { libelle: 'Litiges', lien: '/marche/litiges', icone: 'lucideGavel', droit: 'MARCHE_GERER' },
+        { libelle: 'Avis des clients', lien: '/marche/avis', icone: 'lucideStar', droit: 'MARCHE_GERER' },
+        { libelle: 'Réglages du marché', lien: '/marche/reglages', icone: 'lucideSettings', droit: 'MARCHE_GERER' },
+      ],
+    },
+    {
       titre: 'Catalogue',
       liens: [
         { libelle: 'Catégories', lien: '/categories', icone: 'lucideLayoutGrid', droit: 'CATALOGUE_GERER' },

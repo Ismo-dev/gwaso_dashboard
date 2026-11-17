@@ -80,6 +80,7 @@ const DOMAINES: Record<string, { libelle: string; icone: string }> = {
   ESPACE: { libelle: 'Producteurs', icone: 'lucideStore' },
   RAYON: { libelle: 'Marché', icone: 'lucideShoppingBasket' },
   COMMISSION: { libelle: 'Marché', icone: 'lucideShoppingBasket' },
+  MARCHE: { libelle: 'Marché', icone: 'lucideShoppingBasket' },
   CATEGORIE: { libelle: 'Catégories', icone: 'lucideLayoutGrid' },
   INGREDIENT: { libelle: 'Ingrédients', icone: 'lucideCarrot' },
   USTENSILE: { libelle: 'Ustensiles', icone: 'lucideUtensilsCrossed' },
@@ -131,6 +132,7 @@ export const DROITS = {
   PRODUIT_GERER: 'PRODUIT_GERER',
   RAYON_GERER: 'RAYON_GERER',
   COMMISSION_GERER: 'COMMISSION_GERER',
+  MARCHE_GERER: 'MARCHE_GERER',
   ESPACE_PRODUCTEUR: 'ESPACE_PRODUCTEUR',
 } as const;
 

@@ -1,0 +1,82 @@
+.liste {
+  overflow: hidden;
+}
+
+.rechargement {
+  opacity: 0.55;
+}
+
+.squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-4);
+}
+
+.sq-ligne {
+  display: block;
+  height: 44px;
+}
+
+.cellule-textes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &.centre {
+    align-items: center;
+  }
+}
+
+.reference,
+.motif {
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.meta {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.description {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gw-etiquette.ouvert {
+  background: var(--gw-attention-fond);
+  color: var(--gw-attention);
+}
+
+.cartes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  margin: 0;
+  padding: var(--gw-espace-3);
+  list-style: none;
+}
+
+.carte-litige {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--gw-espace-3);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+
+  button {
+    margin-top: var(--gw-espace-2);
+  }
+}
+
+.carte-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-espace-2);
+}

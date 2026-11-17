@@ -76,6 +76,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'marche',
+        canActivate: [droitGuard],
+        data: { filAriane: 'Marché', droit: 'MARCHE_GERER' },
+        loadChildren: () => import('./features/marche/marche.routes').then((m) => m.MARCHE_ROUTES),
+      },
+      {
         path: 'categories',
         canActivate: [droitGuard],
         data: { filAriane: 'Catégories', droit: 'CATALOGUE_GERER' },

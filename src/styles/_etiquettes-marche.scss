@@ -1,0 +1,30 @@
+// Couleur des étiquettes de statut du marché (commandes) : le libellé est toujours écrit,
+// la couleur ne fait que le souligner. À inclure dans le style d'un composant (@use 'etiquettes-marche').
+.gw-etiquette {
+  margin-left: 0;
+
+  &.ton-attente {
+    background: var(--gw-attention-fond);
+    color: var(--gw-attention);
+  }
+
+  &.ton-succes {
+    background: var(--gw-succes-fond);
+    color: var(--gw-succes);
+  }
+
+  &.ton-erreur {
+    background: var(--gw-danger-fond);
+    color: var(--gw-danger);
+  }
+
+  &.ton-info {
+    background: var(--gw-karite-pale);
+    color: var(--gw-karite);
+  }
+
+  &.ton-neutre {
+    background: var(--gw-fond);
+    color: var(--gw-texte-doux);
+  }
+}

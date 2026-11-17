@@ -379,6 +379,16 @@
                 }
                 Enregistrer la photo
               </button>
+            } @else if (etape()?.photoUrl) {
+              <button
+                matButton
+                type="button"
+                class="bouton-media retirer"
+                [disabled]="envoiPhoto()"
+                (click)="retirerMedia('photo')"
+              >
+                Retirer la photo
+              </button>
             }
           </div>
           <div class="media">
@@ -401,6 +411,16 @@
                 } @else {
                   Enregistrer la vidéo
                 }
+              </button>
+            } @else if (etape()?.videoUrl) {
+              <button
+                matButton
+                type="button"
+                class="bouton-media retirer"
+                [disabled]="envoiVideo()"
+                (click)="retirerMedia('video')"
+              >
+                Retirer la vidéo
               </button>
             }
           </div>
@@ -425,7 +445,8 @@
       @if (etape(); as e) {
         <p class="aide aide-media">
           Expliquez l'étape à voix haute : la préparation guidée de l'application la fait écouter.
-          En bambara, c'est le seul moyen pour l'instant de guider ceux qui ne lisent pas le français.
+          En bambara, c'est le seul moyen pour l'instant de guider ceux qui ne lisent pas le
+          français.
         </p>
         <div class="audios">
           <app-audio-etape
