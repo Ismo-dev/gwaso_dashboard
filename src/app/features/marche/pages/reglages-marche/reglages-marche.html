@@ -1,0 +1,174 @@
+<app-page-header
+  surtitre="Marché"
+  titre="Réglages du marché"
+  description="Comment une commande trouve son fournisseur, le temps laissé pour payer, et le prix de la livraison."
+/>
+
+@if (chargement()) {
+  <div class="gw-carte bloc" aria-busy="true" aria-label="Chargement des réglages">
+    <span class="gw-squelette sq-ligne"></span>
+    <span class="gw-squelette sq-ligne"></span>
+    <span class="gw-squelette sq-ligne"></span>
+  </div>
+} @else if (erreurChargement()) {
+  <app-empty-state
+    titre="Impossible de charger les réglages"
+    message="Vérifiez que le serveur est lancé, puis réessayez."
+    icone="lucideCircleAlert"
+    ton="erreur"
+  >
+    <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
+  </app-empty-state>
+} @else {
+  <form class="disposition" [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
+    <div class="colonne">
+      <section class="gw-carte bloc" aria-labelledby="titre-recherche">
+        <h2 class="bloc-titre" id="titre-recherche">
+          <ng-icon name="lucideMapPin" size="1.25rem" aria-hidden="true" />
+          Recherche d'un fournisseur
+        </h2>
+        <p class="bloc-aide">
+          La commande est proposée aux fournisseurs du rayon de départ. Sans réponse, le rayon
+          s'élargit à chaque délai, jusqu'au rayon maximum. Les mêmes délais ouvrent ensuite la
+          course aux livreurs indépendants.
+        </p>
+        <div class="grille">
+          <mat-form-field>
+            <mat-label>Rayon de départ</mat-label>
+            <input matInput type="number" formControlName="rayonInitialKm" min="0.1" step="0.5" />
+            <span matTextSuffix>km</span>
+            <mat-error>Au moins 0,1 km.</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Élargissement à chaque palier</mat-label>
+            <input matInput type="number" formControlName="pasRayonKm" min="0.1" step="0.5" />
+            <span matTextSuffix>km</span>
+            <mat-error>Au moins 0,1 km.</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Rayon maximum</mat-label>
+            <input matInput type="number" formControlName="rayonMaxKm" min="0.1" step="0.5" />
+            <span matTextSuffix>km</span>
+            <mat-error>Au moins 0,1 km.</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Délai entre deux paliers</mat-label>
+            <input matInput type="number" formControlName="delaiRechercheMin" min="1" step="1" />
+            <span matTextSuffix>min</span>
+            <mat-error>Au moins 1 minute.</mat-error>
+          </mat-form-field>
+        </div>
+        @if (rayonIncoherent()) {
+          <p class="alerte" role="alert">
+            Le rayon maximum doit être au moins égal au rayon de départ.
+          </p>
+        } @else if (paliers().length > 0) {
+          <p class="apercu-paliers">
+            Paliers :
+            @for (r of paliers(); track $index; let dernier = $last) {
+              <strong class="gw-chiffres">{{ r | number: '1.0-1' }} km</strong
+              >{{ dernier ? '' : ' → ' }}
+            }
+          </p>
+        }
+      </section>
+
+      <section class="gw-carte bloc" aria-labelledby="titre-paiement">
+        <h2 class="bloc-titre" id="titre-paiement">
+          <ng-icon name="lucideClock" size="1.25rem" aria-hidden="true" />
+          Paiement
+        </h2>
+        <p class="bloc-aide">
+          Temps laissé au client pour payer après l'acceptation du fournisseur ; passé ce délai, la
+          commande expire et le stock est rendu.
+        </p>
+        <div class="grille">
+          <mat-form-field>
+            <mat-label>Délai pour payer</mat-label>
+            <input matInput type="number" formControlName="delaiPaiementMin" min="1" step="1" />
+            <span matTextSuffix>min</span>
+            <mat-error>Au moins 1 minute.</mat-error>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="gw-carte bloc" aria-labelledby="titre-livraison">
+        <h2 class="bloc-titre" id="titre-livraison">
+          <ng-icon name="lucideBike" size="1.25rem" aria-hidden="true" />
+          Livraison
+        </h2>
+        <p class="bloc-aide">
+          Prix = prix de base + prix au km × distance de route (ligne droite × 1,3), arrondi aux 50
+          F au-dessus. La commission est retenue sur le prix de la livraison ; le reste va au
+          livreur.
+        </p>
+        <div class="grille">
+          <mat-form-field>
+            <mat-label>Prix de base</mat-label>
+            <input matInput type="number" formControlName="prixBaseLivraison" min="0" step="50" />
+            <span matTextSuffix>FCFA</span>
+            <mat-error>Un montant positif ou nul.</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Prix au km</mat-label>
+            <input matInput type="number" formControlName="prixParKm" min="0" step="10" />
+            <span matTextSuffix>FCFA</span>
+            <mat-error>Un montant positif ou nul.</mat-error>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-label>Commission Gwaso</mat-label>
+            <input
+              matInput
+              type="number"
+              formControlName="tauxCommissionLivraison"
+              min="0"
+              max="100"
+              step="0.5"
+            />
+            <span matTextSuffix>%</span>
+            <mat-error>Entre 0 et 100 %.</mat-error>
+          </mat-form-field>
+        </div>
+
+        <table class="gw-tableau apercu" aria-label="Aperçu du prix de livraison selon la distance">
+          <thead>
+            <tr>
+              <th scope="col">Distance (ligne droite)</th>
+              <th scope="col" class="gw-col-centre">Payé par le client</th>
+              <th scope="col" class="gw-col-centre">Gain du livreur</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ligne of apercu(); track ligne.km) {
+              <tr>
+                <td class="gw-chiffres">{{ ligne.km }} km</td>
+                <td class="gw-col-centre gw-chiffres">
+                  {{ ligne.prix | number: '1.0-0' : 'fr' }} F
+                </td>
+                <td class="gw-col-centre gw-chiffres">
+                  {{ ligne.gain | number: '1.0-0' : 'fr' }} F
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <aside class="gw-carte bloc enregistrement">
+      <p class="bloc-aide">
+        Les nouveaux réglages comptent pour les prochaines commandes ; celles en cours ne changent
+        pas.
+      </p>
+      @if (erreur()) {
+        <p class="alerte" role="alert">{{ erreur() }}</p>
+      }
+      <button matButton="filled" type="submit" [disabled]="enCours() || formulaire.pristine">
+        @if (enCours()) {
+          <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+        }
+        Enregistrer les réglages
+      </button>
+    </aside>
+  </form>
+}

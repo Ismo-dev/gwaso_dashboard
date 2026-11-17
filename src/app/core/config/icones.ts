@@ -47,6 +47,8 @@ import {
   lucideShieldCheck,
   lucideShoppingBasket,
   lucideSparkles,
+  lucideStar,
+  lucideGavel,
   lucideStore,
   lucideTrash2,
   lucideTriangleAlert,
@@ -215,4 +217,6 @@ export const ICONES = {
   lucidePhone,
   lucideMail,
   lucideSettings,
+  lucideStar,
+  lucideGavel,
 };

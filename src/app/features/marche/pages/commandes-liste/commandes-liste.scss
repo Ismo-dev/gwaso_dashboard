@@ -1,0 +1,134 @@
+@use 'etiquettes-marche';
+
+.liste {
+  overflow: hidden;
+}
+
+.outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-4) var(--gw-espace-4) 0;
+
+  .gw-resume {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.recherche {
+  flex: 1 1 280px;
+}
+
+.icone-champ {
+  margin: 0 var(--gw-espace-2) 0 var(--gw-espace-3);
+  color: var(--gw-texte-doux);
+}
+
+.rechargement {
+  opacity: 0.55;
+}
+
+.squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-4);
+}
+
+.sq-ligne {
+  display: block;
+  height: 44px;
+}
+
+.cellule-textes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  &.centre {
+    align-items: center;
+  }
+}
+
+.reference {
+  color: var(--gw-cacao);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--gw-action);
+    text-decoration: underline;
+  }
+}
+
+.montant {
+  color: var(--gw-cacao);
+  font-weight: 600;
+}
+
+.meta {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}
+
+.vide {
+  color: var(--gw-texte-discret);
+  font-style: italic;
+}
+
+.actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+  justify-content: flex-end;
+  gap: var(--gw-espace-2);
+}
+
+.danger {
+  color: var(--gw-danger);
+}
+
+.cartes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  margin: 0;
+  padding: var(--gw-espace-3);
+  list-style: none;
+}
+
+.carte-commande {
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon);
+}
+
+.carte-lien {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--gw-espace-3);
+  color: var(--gw-texte);
+  text-decoration: none;
+}
+
+.carte-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-espace-2);
+}
+
+.carte-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+  padding: 0 var(--gw-espace-3) var(--gw-espace-3);
+
+  button {
+    flex: 1;
+  }
+}

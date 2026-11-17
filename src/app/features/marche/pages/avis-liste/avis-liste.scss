@@ -1,0 +1,85 @@
+.liste {
+  overflow: hidden;
+}
+
+.squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-3);
+  padding: var(--gw-espace-4);
+}
+
+.sq-ligne {
+  display: block;
+  height: 72px;
+}
+
+.avis {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.un-avis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-2);
+  padding: var(--gw-espace-4);
+  border-top: 1px solid var(--gw-bordure);
+
+  &.masque {
+    background: var(--gw-fond, transparent);
+
+    .commentaire,
+    .note {
+      opacity: 0.55;
+    }
+  }
+}
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gw-espace-2);
+}
+
+.note {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--gw-bordure);
+
+  // Les icônes lucide n'ont qu'un contour : l'étoile de la note est remplie
+  .pleine {
+    color: var(--gw-karite);
+
+    ::ng-deep svg {
+      fill: currentColor;
+    }
+  }
+}
+
+.commentaire {
+  margin: 0;
+  color: var(--gw-texte);
+
+  &.vide {
+    color: var(--gw-texte-doux);
+    font-style: italic;
+  }
+}
+
+.pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gw-espace-2);
+}
+
+.meta {
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+}

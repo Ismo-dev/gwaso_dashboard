@@ -1,0 +1,98 @@
+<app-page-header
+  surtitre="Marché"
+  titre="Avis des clients"
+  description="Notes laissées après une livraison. Masquez un avis injurieux ou hors sujet : il ne compte plus dans la moyenne."
+/>
+
+<section class="gw-carte liste" aria-label="Liste des avis">
+  <p class="gw-resume" aria-live="polite">
+    @if (!chargement() && resultat(); as page) {
+      <strong class="gw-chiffres">{{ page.totalElements }}</strong>
+      {{ page.totalElements > 1 ? 'avis' : 'avis' }}
+    }
+  </p>
+
+  @if (chargement() && !resultat()) {
+    <div class="squelette" aria-busy="true" aria-label="Chargement des avis">
+      @for (ligne of lignesSquelette; track ligne) {
+        <span class="gw-squelette sq-ligne"></span>
+      }
+    </div>
+  } @else if (erreur()) {
+    <app-empty-state
+      titre="Impossible de charger les avis"
+      message="Vérifiez que le serveur est lancé, puis réessayez."
+      icone="lucideCircleAlert"
+      ton="erreur"
+    >
+      <button matButton="filled" type="button" (click)="charger()">Réessayer</button>
+    </app-empty-state>
+  } @else if (avis().length === 0) {
+    <app-empty-state
+      titre="Aucun avis pour l'instant"
+      message="Les clients peuvent noter le fournisseur et le livreur une fois leur commande livrée."
+      icone="lucideStar"
+    />
+  } @else {
+    <ul class="avis">
+      @for (a of avis(); track a.id) {
+        <li class="un-avis" [class.masque]="!a.visible">
+          <div class="entete">
+            <span class="note" [attr.aria-label]="a.note + ' sur 5'">
+              @for (e of etoiles; track e) {
+                <ng-icon
+                  name="lucideStar"
+                  size="1rem"
+                  aria-hidden="true"
+                  [class.pleine]="e <= a.note"
+                />
+              }
+            </span>
+            <span class="gw-etiquette">{{
+              a.cible === 'FOURNISSEUR' ? 'Fournisseur' : 'Livreur'
+            }}</span>
+            @if (!a.visible) {
+              <span class="gw-etiquette gw-etiquette-neutre">Masqué</span>
+            }
+          </div>
+          @if (a.commentaire) {
+            <p class="commentaire">« {{ a.commentaire }} »</p>
+          } @else {
+            <p class="commentaire vide">Sans commentaire</p>
+          }
+          <div class="pied">
+            <span class="meta">
+              {{ a.auteurPrenom }} · commande {{ a.referenceCommande }} ·
+              {{ a.dateAvis | date: 'd MMM y' }}
+            </span>
+            <button
+              matButton="outlined"
+              type="button"
+              [disabled]="enCours() === a.id"
+              (click)="basculer(a)"
+            >
+              <ng-icon
+                [name]="a.visible ? 'lucideEyeOff' : 'lucideEye'"
+                size="1rem"
+                aria-hidden="true"
+              />
+              {{ a.visible ? 'Masquer' : 'Réafficher' }}
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (avis().length > 0) {
+    <mat-paginator
+      class="gw-pagination"
+      [length]="resultat()?.totalElements ?? 0"
+      [pageIndex]="page()"
+      [pageSize]="taille()"
+      [pageSizeOptions]="tailles"
+      (page)="changerPage($event)"
+      aria-label="Pages d'avis"
+    />
+  }
+</section>

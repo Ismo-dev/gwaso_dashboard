@@ -1,0 +1,66 @@
+<h2 mat-dialog-title>Confier la course de la commande {{ data.reference }}</h2>
+
+<mat-dialog-content>
+  <p class="aide">
+    Livreurs validés et disponibles : ceux du fournisseur d'abord, puis les indépendants, du plus
+    proche au plus loin du fournisseur. Le livreur, le fournisseur et le client sont prévenus.
+  </p>
+
+  @if (chargement()) {
+    <div class="etat" aria-busy="true">
+      <mat-progress-spinner
+        mode="indeterminate"
+        diameter="28"
+        aria-label="Chargement des livreurs"
+      />
+    </div>
+  } @else if (erreurChargement()) {
+    <p class="erreur" role="alert">Impossible de charger les livreurs.</p>
+    <button matButton="outlined" type="button" (click)="charger()">Réessayer</button>
+  } @else if (livreurs().length === 0) {
+    <p class="vide">
+      <ng-icon name="lucideBike" size="1.25rem" aria-hidden="true" />
+      Aucun livreur disponible pour le moment. Réessayez plus tard, ou annulez la commande pour
+      rembourser le client.
+    </p>
+  } @else {
+    <mat-radio-group
+      class="livreurs"
+      aria-label="Livreur"
+      [value]="choisi()"
+      (change)="choisi.set($event.value)"
+    >
+      @for (l of livreurs(); track l.id) {
+        <mat-radio-button [value]="l.id" class="livreur">
+          <span class="nom">{{ l.nom }}</span>
+          <span class="meta">
+            {{ l.duFournisseur ? 'Livreur du fournisseur' : 'Indépendant' }}
+            @if (l.distanceKm !== null) {
+              · <span class="gw-chiffres">{{ l.distanceKm | number: '1.0-1' : 'fr' }} km</span> du
+              fournisseur
+            } @else {
+              · position inconnue
+            }
+            @if (l.telephone) {
+              · {{ l.telephone }}
+            }
+          </span>
+        </mat-radio-button>
+      }
+    </mat-radio-group>
+  }
+
+  @if (erreur()) {
+    <p class="erreur" role="alert">{{ erreur() }}</p>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton type="button" mat-dialog-close [disabled]="enCours()">Annuler</button>
+  <button matButton="filled" type="button" [disabled]="!choisi() || enCours()" (click)="confier()">
+    @if (enCours()) {
+      <mat-progress-spinner mode="indeterminate" diameter="18" aria-hidden="true" />
+    }
+    Confier la course
+  </button>
+</mat-dialog-actions>
