@@ -1,0 +1,306 @@
+<section class="section" aria-labelledby="titre-marche">
+  <div class="entete">
+    <div class="section-entete">
+      <h2 id="titre-marche">Marché</h2>
+      <p>Commandes, ventes et livraisons sur la période choisie.</p>
+    </div>
+    <mat-button-toggle-group
+      class="periodes"
+      name="periode"
+      aria-label="Période des statistiques du marché"
+      [value]="jours()"
+      (change)="choisir($event.value)"
+      hideSingleSelectionIndicator
+    >
+      @for (p of periodes; track p) {
+        <mat-button-toggle [value]="p">{{ p }} jours</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </div>
+
+  @if (erreur()) {
+    <div class="gw-carte">
+      <app-empty-state
+        titre="Impossible de charger les chiffres du marché"
+        message="Vérifiez que le serveur est lancé, puis réessayez."
+        icone="lucideCircleAlert"
+        ton="erreur"
+      >
+        <button matButton="filled" type="button" (click)="charger()">
+          <ng-icon name="lucideRefreshCw" size="1.125rem" aria-hidden="true" />
+          Réessayer
+        </button>
+      </app-empty-state>
+    </div>
+  } @else if (stats(); as s) {
+    <div class="contenu" [class.recharge]="chargement()" [attr.aria-busy]="chargement()">
+      <!-- Maintenant : ce qui attend une action, et les acteurs prêts -->
+      <ul class="maintenant" aria-label="Le marché en ce moment">
+        <li>
+          <a
+            class="etat gw-carte"
+            [class.etat-alerte]="s.maintenant.sansLivreur > 0"
+            routerLink="/marche/commandes"
+            [queryParams]="{ onglet: 'SANS_LIVREUR' }"
+          >
+            <ng-icon name="lucideTruck" size="1.125rem" aria-hidden="true" />
+            <span class="etat-nombre gw-chiffres">{{ s.maintenant.sansLivreur }}</span>
+            <span class="etat-libelle"
+              >{{ s.maintenant.sansLivreur > 1 ? 'commandes' : 'commande' }} sans livreur</span
+            >
+          </a>
+        </li>
+        <li>
+          <a
+            class="etat gw-carte"
+            [class.etat-alerte]="s.maintenant.litigesOuverts > 0"
+            routerLink="/marche/litiges"
+          >
+            <ng-icon name="lucideMessageSquareWarning" size="1.125rem" aria-hidden="true" />
+            <span class="etat-nombre gw-chiffres">{{ s.maintenant.litigesOuverts }}</span>
+            <span class="etat-libelle"
+              >{{ s.maintenant.litigesOuverts > 1 ? 'réclamations' : 'réclamation' }} à
+              trancher</span
+            >
+          </a>
+        </li>
+        <li>
+          <a
+            class="etat gw-carte"
+            routerLink="/marche/commandes"
+            [queryParams]="{ onglet: 'EN_COURS' }"
+          >
+            <ng-icon name="lucideShoppingBag" size="1.125rem" aria-hidden="true" />
+            <span class="etat-nombre gw-chiffres">{{ s.maintenant.enCours }}</span>
+            <span class="etat-libelle">en cours</span>
+          </a>
+        </li>
+        <li>
+          <span class="etat gw-carte">
+            <ng-icon name="lucideStore" size="1.125rem" aria-hidden="true" />
+            <span class="etat-nombre gw-chiffres">{{ s.maintenant.fournisseursActifs }}</span>
+            <span class="etat-libelle">{{
+              s.maintenant.fournisseursActifs > 1 ? 'fournisseurs ouverts' : 'fournisseur ouvert'
+            }}</span>
+          </span>
+        </li>
+        <li>
+          <span class="etat gw-carte">
+            <ng-icon name="lucideBike" size="1.125rem" aria-hidden="true" />
+            <span class="etat-nombre gw-chiffres">{{ s.maintenant.livreursDisponibles }}</span>
+            <span class="etat-libelle"
+              >{{
+                s.maintenant.livreursDisponibles > 1 ? 'livreurs disponibles' : 'livreur disponible'
+              }}
+              <span class="etat-detail"
+                >dont {{ pluriel(s.maintenant.livreursIndependants, 'indépendant') }}</span
+              ></span
+            >
+          </span>
+        </li>
+      </ul>
+
+      <!-- Chiffres de la période -->
+      <div class="grille-chiffres">
+        <article class="chiffre gw-carte">
+          <h3>Ventes</h3>
+          <p class="valeur">{{ fcfa(s.argent.ventes) }}</p>
+          <p class="detail">Panier moyen : {{ fcfa(s.argent.panierMoyen) }}</p>
+        </article>
+        <article class="chiffre gw-carte">
+          <h3>Commandes payées</h3>
+          <p class="valeur">{{ s.commandes.payees.toLocaleString('fr-FR') }}</p>
+          <p class="detail">
+            {{ pluriel(s.commandes.passees, 'passée') }} ·
+            {{ pluriel(s.commandes.livrees, 'livrée') }} ·
+            {{ pluriel(s.commandes.annulees, 'annulée') }}
+          </p>
+        </article>
+        <article class="chiffre gw-carte">
+          <h3>Commandes réussies</h3>
+          <p class="valeur">
+            {{ s.commandes.tauxReussite === null ? '—' : s.commandes.tauxReussite + ' %' }}
+          </p>
+          <p class="detail">
+            @if (s.commandes.delaiMoyenMin !== null) {
+              Livrées en {{ duree(s.commandes.delaiMoyenMin) }} en moyenne après paiement
+            } @else {
+              Aucune commande terminée sur la période
+            }
+          </p>
+        </article>
+        <article class="chiffre gw-carte">
+          <h3>Commission Gwaso</h3>
+          <p class="valeur">{{ fcfa(s.argent.commissionGwaso) }}</p>
+          <p class="detail">Remboursé aux clients : {{ fcfa(s.argent.rembourse) }}</p>
+        </article>
+      </div>
+
+      <!-- Ventes jour par jour : une série, pas de légende (le titre la nomme) -->
+      <section class="gw-carte panneau" aria-labelledby="titre-ventes-jour">
+        <div class="panneau-entete">
+          <div>
+            <h3 id="titre-ventes-jour">Ventes par jour</h3>
+            <p>Paiements confirmés, en FCFA.</p>
+          </div>
+        </div>
+
+        @if (aucuneVente()) {
+          <app-empty-state
+            titre="Aucune vente sur la période"
+            message="Les ventes apparaîtront ici dès le premier paiement."
+            icone="lucideChartColumn"
+          />
+        } @else {
+          <div class="graphique" role="group" [attr.aria-label]="resumeGraphique()">
+            <div class="axe" aria-hidden="true">
+              @for (g of graduations(); track $index) {
+                <span class="gw-chiffres">{{ compact(g) }}</span>
+              }
+            </div>
+            <div class="trace">
+              <div class="grille" aria-hidden="true">
+                @for (g of graduations(); track $index) {
+                  <span></span>
+                }
+              </div>
+              <div
+                class="colonnes"
+                [style.--n]="colonnes().length"
+                (pointerleave)="survol.set(null)"
+              >
+                @for (c of colonnes(); track c.date.getTime(); let i = $index) {
+                  <button
+                    type="button"
+                    class="colonne"
+                    [class.actif]="survol() === i"
+                    [attr.aria-label]="
+                      (c.date | date: 'EEEE d MMMM') +
+                      ' : ' +
+                      fcfa(c.ventes) +
+                      ', ' +
+                      pluriel(c.commandes, 'commande')
+                    "
+                    (pointerenter)="survol.set(i)"
+                    (focus)="survol.set(i)"
+                    (blur)="survol.set(null)"
+                  >
+                    @if (c.ventes > 0) {
+                      <span class="barre" [style.height.%]="c.hauteur"></span>
+                    }
+                    @if (survol() === i) {
+                      <span
+                        class="infobulle"
+                        [class.a-gauche]="i > colonnes().length / 2"
+                        role="tooltip"
+                        aria-hidden="true"
+                      >
+                        <span class="infobulle-date">{{ c.date | date: 'EEE d MMM' }}</span>
+                        <strong>{{ fcfa(c.ventes) }}</strong>
+                        <span>{{ pluriel(c.commandes, 'commande') }}</span>
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+              <div class="reperes" aria-hidden="true">
+                @for (d of reperes(); track d.getTime()) {
+                  <span>{{ d | date: 'd MMM' }}</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <details class="tableau">
+            <summary>Voir le détail jour par jour</summary>
+            <div class="tableau-defile">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">Jour</th>
+                    <th scope="col">Commandes passées</th>
+                    <th scope="col">Ventes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of colonnes().slice().reverse(); track c.date.getTime()) {
+                    <tr>
+                      <th scope="row">{{ c.date | date: 'EEE d MMM y' }}</th>
+                      <td class="gw-chiffres">{{ c.commandes }}</td>
+                      <td class="gw-chiffres">{{ fcfa(c.ventes) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </details>
+        }
+      </section>
+
+      <!-- Classements -->
+      <div class="colonnes-classements">
+        @for (
+          bloc of [
+            {
+              titre: 'Produits les plus vendus',
+              id: 'titre-top-produits',
+              liste: s.topProduits,
+              icone: 'lucideCarrot',
+            },
+            {
+              titre: 'Meilleurs fournisseurs',
+              id: 'titre-top-fournisseurs',
+              liste: s.topFournisseurs,
+              icone: 'lucideStore',
+            },
+          ];
+          track bloc.id
+        ) {
+          <section class="gw-carte panneau" [attr.aria-labelledby]="bloc.id">
+            <div class="panneau-entete">
+              <div>
+                <h3 [id]="bloc.id">{{ bloc.titre }}</h3>
+                <p>Montant des produits vendus sur {{ s.jours }} jours.</p>
+              </div>
+            </div>
+            @if (bloc.liste.length) {
+              <ol class="classement">
+                @for (ligne of bloc.liste; track ligne.nom; let i = $index) {
+                  <li>
+                    <span class="rang gw-chiffres" aria-hidden="true">{{ i + 1 }}</span>
+                    <div class="ligne">
+                      <div class="ligne-haut">
+                        <span class="ligne-nom">{{ ligne.nom }}</span>
+                        <span class="ligne-montant gw-chiffres">{{ fcfa(ligne.montant) }}</span>
+                      </div>
+                      <span class="jauge" aria-hidden="true"
+                        ><span [style.width.%]="part(bloc.liste, ligne)"></span
+                      ></span>
+                      <span class="ligne-detail">{{ pluriel(ligne.commandes, 'commande') }}</span>
+                    </div>
+                  </li>
+                }
+              </ol>
+            } @else {
+              <app-empty-state
+                titre="Rien de vendu sur la période"
+                message="Le classement se remplira avec les premières commandes payées."
+                [icone]="bloc.icone"
+              />
+            }
+          </section>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="squelette" aria-busy="true" aria-label="Chargement des chiffres du marché">
+      <div class="gw-squelette sq-etats"></div>
+      <div class="grille-chiffres">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="gw-squelette sq-chiffre"></div>
+        }
+      </div>
+      <div class="gw-squelette sq-graphique"></div>
+    </div>
+  }
+</section>
