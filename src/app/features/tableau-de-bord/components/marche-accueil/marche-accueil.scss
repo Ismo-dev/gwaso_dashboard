@@ -1,0 +1,462 @@
+@use 'points-de-rupture' as ecran;
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--gw-espace-3);
+  margin-bottom: var(--gw-espace-4);
+
+  h2 {
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-titre-section);
+    font-weight: 700;
+  }
+
+  p {
+    margin-top: var(--gw-espace-1);
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-texte);
+  }
+}
+
+.contenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+  transition: opacity var(--gw-duree);
+}
+
+.recharge {
+  opacity: 0.55;
+}
+
+// ----- Maintenant -----
+.maintenant {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--gw-espace-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.etat {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: var(--gw-espace-2);
+  height: 100%;
+  padding: var(--gw-espace-3) var(--gw-espace-4);
+  color: var(--gw-texte-doux);
+  text-decoration: none;
+
+  ng-icon {
+    grid-row: span 2;
+    align-self: start;
+    margin-top: 4px;
+  }
+}
+
+a.etat {
+  transition: border-color var(--gw-duree);
+
+  &:hover {
+    border-color: var(--gw-contour-champ);
+  }
+}
+
+.etat-nombre {
+  color: var(--gw-texte);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.etat-libelle {
+  grid-column: 2;
+  font-size: var(--gw-taille-petit);
+}
+
+.etat-detail {
+  display: block;
+  color: var(--gw-texte-discret);
+}
+
+.etat-alerte {
+  background: var(--gw-attention-fond);
+  color: var(--gw-attention);
+
+  .etat-nombre {
+    color: var(--gw-attention);
+  }
+}
+
+// ----- Chiffres de la période -----
+.grille-chiffres {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gw-espace-4);
+}
+
+.chiffre {
+  padding: var(--gw-espace-5);
+
+  h3 {
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-label);
+    font-weight: 600;
+  }
+
+  .valeur {
+    margin-top: var(--gw-espace-2);
+    color: var(--gw-texte);
+    font-size: 1.625rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .detail {
+    margin-top: var(--gw-espace-2);
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+  }
+}
+
+// ----- Panneaux -----
+.panneau {
+  padding: var(--gw-espace-5);
+
+  @include ecran.mobile {
+    padding: var(--gw-espace-4);
+  }
+}
+
+.panneau-entete {
+  margin-bottom: var(--gw-espace-4);
+
+  h3 {
+    color: var(--gw-cacao);
+    font-size: var(--gw-taille-titre-carte);
+    font-weight: 600;
+  }
+
+  p {
+    margin-top: 2px;
+    color: var(--gw-texte-doux);
+    font-size: var(--gw-taille-petit);
+  }
+}
+
+// ----- Graphique des ventes -----
+.graphique {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--gw-espace-2);
+}
+
+.axe {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 200px;
+  color: var(--gw-texte-discret);
+  font-size: var(--gw-taille-petit);
+  text-align: right;
+
+  span {
+    line-height: 1;
+    transform: translateY(-50%);
+
+    &:first-child {
+      transform: none;
+    }
+
+    &:last-child {
+      transform: translateY(0);
+    }
+  }
+}
+
+.trace {
+  position: relative;
+  min-width: 0;
+}
+
+.grille {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 200px;
+  pointer-events: none;
+
+  span {
+    border-top: 1px solid var(--gw-bordure);
+  }
+}
+
+.colonnes {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  gap: 2px;
+  height: 200px;
+}
+
+// Toute la hauteur du jour est la cible du survol : bien plus grande que la barre
+.colonne {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+
+  &:focus-visible {
+    outline: 2px solid var(--gw-action);
+    outline-offset: 1px;
+    border-radius: 4px;
+  }
+
+  &.actif {
+    background: var(--gw-fond);
+    border-radius: 4px;
+  }
+}
+
+.barre {
+  width: 100%;
+  max-width: 24px;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  background: var(--gw-action);
+  transition: background var(--gw-duree);
+
+  .actif & {
+    background: var(--gw-action-survol);
+  }
+}
+
+.infobulle {
+  position: absolute;
+  bottom: calc(100% - 8px);
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border: 1px solid var(--gw-bordure);
+  border-radius: var(--gw-rayon-sm);
+  background: var(--gw-surface);
+  box-shadow: 0 6px 20px rgb(31 22 18 / 0.12);
+  color: var(--gw-texte-doux);
+  font-size: var(--gw-taille-petit);
+  text-align: left;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-20%, -4px);
+
+  &.a-gauche {
+    transform: translate(-80%, -4px);
+  }
+
+  strong {
+    color: var(--gw-texte);
+    font-size: var(--gw-taille-texte);
+  }
+}
+
+.infobulle-date {
+  display: block;
+}
+
+.infobulle-date::first-letter {
+  text-transform: uppercase;
+}
+
+.reperes {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--gw-espace-2);
+  color: var(--gw-texte-discret);
+  font-size: var(--gw-taille-petit);
+}
+
+// ----- Tableau (les mêmes chiffres, sans survol) -----
+.tableau {
+  margin-top: var(--gw-espace-4);
+
+  summary {
+    width: fit-content;
+    color: var(--gw-action);
+    font-size: var(--gw-taille-label);
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.tableau-defile {
+  max-height: 280px;
+  margin-top: var(--gw-espace-3);
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--gw-taille-petit);
+
+  th,
+  td {
+    padding: var(--gw-espace-2) var(--gw-espace-3);
+    border-bottom: 1px solid var(--gw-bordure);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--gw-surface);
+    color: var(--gw-texte-doux);
+    font-weight: 600;
+  }
+
+  tbody th {
+    color: var(--gw-texte);
+    font-weight: 500;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
+  }
+
+  td {
+    color: var(--gw-texte);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  thead th:not(:first-child) {
+    text-align: right;
+  }
+}
+
+// ----- Classements -----
+.colonnes-classements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--gw-espace-4);
+
+  @include ecran.mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.classement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: var(--gw-espace-3);
+  }
+}
+
+.rang {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-fond-accent);
+  color: var(--gw-texte);
+  font-size: var(--gw-taille-petit);
+  font-weight: 700;
+}
+
+.ligne {
+  flex: 1;
+  min-width: 0;
+}
+
+.ligne-haut {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gw-espace-3);
+}
+
+.ligne-nom {
+  overflow: hidden;
+  color: var(--gw-texte);
+  font-size: var(--gw-taille-texte);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ligne-montant {
+  flex: none;
+  color: var(--gw-texte);
+  font-size: var(--gw-taille-texte);
+  font-weight: 600;
+}
+
+.jauge {
+  display: block;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--gw-rayon-pilule);
+  background: var(--gw-terre-cuite-pale);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: var(--gw-rayon-pilule);
+    background: var(--gw-action);
+  }
+}
+
+.ligne-detail {
+  display: block;
+  margin-top: 4px;
+  color: var(--gw-texte-discret);
+  font-size: var(--gw-taille-petit);
+}
+
+// ----- Chargement -----
+.squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gw-espace-4);
+
+  .gw-squelette {
+    border-radius: var(--gw-rayon-lg);
+  }
+
+  .sq-etats {
+    height: 72px;
+  }
+
+  .sq-chiffre {
+    height: 112px;
+  }
+
+  .sq-graphique {
+    height: 300px;
+  }
+}

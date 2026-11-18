@@ -13,6 +13,7 @@ import { RecetteResponse, nomsCategories } from '../../../recettes/models/recett
 import { RecetteService } from '../../../recettes/services/recette.service';
 import { Statistiques } from '../../models/statistiques.model';
 import { StatistiquesService } from '../../services/statistiques.service';
+import { MarcheAccueil } from '../../components/marche-accueil/marche-accueil';
 import { AccueilProducteur } from '../../../espace-producteur/components/accueil-producteur/accueil-producteur';
 
 /** Une file de travail « à traiter » (recettes, vidéos, défis, comptes). */
@@ -54,6 +55,7 @@ const NB_APERCU = 5;
     DepuisPipe,
     FichierPipe,
     AccueilProducteur,
+    MarcheAccueil,
   ],
   selector: 'app-accueil',
   styleUrl: './accueil.scss',

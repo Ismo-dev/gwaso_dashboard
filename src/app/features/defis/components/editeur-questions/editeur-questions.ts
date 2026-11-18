@@ -42,7 +42,7 @@ export function nouvelleQuestion(partielle: Partial<QuestionEdition> = {}): Ques
  * et, en option, des propositions à choisir.
  */
 @Component({
-  imports: [MatFormField, MatLabel, MatHint, MatSuffix, MatInput, MatSelect, MatOption, MatSlideToggle, MatButton, MatIconButton, MatTooltip, NgIcon, ListeReponses],
+  imports: [MatFormField, MatLabel, MatSuffix, MatInput, MatSelect, MatOption, MatSlideToggle, MatButton, MatIconButton, MatTooltip, NgIcon, ListeReponses],
   selector: 'app-editeur-questions',
   styleUrl: './editeur-questions.scss',
   templateUrl: './editeur-questions.html',
