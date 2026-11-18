@@ -68,28 +68,39 @@ export class UtilisateurService {
 
   getDemandesStatut(statut?: StatutRole): Observable<DemandeStatutResponse[]> {
     return this.http
-      .get<ApiResponse<DemandeStatutResponse[]>>(`${environment.apiUrl}/demandes-statut`, { params: versParams({ statut }) })
+      .get<ApiResponse<DemandeStatutResponse[]>>(`${environment.apiUrl}/demandes-statut`, {
+        params: versParams({ statut }),
+      })
       .pipe(map((reponse) => reponse.data));
   }
 
   getDemandesDe(utilisateurId: string): Observable<DemandeStatutResponse[]> {
     return this.http
-      .get<ApiResponse<DemandeStatutResponse[]>>(`${environment.apiUrl}/demandes-statut/utilisateur/${utilisateurId}`)
+      .get<ApiResponse<DemandeStatutResponse[]>>(
+        `${environment.apiUrl}/demandes-statut/utilisateur/${utilisateurId}`,
+      )
       .pipe(map((reponse) => reponse.data));
   }
 
   /** Le cuisinier devient chef cuisinier ou producteur (même compte). */
   validerDemande(demandeId: string, profilId?: string): Observable<DemandeStatutResponse> {
     return this.http
-      .put<ApiResponse<DemandeStatutResponse>>(`${environment.apiUrl}/demandes-statut/${demandeId}/valider`, {}, {
-        params: versParams({ profilId }),
-      })
+      .put<ApiResponse<DemandeStatutResponse>>(
+        `${environment.apiUrl}/demandes-statut/${demandeId}/valider`,
+        {},
+        {
+          params: versParams({ profilId }),
+        },
+      )
       .pipe(map((reponse) => reponse.data));
   }
 
   refuserDemande(demandeId: string, motifRejet: string): Observable<DemandeStatutResponse> {
     return this.http
-      .put<ApiResponse<DemandeStatutResponse>>(`${environment.apiUrl}/demandes-statut/${demandeId}/rejeter`, { motifRejet })
+      .put<ApiResponse<DemandeStatutResponse>>(
+        `${environment.apiUrl}/demandes-statut/${demandeId}/rejeter`,
+        { motifRejet },
+      )
       .pipe(map((reponse) => reponse.data));
   }
 
@@ -97,7 +108,9 @@ export class UtilisateurService {
 
   getProduits(producteurId: string): Observable<ProduitProducteurResponse[]> {
     return this.http
-      .get<ApiResponse<ProduitProducteurResponse[]>>(`${environment.apiUrl}/producteurs/produits/producteur/${producteurId}`)
+      .get<ApiResponse<ProduitProducteurResponse[]>>(
+        `${environment.apiUrl}/producteurs/produits/producteur/${producteurId}`,
+      )
       .pipe(map((reponse) => reponse.data));
   }
 
@@ -204,7 +217,10 @@ export class UtilisateurService {
     const formulaire = new FormData();
     formulaire.append('file', fichier);
     return this.http
-      .post<ApiResponse<{ url: string }>>(`${environment.apiUrl}/fichiers/justificatifs`, formulaire)
+      .post<ApiResponse<{ url: string }>>(
+        `${environment.apiUrl}/fichiers/justificatifs`,
+        formulaire,
+      )
       .pipe(map((reponse) => reponse.data.url));
   }
 
@@ -248,7 +264,10 @@ export class UtilisateurService {
     const formulaire = new FormData();
     formulaire.append('file', fichier);
     return this.http
-      .post<ApiResponse<unknown>>(`${environment.apiUrl}/fichiers/utilisateurs/${id}/photo`, formulaire)
+      .post<ApiResponse<unknown>>(
+        `${environment.apiUrl}/fichiers/utilisateurs/${id}/photo`,
+        formulaire,
+      )
       .pipe(map(() => undefined));
   }
 

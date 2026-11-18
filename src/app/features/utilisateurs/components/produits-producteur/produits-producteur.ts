@@ -64,7 +64,8 @@ export class ProduitsProducteur {
         this.produits.update((liste) => liste.filter((p) => p.id !== produit.id));
         this.notification.succes(`« ${produit.ingredientNom} » est retiré.`);
       },
-      error: (erreur: unknown) => this.notification.erreur(messageErreur(erreur, "Le produit n'a pas pu être retiré.")),
+      error: (erreur: unknown) =>
+        this.notification.erreur(messageErreur(erreur, "Le produit n'a pas pu être retiré.")),
     });
   }
 }

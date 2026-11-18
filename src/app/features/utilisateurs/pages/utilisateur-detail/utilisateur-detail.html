@@ -162,9 +162,11 @@
               <dt>Fournisseur</dt>
               <dd>
                 @if (f.fournisseurId) {
-                  <a [routerLink]="['/utilisateurs', f.fournisseurId]" [queryParams]="{ role: 'PRODUCTEUR' }">{{
-                    f.fournisseurNom
-                  }}</a>
+                  <a
+                    [routerLink]="['/utilisateurs', f.fournisseurId]"
+                    [queryParams]="{ role: 'PRODUCTEUR' }"
+                    >{{ f.fournisseurNom }}</a
+                  >
                 } @else {
                   <span class="vide">Aucun</span>
                 }
@@ -185,7 +187,11 @@
             </div>
           </dl>
           @if (f.pieceIdentiteUrl; as piece) {
-            <button type="button" class="justificatif" (click)="voirJustificatif(piece, f.prenom + ' ' + f.nom)">
+            <button
+              type="button"
+              class="justificatif"
+              (click)="voirJustificatif(piece, f.prenom + ' ' + f.nom)"
+            >
               <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
               <strong>Voir la pièce d'identité</strong>
               <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
@@ -248,7 +254,12 @@
               <dd>
                 <!-- La localité d'un fournisseur est un lieu choisi sur la carte : on peut l'y voir -->
                 @if (f.latitude != null && f.longitude != null) {
-                  <a class="lien-carte" [href]="lienCarte(f.latitude, f.longitude)" target="_blank" rel="noopener">
+                  <a
+                    class="lien-carte"
+                    [href]="lienCarte(f.latitude, f.longitude)"
+                    target="_blank"
+                    rel="noopener"
+                  >
                     <ng-icon name="lucideMapPin" size="0.875rem" aria-hidden="true" />
                     {{ f.localite }}
                     <span class="sr-only">(carte, nouvel onglet)</span>

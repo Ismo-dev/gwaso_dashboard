@@ -1,5 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
@@ -68,7 +74,10 @@ export class ModifierUtilisateurDialog {
       email: [this.fiche.email ?? '', [Validators.email, Validators.maxLength(120)]],
       telephone: [this.fiche.telephone ?? '', [Validators.pattern(/^\+?[0-9 ]{8,20}$/)]],
       niveau: [(this.fiche.niveau ?? 'DEBUTANT') as NiveauCuisine],
-      localite: [this.fiche.localite ?? '', this.fiche.role === 'PRODUCTEUR' ? [Validators.required, Validators.maxLength(100)] : []],
+      localite: [
+        this.fiche.localite ?? '',
+        this.fiche.role === 'PRODUCTEUR' ? [Validators.required, Validators.maxLength(100)] : [],
+      ],
     },
     { validators: contactValide(this.fiche.role) },
   );
@@ -103,7 +112,10 @@ export class ModifierUtilisateurDialog {
         break;
       case 'CHEF':
         // Le justificatif est renvoyé tel quel : il n'est pas modifié ici
-        appel = this.utilisateurService.modifierChef(id, { ...commun, preuveUrl: this.fiche.preuveUrl ?? '' });
+        appel = this.utilisateurService.modifierChef(id, {
+          ...commun,
+          preuveUrl: this.fiche.preuveUrl ?? '',
+        });
         break;
       case 'PRODUCTEUR':
         appel = this.utilisateurService.modifierProducteur(id, {

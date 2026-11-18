@@ -26,10 +26,7 @@ import { NgIcon } from '@ng-icons/core';
 import { map, Observable, of, switchMap } from 'rxjs';
 import { TypeCompte } from '../../../../core/models/enums.model';
 import { messageErreur } from '../../../../core/utils/erreurs';
-import {
-  ProfilDroitsResponse,
-  ProfilResponse,
-} from '../../../profils/models/profil.model';
+import { ProfilDroitsResponse, ProfilResponse } from '../../../profils/models/profil.model';
 import { ProfilService } from '../../../profils/services/profil.service';
 import {
   AIDES_TYPE_COMPTE,
@@ -37,7 +34,9 @@ import {
   LIBELLES_NIVEAU,
   LIBELLES_TYPE_COMPTE,
   NiveauCuisine,
-  TYPES_COMPTE_CREABLES, JUSTIFICATIFS_ATTENDUS } from '../../models/utilisateur.model';
+  TYPES_COMPTE_CREABLES,
+  JUSTIFICATIFS_ATTENDUS,
+} from '../../models/utilisateur.model';
 import { UtilisateurService } from '../../services/utilisateur.service';
 
 /** Il faut un email ou un téléphone pour se connecter ; l'email est obligatoire pour un administrateur. */
@@ -142,7 +141,8 @@ export class NouvelUtilisateurDialog implements OnInit {
   /** Chef et producteur : statut à valider (on propose de le faire tout de suite). */
   protected aValider = computed(() => this.role() === 'CHEF' || this.role() === 'PRODUCTEUR');
   protected aideJustificatif = computed(
-    () => `Photo ou PDF : ${JUSTIFICATIFS_ATTENDUS[this.role() === 'CHEF' ? 'CHEF' : 'PRODUCTEUR']}`,
+    () =>
+      `Photo ou PDF : ${JUSTIFICATIFS_ATTENDUS[this.role() === 'CHEF' ? 'CHEF' : 'PRODUCTEUR']}`,
   );
 
   constructor() {
@@ -169,7 +169,9 @@ export class NouvelUtilisateurDialog implements OnInit {
   ngOnInit(): void {
     this.profilService.getAll().subscribe({
       next: (profils) => {
-        this.profils.set(profils.filter((p) => p.actif).sort((a, b) => a.nom.localeCompare(b.nom, 'fr')));
+        this.profils.set(
+          profils.filter((p) => p.actif).sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+        );
         this.chargementProfils.set(false);
         this.proposerProfil(this.formulaire.controls.typeCompte.value);
       },
@@ -189,7 +191,9 @@ export class NouvelUtilisateurDialog implements OnInit {
         ? profils.find((p) => p.systeme)
         : type === 'CUISINIER'
           ? profils.find((p) => p.inscription)
-          : profils.find((p) => normaliser(p.nom).includes(type === 'CHEF' ? 'chef' : 'producteur'));
+          : profils.find((p) =>
+              normaliser(p.nom).includes(type === 'CHEF' ? 'chef' : 'producteur'),
+            );
     if (propose) {
       this.formulaire.controls.profilId.setValue(propose.id);
     }
@@ -224,7 +228,9 @@ export class NouvelUtilisateurDialog implements OnInit {
     if (this.aValider() && !this.justificatif()) {
       this.formulaire.markAllAsTouched();
       this.erreurJustificatif.set('Le justificatif est obligatoire.');
-      this.erreur.set('Ajoutez le justificatif du statut (diplôme, attestation, carte professionnelle...).');
+      this.erreur.set(
+        'Ajoutez le justificatif du statut (diplôme, attestation, carte professionnelle...).',
+      );
       return;
     }
     if (this.formulaire.invalid) {
@@ -233,10 +239,10 @@ export class NouvelUtilisateurDialog implements OnInit {
         this.formulaire.controls.profilId.invalid
           ? 'Choisissez le profil du compte.'
           : this.formulaire.hasError('emailAdmin')
-          ? "L'email est obligatoire pour ce profil (il sert à se connecter au dashboard)."
-          : this.formulaire.hasError('contact')
-            ? 'Indiquez un email ou un numéro de téléphone : il sert à se connecter.'
-            : 'Certains champs sont à compléter. Ils sont signalés en rouge.',
+            ? "L'email est obligatoire pour ce profil (il sert à se connecter au dashboard)."
+            : this.formulaire.hasError('contact')
+              ? 'Indiquez un email ou un numéro de téléphone : il sert à se connecter.'
+              : 'Certains champs sont à compléter. Ils sont signalés en rouge.',
       );
       return;
     }
@@ -272,12 +278,15 @@ export class NouvelUtilisateurDialog implements OnInit {
         creation = this.utilisateurService.creerAdmin(commun);
         break;
       case 'CHEF':
-        creation = preuve$.pipe(
-          switchMap((preuveUrl) => this.utilisateurService.creerChef({ ...commun, preuveUrl })),
-        )
+        creation = preuve$
+          .pipe(
+            switchMap((preuveUrl) => this.utilisateurService.creerChef({ ...commun, preuveUrl })),
+          )
           .pipe(
             switchMap((chef) =>
-              v.validerDirectement ? valider(this.utilisateurService.validerChef(chef.id)) : of(chef),
+              v.validerDirectement
+                ? valider(this.utilisateurService.validerChef(chef.id))
+                : of(chef),
             ),
           );
         break;
@@ -285,7 +294,11 @@ export class NouvelUtilisateurDialog implements OnInit {
         creation = preuve$
           .pipe(
             switchMap((preuveUrl) =>
-              this.utilisateurService.creerProducteur({ ...commun, localite: v.localite.trim(), preuveUrl }),
+              this.utilisateurService.creerProducteur({
+                ...commun,
+                localite: v.localite.trim(),
+                preuveUrl,
+              }),
             ),
           )
           .pipe(
@@ -306,7 +319,9 @@ export class NouvelUtilisateurDialog implements OnInit {
       switchMap((compte) => {
         compteCree = true;
         const c = compte as { id: string; profilId: string | null };
-        return c.profilId === profilId ? of(compte) : this.utilisateurService.changerProfil(c.id, profilId);
+        return c.profilId === profilId
+          ? of(compte)
+          : this.utilisateurService.changerProfil(c.id, profilId);
       }),
     );
 

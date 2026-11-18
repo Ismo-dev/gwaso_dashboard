@@ -2,21 +2,47 @@
   <section class="gw-carte panneau panneau-attente" aria-labelledby="titre-demande">
     <h2 id="titre-demande">Veut devenir {{ libellesRole[d.type] | lowercase }}</h2>
     <p class="explication">
-      Demande envoyée le {{ d.dateDemande | date: "d MMMM y 'à' HH:mm" }}. Vérifiez le justificatif avant de décider.
+      Demande envoyée le {{ d.dateDemande | date: "d MMMM y 'à' HH:mm" }}. Vérifiez le justificatif
+      avant de décider.
     </p>
     @if (d.motivation) {
       <blockquote class="motivation">« {{ d.motivation }} »</blockquote>
     }
     @if (d.localite) {
-      <p class="localite"><ng-icon name="lucideStore" size="1rem" aria-hidden="true" /> Produit à {{ d.localite }}</p>
+      <p class="localite">
+        <ng-icon name="lucideStore" size="1rem" aria-hidden="true" /> Produit à {{ d.localite }}
+      </p>
+    }
+    @if (d.numeroMobileMoney) {
+      <p class="localite">
+        <ng-icon name="lucideSmartphone" size="1rem" aria-hidden="true" /> Payé sur
+        {{ operateurs[d.operateur ?? ''] ?? '' }} · {{ d.numeroMobileMoney }}
+      </p>
     }
     <button type="button" class="justificatif" (click)="voirJustificatif(d)">
       <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
-      <strong>Voir le justificatif</strong>
+      <strong>{{
+        d.type === 'LIVREUR' ? 'Pièce d’identité : recto' : 'Voir le justificatif'
+      }}</strong>
       <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
     </button>
+    @if (d.preuveVersoUrl) {
+      <button type="button" class="justificatif" (click)="voirJustificatif(d, true)">
+        <ng-icon name="lucideBadgeCheck" size="1.125rem" aria-hidden="true" />
+        <strong>Pièce d’identité : verso</strong>
+        <ng-icon class="fleche" name="lucideArrowRight" size="1rem" aria-hidden="true" />
+      </button>
+    }
     <div class="decision">
-      <button matButton="outlined" type="button" class="gw-bouton-danger" [disabled]="enCours()" (click)="refuser(d)">Refuser…</button>
+      <button
+        matButton="outlined"
+        type="button"
+        class="gw-bouton-danger"
+        [disabled]="enCours()"
+        (click)="refuser(d)"
+      >
+        Refuser…
+      </button>
       <button matButton="filled" type="button" [disabled]="enCours()" (click)="valider(d)">
         <ng-icon name="lucideCircleCheck" size="1.125rem" aria-hidden="true" />
         Valider : devient {{ libellesRole[d.type] | lowercase }}

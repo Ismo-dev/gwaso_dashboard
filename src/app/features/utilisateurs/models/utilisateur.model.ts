@@ -8,9 +8,20 @@ export type NiveauCuisine = 'DEBUTANT' | 'INTERMEDIAIRE' | 'EXPERT';
  * Justificatifs attendus pour chaque statut : affichés au demandeur (application)
  * et à l'administrateur (création de compte, carte de demande), pour parler de la même chose.
  */
-export const JUSTIFICATIFS_ATTENDUS: Record<'CHEF' | 'PRODUCTEUR', string> = {
+export const JUSTIFICATIFS_ATTENDUS: Record<TypeDemande, string> = {
   CHEF: 'diplôme, attestation de formation, carte professionnelle…',
-  PRODUCTEUR: 'photo du jardin, du champ, de l’étal ou de la boutique, carte de coopérative, registre de commerce…',
+  PRODUCTEUR:
+    'photo du jardin, du champ, de l’étal ou de la boutique, carte de coopérative, registre de commerce…',
+  LIVREUR: 'pièce d’identité lisible (recto et verso), au nom de la personne',
+};
+
+/** Statuts qu'un cuisinier peut demander. */
+export type TypeDemande = 'CHEF' | 'PRODUCTEUR' | 'LIVREUR';
+
+/** Libellé de l'opérateur Mobile Money. */
+export const OPERATEURS_MOBILE_MONEY: Record<string, string> = {
+  ORANGE_MONEY: 'Orange Money',
+  MOOV_MONEY: 'Moov Money',
 };
 
 export const LIBELLES_TYPE_COMPTE: Record<TypeCompte, string> = {
@@ -32,15 +43,22 @@ export const ICONES_TYPE_COMPTE: Record<TypeCompte, string> = {
 
 /** Ce que chaque type de compte demande à la création (le type ne donne aucun droit). */
 export const AIDES_TYPE_COMPTE: Record<TypeCompte, string> = {
-  ADMIN: "Équipe Gwaso : se connecte au dashboard selon les droits de son profil",
+  ADMIN: 'Équipe Gwaso : se connecte au dashboard selon les droits de son profil',
   CUISINIER: 'Membre de la communauté (niveau en cuisine)',
   CHEF: 'Chef cuisinier (justificatif obligatoire)',
   PRODUCTEUR: 'Vend ses produits (localité et justificatif)',
-  LIVREUR: 'Livre pour un fournisseur, qui l’ajoute depuis son espace',
+  LIVREUR:
+    'Livre pour un fournisseur (qui l’ajoute) ou en indépendant (demande depuis un compte cuisinier)',
 };
 
 /** Ordre d'affichage des types de compte. */
-export const ORDRE_TYPES_COMPTE: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR', 'LIVREUR'];
+export const ORDRE_TYPES_COMPTE: TypeCompte[] = [
+  'ADMIN',
+  'CUISINIER',
+  'CHEF',
+  'PRODUCTEUR',
+  'LIVREUR',
+];
 
 /** Types créés depuis le dashboard : un livreur est ajouté par son fournisseur, dans son espace. */
 export const TYPES_COMPTE_CREABLES: TypeCompte[] = ['ADMIN', 'CUISINIER', 'CHEF', 'PRODUCTEUR'];
@@ -62,7 +80,7 @@ export interface DemandeStatut {
   origine: 'compte' | 'cuisinier';
   demandeId: string | null;
   motivation: string | null;
-  type: 'CHEF' | 'PRODUCTEUR';
+  type: TypeDemande;
   nom: string;
   prenom: string;
   email: string | null;
@@ -73,6 +91,10 @@ export interface DemandeStatut {
   /** Fournisseur : position de sa localité sur la carte. */
   latitude?: number | null;
   longitude?: number | null;
+  /** Livreur : verso de la pièce d'identité (preuveUrl en est le recto), et où il sera payé. */
+  preuveVersoUrl?: string | null;
+  numeroMobileMoney?: string | null;
+  operateur?: string | null;
   dateInscription: string;
 }
 
@@ -263,7 +285,11 @@ export interface FiltresComptesAValider extends Pagination {
 /** DemandeStatutResponseDTO : un cuisinier demande à devenir chef cuisinier ou producteur. */
 export interface DemandeStatutResponse {
   id: string;
-  type: 'CHEF' | 'PRODUCTEUR';
+  type: TypeDemande;
+  /** Livreur : verso de la pièce d'identité (preuveUrl en est le recto), et où il sera payé. */
+  preuveVersoUrl?: string | null;
+  numeroMobileMoney?: string | null;
+  operateur?: string | null;
   statut: StatutRole;
   preuveUrl: string;
   localite: string | null;

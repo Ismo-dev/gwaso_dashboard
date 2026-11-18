@@ -22,15 +22,52 @@
       <dt>Payé par le client</dt>
       <dd class="gw-chiffres">{{ paye | number: '1.0-0' }} F</dd>
     </div>
+    @if (litige.montantDemande) {
+      <div>
+        <dt>Demandé</dt>
+        <dd class="gw-chiffres">{{ litige.montantDemande | number: '1.0-0' }} F</dd>
+      </div>
+    }
   </dl>
+
+  @if (litige.lignes?.length) {
+    <ul class="lignes" aria-label="Produits concernés">
+      @for (l of litige.lignes; track l.ligneCommandeId) {
+        <li>
+          <span
+            >{{ l.ingredientNom }} · {{ l.quantite | number: '1.0-2' : 'fr' }}
+            {{ l.unite | unite }}</span
+          >
+          <span class="gw-chiffres">{{ l.montant | number: '1.0-0' : 'fr' }} F</span>
+        </li>
+      }
+    </ul>
+  }
 
   @if (litige.description) {
     <blockquote class="description">« {{ litige.description }} »</blockquote>
   }
-  @if (litige.photoUrl | fichier; as photo) {
-    <a class="photo" [href]="photo" target="_blank" rel="noopener">
-      <img [src]="photo" alt="Photo envoyée par le client" loading="lazy" />
-    </a>
+  @if (photos.length) {
+    <div class="photos">
+      @for (p of photos; track p) {
+        @if (p | fichier; as url) {
+          <a class="photo" [href]="url" target="_blank" rel="noopener">
+            <img [src]="url" alt="Photo envoyée par le client" loading="lazy" />
+          </a>
+        }
+      }
+    </div>
+  }
+
+  @if (litige.fournisseurAccepte === false) {
+    <p class="reponse">
+      <strong>Le fournisseur conteste</strong>
+      @if (litige.reponseFournisseur) {
+        : « {{ litige.reponseFournisseur }} »
+      }
+    </p>
+  } @else if (litige.fournisseurAccepte == null && litige.motif !== 'NON_LIVRE') {
+    <p class="reponse attente">Le fournisseur n'a pas encore répondu.</p>
   }
 
   <fieldset class="choix">

@@ -26,7 +26,15 @@ export interface DonneesJustificatif {
  * puis on l'affiche (photo) ou on l'intègre (PDF) dans la fenêtre.
  */
 @Component({
-  imports: [MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose, MatButton, MatProgressSpinner, NgIcon],
+  imports: [
+    MatDialogTitle,
+    MatDialogContent,
+    MatDialogActions,
+    MatDialogClose,
+    MatButton,
+    MatProgressSpinner,
+    NgIcon,
+  ],
   selector: 'app-justificatif-dialog',
   styleUrl: './justificatif-dialog.scss',
   templateUrl: './justificatif-dialog.html',

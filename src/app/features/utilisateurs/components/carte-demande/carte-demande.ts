@@ -6,11 +6,18 @@ import { RouterLink } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { Avatar } from '../../../../shared/components/avatar/avatar';
 import { DepuisPipe } from '../../../../shared/pipes/depuis.pipe';
-import { DemandeStatut, JUSTIFICATIFS_ATTENDUS, LIBELLES_TYPE_COMPTE, lienCarte } from '../../models/utilisateur.model';
+import {
+  DemandeStatut,
+  ICONES_TYPE_COMPTE,
+  JUSTIFICATIFS_ATTENDUS,
+  LIBELLES_TYPE_COMPTE,
+  lienCarte,
+  OPERATEURS_MOBILE_MONEY,
+} from '../../models/utilisateur.model';
 import { ouvrirJustificatif } from '../justificatif-dialog/ouvrir-justificatif';
 
 /**
- * Carte d'une demande de statut (chef cuisinier ou producteur).
+ * Carte d'une demande de statut (chef cuisinier, producteur ou livreur).
  * Tout ce qu'il faut pour décider est sur la carte : identité, contact, justificatif, décision.
  */
 @Component({
@@ -32,13 +39,19 @@ export class CarteDemande {
   protected readonly lienCarte = lienCarte;
   protected libelleRole = computed(() => LIBELLES_TYPE_COMPTE[this.demande().type]);
   /** Ce que l'administrateur doit s'attendre à voir dans le justificatif. */
-  protected justificatifAttendu = computed(() => JUSTIFICATIFS_ATTENDUS[this.demande().type === 'CHEF' ? 'CHEF' : 'PRODUCTEUR']);
-  protected icone = computed(() =>
-    this.demande().type === 'CHEF' ? 'lucideChefHat' : 'lucideStore',
-  );
+  protected justificatifAttendu = computed(() => JUSTIFICATIFS_ATTENDUS[this.demande().type]);
+  protected icone = computed(() => ICONES_TYPE_COMPTE[this.demande().type]);
+  protected livreur = computed(() => this.demande().type === 'LIVREUR');
+  protected readonly operateurs = OPERATEURS_MOBILE_MONEY;
 
-  voirJustificatif(): void {
+  /** [verso] : la seconde photo de la pièce d'identité d'un livreur. */
+  voirJustificatif(verso = false): void {
     const d = this.demande();
-    ouvrirJustificatif(this.dialog, d.preuveUrl!, `${d.prenom} ${d.nom}`);
+    const url = verso ? d.preuveVersoUrl! : d.preuveUrl!;
+    ouvrirJustificatif(
+      this.dialog,
+      url,
+      `${d.prenom} ${d.nom}${this.livreur() ? (verso ? ' (verso)' : ' (recto)') : ''}`,
+    );
   }
 }
