@@ -17,6 +17,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatRadioButton, MatRadioGroup } from '@angular/material/radio';
 import { messageErreur } from '../../../../core/utils/erreurs';
 import { FichierPipe } from '../../../../shared/pipes/fichier.pipe';
+import { UnitePipe } from '../../../../shared/pipes/unite.pipe';
 import {
   ChargeLitige,
   DecisionLitige,
@@ -51,6 +52,7 @@ import { MarcheService } from '../../services/marche.service';
     MatRadioButton,
     MatProgressSpinner,
     FichierPipe,
+    UnitePipe,
   ],
   selector: 'app-decision-litige-dialog',
   styleUrl: './decision-litige-dialog.scss',
@@ -65,9 +67,16 @@ export class DecisionLitigeDialog {
   protected readonly decisions = Object.entries(DECISIONS_LITIGE) as [DecisionLitige, string][];
   protected readonly paye = this.litige.montantPaye ?? 0;
   protected readonly nonLivre = this.litige.motif === 'NON_LIVRE';
+  /** Les photos de la réclamation (la première est aussi dans photoUrl, pour les anciens litiges). */
+  protected readonly photos = this.litige.photos?.length
+    ? this.litige.photos
+    : this.litige.photoUrl
+      ? [this.litige.photoUrl]
+      : [];
 
   protected decision = new FormControl<DecisionLitige | null>(null, Validators.required);
-  protected montant = new FormControl<number | null>(null, [
+  // Pré-rempli avec ce que le client demande (produits concernés × prix)
+  protected montant = new FormControl<number | null>(this.litige.montantDemande ?? null, [
     Validators.required,
     Validators.min(1),
     Validators.max(this.paye),

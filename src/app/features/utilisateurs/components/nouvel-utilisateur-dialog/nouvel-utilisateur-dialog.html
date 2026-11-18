@@ -32,7 +32,8 @@
       <div class="aucun-profil" role="alert">
         <ng-icon name="lucideCircleAlert" size="1.25rem" aria-hidden="true" />
         <p>
-          Aucun profil actif. Créez-en un dans <a routerLink="/profils" mat-dialog-close>Profils et droits</a>.
+          Aucun profil actif. Créez-en un dans
+          <a routerLink="/profils" mat-dialog-close>Profils et droits</a>.
         </p>
       </div>
     } @else {
@@ -53,7 +54,13 @@
     <div class="ligne">
       <mat-form-field>
         <mat-label>Prénom</mat-label>
-        <input matInput formControlName="prenom" maxlength="60" autocomplete="off" cdkFocusInitial />
+        <input
+          matInput
+          formControlName="prenom"
+          maxlength="60"
+          autocomplete="off"
+          cdkFocusInitial
+        />
         <mat-error>Le prénom est obligatoire.</mat-error>
       </mat-form-field>
       <mat-form-field>
@@ -108,7 +115,9 @@
         matIconButton
         matSuffix
         type="button"
-        [attr.aria-label]="motDePasseVisible() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+        [attr.aria-label]="
+          motDePasseVisible() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+        "
         (click)="motDePasseVisible.set(!motDePasseVisible())"
       >
         <ng-icon [name]="motDePasseVisible() ? 'lucideEyeOff' : 'lucideEye'" size="1.125rem" />
@@ -151,7 +160,11 @@
     <!-- Chef et producteur : justificatif obligatoire -->
     @if (aValider()) {
       <div class="justificatif" [class.justificatif-erreur]="erreurJustificatif()">
-        <ng-icon [name]="justificatif() ? 'lucideBadgeCheck' : 'lucideUpload'" size="1.25rem" aria-hidden="true" />
+        <ng-icon
+          [name]="justificatif() ? 'lucideBadgeCheck' : 'lucideUpload'"
+          size="1.25rem"
+          aria-hidden="true"
+        />
         <div class="justificatif-textes">
           <p class="justificatif-titre">
             {{ justificatif()?.name ?? 'Justificatif du statut' }}
@@ -198,9 +211,7 @@
       <mat-checkbox formControlName="validerDirectement" class="validation">
         Valider directement ce compte (justificatif déjà vérifié)
       </mat-checkbox>
-      <p class="aide aide-case">
-        Sinon, le compte apparaîtra dans « Demandes à valider ».
-      </p>
+      <p class="aide aide-case">Sinon, le compte apparaîtra dans « Demandes à valider ».</p>
     }
   </mat-dialog-content>
 

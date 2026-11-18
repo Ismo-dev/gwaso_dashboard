@@ -65,3 +65,44 @@
   color: var(--gw-danger);
   font-weight: 600;
 }
+
+.lignes {
+  margin: 0 0 var(--gw-espace-3);
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--gw-espace-3);
+    padding: var(--gw-espace-1) 0;
+    border-top: 1px solid var(--gw-bordure);
+  }
+}
+
+.photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gw-espace-2);
+  margin-bottom: var(--gw-espace-3);
+
+  .photo img {
+    width: 120px;
+    height: 120px;
+    max-height: none;
+    margin: 0;
+  }
+}
+
+.reponse {
+  margin: 0 0 var(--gw-espace-3);
+  padding: var(--gw-espace-2) var(--gw-espace-3);
+  border-radius: var(--gw-rayon);
+  background: var(--gw-danger-fond);
+  color: var(--gw-danger);
+
+  &.attente {
+    background: var(--gw-attention-fond);
+    color: var(--gw-attention);
+  }
+}

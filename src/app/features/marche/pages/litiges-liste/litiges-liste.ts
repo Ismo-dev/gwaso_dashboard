@@ -84,8 +84,8 @@ export class LitigesListe implements OnInit {
   protected chargement = signal(true);
   protected erreur = signal(false);
   protected resultat = signal<PageResponse<LitigeResponse> | null>(null);
-  /** Nombre de litiges ouverts (connu après le premier chargement de l'onglet « À trancher »). */
-  private ouverts = signal<number | null>(null);
+  /** Nombre de litiges par statut (GET /admin/litiges/compteurs). */
+  private compteurs = signal<Record<string, number>>({});
 
   protected litiges = computed(() => this.resultat()?.contenu ?? []);
 
@@ -93,7 +93,7 @@ export class LitigesListe implements OnInit {
     {
       valeur: 'OUVERT',
       libelle: 'À trancher',
-      compte: this.ouverts(),
+      compte: this.compteurs()['OUVERT'] ?? null,
       aide: 'versement en attente',
       ton: 'attente',
       prioritaire: true,
@@ -101,11 +101,17 @@ export class LitigesListe implements OnInit {
     {
       valeur: 'RESOLU',
       libelle: 'Tranchés',
-      compte: null,
+      compte: this.compteurs()['RESOLU'] ?? null,
       aide: 'remboursés ou rejetés',
       ton: 'succes',
     },
-    { valeur: 'TOUS', libelle: 'Tous', compte: null, aide: 'tous les litiges', ton: 'info' },
+    {
+      valeur: 'TOUS',
+      libelle: 'Tous',
+      compte: this.compteurs()['TOUS'] ?? null,
+      aide: 'tous les litiges',
+      ton: 'info',
+    },
   ]);
 
   protected motif(litige: LitigeResponse): string {
@@ -118,6 +124,14 @@ export class LitigesListe implements OnInit {
 
   ngOnInit(): void {
     this.charger();
+    this.chargerCompteurs();
+  }
+
+  private chargerCompteurs(): void {
+    this.marcheService.getCompteursLitiges().subscribe({
+      next: (c) => this.compteurs.set(c),
+      error: () => this.compteurs.set({}),
+    });
   }
 
   changerFiltre(valeur: string): void {
@@ -145,9 +159,6 @@ export class LitigesListe implements OnInit {
       .subscribe({
         next: (resultat) => {
           this.resultat.set(resultat);
-          if (filtre === 'OUVERT') {
-            this.ouverts.set(resultat.totalElements);
-          }
           this.chargement.set(false);
         },
         error: () => {
@@ -177,8 +188,6 @@ export class LitigesListe implements OnInit {
         : `Commande ${tranche.referenceCommande} : réclamation rejetée, versements lancés.`,
     );
     this.charger();
-    if (this.filtre() !== 'OUVERT') {
-      this.ouverts.update((n) => (n === null ? null : Math.max(n - 1, 0)));
-    }
+    this.chargerCompteurs();
   }
 }

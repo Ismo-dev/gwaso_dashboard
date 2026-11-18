@@ -2,7 +2,13 @@
 
 <mat-dialog-content class="contenu">
   @if (chargement()) {
-    <div class="etat"><mat-progress-spinner mode="indeterminate" diameter="36" aria-label="Chargement du justificatif" /></div>
+    <div class="etat">
+      <mat-progress-spinner
+        mode="indeterminate"
+        diameter="36"
+        aria-label="Chargement du justificatif"
+      />
+    </div>
   } @else if (erreur()) {
     <div class="etat etat-erreur" role="alert">
       <ng-icon name="lucideCircleAlert" size="1.5rem" aria-hidden="true" />

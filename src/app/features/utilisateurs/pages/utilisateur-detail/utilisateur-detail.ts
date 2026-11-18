@@ -365,7 +365,7 @@ export class UtilisateurDetail {
   }
 
   /** Demande validée : le cuisinier est maintenant chef ou producteur, on rouvre sa fiche avec ce rôle. */
-  apresChangementDeType(id: string, role: 'CHEF' | 'PRODUCTEUR'): void {
+  apresChangementDeType(id: string, role: 'CHEF' | 'PRODUCTEUR' | 'LIVREUR'): void {
     this.router.navigate(['/utilisateurs', id], { queryParams: { role }, replaceUrl: true });
   }
 

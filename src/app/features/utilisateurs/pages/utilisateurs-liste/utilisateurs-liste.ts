@@ -68,6 +68,9 @@ import { UtilisateurService } from '../../services/utilisateur.service';
 type Onglet = 'demandes' | 'membres';
 
 const ROLES: TypeCompte[] = ['CUISINIER', 'CHEF', 'PRODUCTEUR', 'LIVREUR', 'ADMIN'];
+
+/** Mot cherché dans le nom des profils pour suggérer celui du nouveau statut. */
+const SUGGESTIONS_PROFIL = { CHEF: 'chef', PRODUCTEUR: 'producteur', LIVREUR: 'livreur' } as const;
 const STATUTS: { valeur: StatutCompte; libelle: string }[] = [
   { valeur: 'ACTIF', libelle: 'Actif' },
   { valeur: 'SUSPENDU', libelle: 'Suspendu' },
@@ -326,9 +329,18 @@ export class UtilisateursListe implements OnInit {
       next: ({ chefs, producteurs, cuisiniers }) => {
         const sansDemande = { origine: 'compte' as const, demandeId: null, motivation: null };
         const demandes: DemandeStatut[] = [
-          ...chefs.contenu.map((c) => ({ ...c, ...sansDemande, type: 'CHEF' as const, localite: null })),
-          ...producteurs.contenu.map((p) => ({ ...p, ...sansDemande, type: 'PRODUCTEUR' as const })),
-          // Cuisiniers qui demandent à devenir chef ou producteur
+          ...chefs.contenu.map((c) => ({
+            ...c,
+            ...sansDemande,
+            type: 'CHEF' as const,
+            localite: null,
+          })),
+          ...producteurs.contenu.map((p) => ({
+            ...p,
+            ...sansDemande,
+            type: 'PRODUCTEUR' as const,
+          })),
+          // Cuisiniers qui demandent à devenir chef, producteur ou livreur
           ...cuisiniers.map((d) => ({
             id: d.demandeurId,
             origine: 'cuisinier' as const,
@@ -344,6 +356,9 @@ export class UtilisateursListe implements OnInit {
             localite: d.localite,
             latitude: d.latitude,
             longitude: d.longitude,
+            preuveVersoUrl: d.preuveVersoUrl,
+            numeroMobileMoney: d.numeroMobileMoney,
+            operateur: d.operateur,
             dateInscription: d.dateDemande,
           })),
         ];
@@ -369,7 +384,7 @@ export class UtilisateursListe implements OnInit {
         titre: `${demande.prenom} ${demande.nom} devient ${role} ?`,
         message: `Son compte passe de cuisinier à ${role}. Il garde ses favoris, commentaires et contenus.`,
         texteConfirmer: 'Valider la demande',
-        suggestion: demande.type === 'CHEF' ? 'chef' : 'producteur',
+        suggestion: SUGGESTIONS_PROFIL[demande.type],
       });
       if (!profilId) {
         return;
@@ -390,7 +405,8 @@ export class UtilisateursListe implements OnInit {
       return;
     }
     this.demandeEnCours.set(demande.id);
-    const requete: Observable<unknown> = demande.type === 'CHEF'
+    const requete: Observable<unknown> =
+      demande.type === 'CHEF'
         ? this.utilisateurService.validerChef(demande.id)
         : this.utilisateurService.validerProducteur(demande.id);
     requete.subscribe({
