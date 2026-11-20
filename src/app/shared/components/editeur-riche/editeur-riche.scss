@@ -78,11 +78,11 @@
 // Mise en forme active : fond karité, comme l'élément actif du menu
 .outil-actif {
   background: var(--gw-karite);
-  color: var(--gw-blanc);
+  color: var(--gw-sur-plein);
 
   &:hover:not(:disabled) {
     background: var(--gw-karite);
-    color: var(--gw-blanc);
+    color: var(--gw-sur-plein);
   }
 }
 
@@ -190,7 +190,7 @@
 }
 
 .pastille-gw-couleur-cacao {
-  background: var(--gw-cacao);
+  background: var(--gw-cacao-fixe);
 }
 
 .pastille-gw-couleur-vert {

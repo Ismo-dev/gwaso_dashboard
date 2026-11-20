@@ -20,6 +20,8 @@
   --gw-terre-cuite: #e36e1e; // marque : accents, indicateurs, grands éléments
   --gw-karite: #703d1e; // états actifs, éléments secondaires
   --gw-blanc: #ffffff; // surfaces
+  // Cacao qui reste sombre dans les deux thèmes : bandeaux, fonds de vidéo, toasts
+  --gw-cacao-fixe: #3b2f29;
 
   // ----- Déclinaisons accessibles de la charte (WCAG AA) -----
   // Le blanc sur #E36E1E ne contraste qu'à 3,2:1 : les boutons et liens utilisent
@@ -30,6 +32,16 @@
   --gw-terre-cuite-pale: #fcefe6;
   --gw-terre-cuite-pale-2: #f8dcc8;
   --gw-karite-pale: #f5ece6;
+  // Texte posé sur un aplat cacao, karité ou terre cuite d'action (pastille, case cochée, bouton)
+  --gw-sur-plein: #ffffff;
+  // Couleurs des répartitions (barres des cartes et de l'accueil), dans cet ordre.
+  // En sombre : palette validée (daltonisme, contraste) sur la surface cacao.
+  --gw-donnee-1: #3b2f29;
+  --gw-donnee-2: #e36e1e;
+  --gw-donnee-3: #703d1e;
+  --gw-donnee-4: #f8dcc8;
+  // Survol teinté karité (lignes, cases)
+  --gw-teinte-karite: rgb(112 61 30 / 0.12);
 
   // ----- Neutres chauds (fonds, bordures, textes secondaires) -----
   --gw-fond: #f7f4f1; // fond des pages
@@ -44,11 +56,11 @@
   --gw-desactive: #b8aca3;
 
   // ----- Sidebar (fond cacao) -----
-  --gw-sidebar-fond: var(--gw-cacao);
+  --gw-sidebar-fond: var(--gw-cacao-fixe);
   --gw-sidebar-texte: #f4ede7; // 11,2:1
   --gw-sidebar-texte-doux: #bcaea4; // 6:1
   --gw-sidebar-survol: rgb(255 255 255 / 0.06);
-  --gw-sidebar-actif: var(--gw-karite);
+  --gw-sidebar-actif: #703d1e;
 
   // ----- États (toujours accompagnés d'un texte ou d'une icône) -----
   --gw-succes: #1e6b45;
@@ -102,7 +114,66 @@
   --gw-largeur-sidebar-compacte: 80px;
   --gw-hauteur-topbar: 68px;
   --gw-largeur-contenu: 1320px;
+}
 
+// ----- Thème sombre : le cacao de la charte devient le fond, son crème le texte -----
+// Les noms restent ceux de la charte : --gw-cacao désigne « le texte fort », --gw-karite « l'accent »,
+// --gw-action « les liens et boutons ». Contrastes vérifiés (AA) sur --gw-fond et --gw-surface.
+@mixin jetons-sombres {
+  --gw-cacao: #f4ede7; // texte fort (15:1 sur le fond)
+  --gw-karite: #e3b28e; // accent (9:1)
+  --gw-action: #f08a45; // liens, boutons (7:1 ; texte des boutons : --gw-sur-plein)
+  --gw-action-survol: #f6a46d;
+  --gw-action-appui: #f9b98c;
+  --gw-terre-cuite-pale: #3d2618;
+  --gw-terre-cuite-pale-2: #4f2f1b;
+  --gw-karite-pale: #3a2a21;
+  --gw-sur-plein: #1f1612;
+  --gw-teinte-karite: rgb(227 178 142 / 0.12);
+  --gw-donnee-1: #d95926;
+  --gw-donnee-2: #3987e5;
+  --gw-donnee-3: #2a9d5c;
+  --gw-donnee-4: #b65ac8;
+
+  --gw-fond: #1f1612; // le cacao profond de la charte
+  --gw-fond-accent: #3b2f29; // le cacao
+  --gw-surface: #2a201b;
+  --gw-surface-2: #31261f;
+  --gw-bordure: #43362e;
+  --gw-contour-champ: #8f8279; // 4,3:1 sur les surfaces
+  --gw-texte-doux: #c9bab0;
+  --gw-texte-discret: #ab9c92;
+  --gw-desactive: #6f6158;
+
+  --gw-sidebar-fond: #17110e;
+  --gw-sidebar-actif: #4a3326;
+
+  --gw-succes: #7fd3a2;
+  --gw-succes-fond: #17301f;
+  --gw-attention: #f2b766;
+  --gw-attention-fond: #3a2a12;
+  --gw-danger: #f4908a;
+  --gw-danger-fond: #3f1c18;
+  --gw-info: #94bdf0;
+  --gw-info-fond: #18293b;
+  --gw-neutre: #c9bab0;
+  --gw-neutre-fond: #33291f;
+
+  --gw-ombre-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --gw-ombre-2: 0 6px 20px rgb(0 0 0 / 0.35);
+
+  color-scheme: dark;
+}
+
+// Choix explicite (menu du header), ou réglage du système quand rien n'est choisi
+:root[data-theme='dark'] {
+  @include jetons-sombres;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include jetons-sombres;
+  }
 }
 
 html {
@@ -464,4 +535,21 @@ ng-icon {
 .gw-etiquette-neutre {
   background: var(--gw-fond);
   color: var(--gw-texte-doux);
+}
+
+// Menu Apparence du header (rendu hors du composant, dans la couche des menus)
+.mat-mdc-menu-item[role='menuitemradio'] .mat-mdc-menu-item-text {
+  display: flex;
+  align-items: center;
+  gap: var(--gw-espace-3);
+  min-width: 190px;
+}
+
+.mat-mdc-menu-item.theme-actif {
+  font-weight: 600;
+}
+
+.theme-coche {
+  margin-left: auto;
+  color: var(--gw-action);
 }

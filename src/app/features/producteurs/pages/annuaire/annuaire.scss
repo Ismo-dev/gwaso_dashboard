@@ -86,8 +86,8 @@
   gap: var(--gw-espace-2);
   padding: var(--gw-espace-3);
   border-radius: var(--gw-rayon-md);
-  background: var(--gw-sable-tres-clair, #fbf9f4);
-  border: 1px solid var(--gw-bordure-douce, #ede8dc);
+  background: var(--gw-surface-2);
+  border: 1px solid var(--gw-bordure);
   flex: 1;
 
   .titre-categories {
@@ -113,8 +113,8 @@
     gap: 4px;
     padding: 4px 10px;
     border-radius: var(--gw-rayon-rond, 9999px);
-    background: #ffffff;
-    border: 1px solid var(--gw-bordure, #e2ded5);
+    background: var(--gw-surface);
+    border: 1px solid var(--gw-bordure);
     color: var(--gw-cacao);
     font-size: 0.78rem;
     font-weight: 600;

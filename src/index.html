@@ -11,8 +11,16 @@
     />
     <!-- Espace privé : il ne doit pas apparaître dans les moteurs de recherche -->
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#1f2937" />
+    <meta name="theme-color" content="#3b2f29" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!-- Thème choisi (clair / sombre) appliqué avant l'affichage : pas d'éclair blanc au chargement -->
+    <script>
+      try {
+        var t = localStorage.getItem('gwaso.theme');
+        if (t === 'sombre') document.documentElement.setAttribute('data-theme', 'dark');
+        if (t === 'clair') document.documentElement.setAttribute('data-theme', 'light');
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <app-root></app-root>

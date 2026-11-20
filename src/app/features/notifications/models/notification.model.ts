@@ -28,7 +28,26 @@ export type TypeNotification =
   | 'NOUVEL_AVIS'
   | 'REPONSE_AVIS'
   | 'CATALOGUE_VALIDE'
-  | 'CATALOGUE_REFUSE';
+  | 'CATALOGUE_REFUSE'
+  // Livreurs
+  | 'DEMANDE_LIVREUR'
+  // Marché : reçus par l'administration (cible : la commande)
+  | 'AUCUN_FOURNISSEUR'
+  | 'AUCUN_LIVREUR'
+  | 'ECHEC_LIVRAISON'
+  | 'LITIGE_OUVERT'
+  | 'CODE_LIVRAISON_BLOQUE'
+  | 'VERSEMENT_ECHOUE'
+  // Marché : reçus par les clients, fournisseurs et livreurs (application mobile)
+  | 'COMMANDE_ACCEPTEE'
+  | 'PAIEMENT_CONFIRME'
+  | 'LIVREUR_ASSIGNE'
+  | 'LIVREUR_EN_ROUTE'
+  | 'COMMANDE_LIVREE'
+  | 'LITIGE_RESOLU'
+  | 'NOUVELLE_COMMANDE_PROCHE'
+  | 'NOUVELLE_COURSE_PROCHE'
+  | 'REVERSEMENT_EFFECTUE';
 
 /** NotificationResponseDTO côté backend. */
 export interface NotificationResponse {
@@ -63,33 +82,309 @@ export interface InfosType {
   aDecider: boolean;
 }
 
-export const INFOS_TYPES: Record<TypeNotification, InfosType> = {
-  INSCRIPTION: { categorie: 'Nouveau membre', icone: 'lucideUserPlus', ton: 'vert', action: 'Voir le compte', aDecider: false },
-  DEMANDE_CHEF: { categorie: 'Demande de statut', icone: 'lucideChefHat', ton: 'terre', action: 'Examiner la demande', aDecider: true },
-  DEMANDE_PRODUCTEUR: { categorie: 'Demande de statut', icone: 'lucideStore', ton: 'terre', action: 'Examiner la demande', aDecider: true },
-  ADMIN_AJOUTE: { categorie: 'Administration', icone: 'lucideShieldCheck', ton: 'cacao', action: 'Voir le compte', aDecider: false },
-  RECETTE_A_VALIDER: { categorie: 'Recette à valider', icone: 'lucideBookOpen', ton: 'terre', action: 'Examiner la recette', aDecider: true },
-  VIDEO_A_VALIDER: { categorie: 'Vidéo à valider', icone: 'lucideClapperboard', ton: 'terre', action: 'Regarder la vidéo', aDecider: true },
-  DEFI_A_VALIDER: { categorie: 'Défi proposé', icone: 'lucideTrophy', ton: 'terre', action: 'Examiner le défi', aDecider: true },
-  PARTICIPATION_DEFI: { categorie: 'Participation', icone: 'lucideUsers', ton: 'karite', action: 'Voir le défi', aDecider: false },
-  DEFI_TERMINE: { categorie: 'Défi terminé', icone: 'lucideMedal', ton: 'karite', action: 'Voir le classement', aDecider: false },
-  INGREDIENT_PROPOSE: { categorie: 'Ingrédient proposé', icone: 'lucideCarrot', ton: 'terre', action: 'Consulter le catalogue', aDecider: true },
-  CATALOGUE_A_VALIDER: { categorie: 'Proposition de chef', icone: 'lucideCarrot', ton: 'terre', action: 'Examiner la proposition', aDecider: true },
-  RECETTE_PUBLIEE: { categorie: 'Recette publiée', icone: 'lucideBookOpen', ton: 'vert', action: 'Voir la recette', aDecider: false },
-  RECETTE_REFUSEE: { categorie: 'Recette refusée', icone: 'lucideBookOpen', ton: 'terre', action: 'Voir la recette', aDecider: false },
-  RECETTE_RETIREE: { categorie: 'Recette retirée', icone: 'lucideBookOpen', ton: 'cacao', action: 'Voir la recette', aDecider: false },
-  VIDEO_PUBLIEE: { categorie: 'Vidéo publiée', icone: 'lucideClapperboard', ton: 'vert', action: 'Voir la vidéo', aDecider: false },
-  VIDEO_REFUSEE: { categorie: 'Vidéo refusée', icone: 'lucideClapperboard', ton: 'terre', action: 'Voir la vidéo', aDecider: false },
-  DEFI_PUBLIE: { categorie: 'Défi validé', icone: 'lucideTrophy', ton: 'vert', action: 'Voir le défi', aDecider: false },
-  DEFI_REFUSE: { categorie: 'Défi refusé', icone: 'lucideTrophy', ton: 'terre', action: 'Voir le défi', aDecider: false },
-  CLASSEMENT_PUBLIE: { categorie: 'Classement', icone: 'lucideMedal', ton: 'karite', action: 'Voir le classement', aDecider: false },
-  DEMANDE_ACCEPTEE: { categorie: 'Demande acceptée', icone: 'lucideShieldCheck', ton: 'vert', action: 'Voir', aDecider: false },
-  DEMANDE_REFUSEE: { categorie: 'Demande refusée', icone: 'lucideShieldCheck', ton: 'terre', action: 'Voir', aDecider: false },
-  NOUVEL_AVIS: { categorie: 'Avis reçu', icone: 'lucideUsers', ton: 'karite', action: 'Voir la recette', aDecider: false },
-  REPONSE_AVIS: { categorie: 'Réponse à un avis', icone: 'lucideUsers', ton: 'karite', action: 'Voir la recette', aDecider: false },
-  CATALOGUE_VALIDE: { categorie: 'Proposition acceptée', icone: 'lucideCarrot', ton: 'vert', action: 'Voir le catalogue', aDecider: false },
-  CATALOGUE_REFUSE: { categorie: 'Proposition refusée', icone: 'lucideCarrot', ton: 'terre', action: 'Voir le catalogue', aDecider: false },
+const INFOS: Record<TypeNotification, InfosType> = {
+  INSCRIPTION: {
+    categorie: 'Nouveau membre',
+    icone: 'lucideUserPlus',
+    ton: 'vert',
+    action: 'Voir le compte',
+    aDecider: false,
+  },
+  DEMANDE_CHEF: {
+    categorie: 'Demande de statut',
+    icone: 'lucideChefHat',
+    ton: 'terre',
+    action: 'Examiner la demande',
+    aDecider: true,
+  },
+  DEMANDE_PRODUCTEUR: {
+    categorie: 'Demande de statut',
+    icone: 'lucideStore',
+    ton: 'terre',
+    action: 'Examiner la demande',
+    aDecider: true,
+  },
+  ADMIN_AJOUTE: {
+    categorie: 'Administration',
+    icone: 'lucideShieldCheck',
+    ton: 'cacao',
+    action: 'Voir le compte',
+    aDecider: false,
+  },
+  RECETTE_A_VALIDER: {
+    categorie: 'Recette à valider',
+    icone: 'lucideBookOpen',
+    ton: 'terre',
+    action: 'Examiner la recette',
+    aDecider: true,
+  },
+  VIDEO_A_VALIDER: {
+    categorie: 'Vidéo à valider',
+    icone: 'lucideClapperboard',
+    ton: 'terre',
+    action: 'Regarder la vidéo',
+    aDecider: true,
+  },
+  DEFI_A_VALIDER: {
+    categorie: 'Défi proposé',
+    icone: 'lucideTrophy',
+    ton: 'terre',
+    action: 'Examiner le défi',
+    aDecider: true,
+  },
+  PARTICIPATION_DEFI: {
+    categorie: 'Participation',
+    icone: 'lucideUsers',
+    ton: 'karite',
+    action: 'Voir le défi',
+    aDecider: false,
+  },
+  DEFI_TERMINE: {
+    categorie: 'Défi terminé',
+    icone: 'lucideMedal',
+    ton: 'karite',
+    action: 'Voir le classement',
+    aDecider: false,
+  },
+  INGREDIENT_PROPOSE: {
+    categorie: 'Ingrédient proposé',
+    icone: 'lucideCarrot',
+    ton: 'terre',
+    action: 'Consulter le catalogue',
+    aDecider: true,
+  },
+  CATALOGUE_A_VALIDER: {
+    categorie: 'Proposition de chef',
+    icone: 'lucideCarrot',
+    ton: 'terre',
+    action: 'Examiner la proposition',
+    aDecider: true,
+  },
+  RECETTE_PUBLIEE: {
+    categorie: 'Recette publiée',
+    icone: 'lucideBookOpen',
+    ton: 'vert',
+    action: 'Voir la recette',
+    aDecider: false,
+  },
+  RECETTE_REFUSEE: {
+    categorie: 'Recette refusée',
+    icone: 'lucideBookOpen',
+    ton: 'terre',
+    action: 'Voir la recette',
+    aDecider: false,
+  },
+  RECETTE_RETIREE: {
+    categorie: 'Recette retirée',
+    icone: 'lucideBookOpen',
+    ton: 'cacao',
+    action: 'Voir la recette',
+    aDecider: false,
+  },
+  VIDEO_PUBLIEE: {
+    categorie: 'Vidéo publiée',
+    icone: 'lucideClapperboard',
+    ton: 'vert',
+    action: 'Voir la vidéo',
+    aDecider: false,
+  },
+  VIDEO_REFUSEE: {
+    categorie: 'Vidéo refusée',
+    icone: 'lucideClapperboard',
+    ton: 'terre',
+    action: 'Voir la vidéo',
+    aDecider: false,
+  },
+  DEFI_PUBLIE: {
+    categorie: 'Défi validé',
+    icone: 'lucideTrophy',
+    ton: 'vert',
+    action: 'Voir le défi',
+    aDecider: false,
+  },
+  DEFI_REFUSE: {
+    categorie: 'Défi refusé',
+    icone: 'lucideTrophy',
+    ton: 'terre',
+    action: 'Voir le défi',
+    aDecider: false,
+  },
+  CLASSEMENT_PUBLIE: {
+    categorie: 'Classement',
+    icone: 'lucideMedal',
+    ton: 'karite',
+    action: 'Voir le classement',
+    aDecider: false,
+  },
+  DEMANDE_ACCEPTEE: {
+    categorie: 'Demande acceptée',
+    icone: 'lucideShieldCheck',
+    ton: 'vert',
+    action: 'Voir',
+    aDecider: false,
+  },
+  DEMANDE_REFUSEE: {
+    categorie: 'Demande refusée',
+    icone: 'lucideShieldCheck',
+    ton: 'terre',
+    action: 'Voir',
+    aDecider: false,
+  },
+  NOUVEL_AVIS: {
+    categorie: 'Avis reçu',
+    icone: 'lucideUsers',
+    ton: 'karite',
+    action: 'Voir la recette',
+    aDecider: false,
+  },
+  REPONSE_AVIS: {
+    categorie: 'Réponse à un avis',
+    icone: 'lucideUsers',
+    ton: 'karite',
+    action: 'Voir la recette',
+    aDecider: false,
+  },
+  CATALOGUE_VALIDE: {
+    categorie: 'Proposition acceptée',
+    icone: 'lucideCarrot',
+    ton: 'vert',
+    action: 'Voir le catalogue',
+    aDecider: false,
+  },
+  CATALOGUE_REFUSE: {
+    categorie: 'Proposition refusée',
+    icone: 'lucideCarrot',
+    ton: 'terre',
+    action: 'Voir le catalogue',
+    aDecider: false,
+  },
+  DEMANDE_LIVREUR: {
+    categorie: 'Demande de statut',
+    icone: 'lucideBike',
+    ton: 'terre',
+    action: 'Examiner la demande',
+    aDecider: true,
+  },
+  AUCUN_FOURNISSEUR: {
+    categorie: 'Marché',
+    icone: 'lucideStore',
+    ton: 'terre',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  AUCUN_LIVREUR: {
+    categorie: 'Marché',
+    icone: 'lucideTruck',
+    ton: 'terre',
+    action: 'Confier la commande',
+    aDecider: true,
+  },
+  ECHEC_LIVRAISON: {
+    categorie: 'Marché',
+    icone: 'lucideTruck',
+    ton: 'terre',
+    action: 'Voir la commande',
+    aDecider: true,
+  },
+  LITIGE_OUVERT: {
+    categorie: 'Réclamation',
+    icone: 'lucideMessageSquareWarning',
+    ton: 'terre',
+    action: 'Voir la commande',
+    aDecider: true,
+  },
+  CODE_LIVRAISON_BLOQUE: {
+    categorie: 'Marché',
+    icone: 'lucideLock',
+    ton: 'terre',
+    action: 'Voir la commande',
+    aDecider: true,
+  },
+  VERSEMENT_ECHOUE: {
+    categorie: 'Versement',
+    icone: 'lucideCircleAlert',
+    ton: 'terre',
+    action: 'Voir la commande',
+    aDecider: true,
+  },
+  COMMANDE_ACCEPTEE: {
+    categorie: 'Marché',
+    icone: 'lucideShoppingBag',
+    ton: 'karite',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  PAIEMENT_CONFIRME: {
+    categorie: 'Marché',
+    icone: 'lucideShoppingBag',
+    ton: 'vert',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  LIVREUR_ASSIGNE: {
+    categorie: 'Marché',
+    icone: 'lucideBike',
+    ton: 'karite',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  LIVREUR_EN_ROUTE: {
+    categorie: 'Marché',
+    icone: 'lucideBike',
+    ton: 'karite',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  COMMANDE_LIVREE: {
+    categorie: 'Marché',
+    icone: 'lucideShoppingBag',
+    ton: 'vert',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  LITIGE_RESOLU: {
+    categorie: 'Réclamation',
+    icone: 'lucideMessageSquareWarning',
+    ton: 'vert',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  NOUVELLE_COMMANDE_PROCHE: {
+    categorie: 'Marché',
+    icone: 'lucideShoppingBag',
+    ton: 'karite',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  NOUVELLE_COURSE_PROCHE: {
+    categorie: 'Marché',
+    icone: 'lucideBike',
+    ton: 'karite',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
+  REVERSEMENT_EFFECTUE: {
+    categorie: 'Versement',
+    icone: 'lucideShoppingBag',
+    ton: 'vert',
+    action: 'Voir la commande',
+    aDecider: false,
+  },
 };
+
+/** Type que ce dashboard ne connaît pas encore (ajouté côté backend) : affiché sans casser la liste. */
+const INFOS_INCONNU: InfosType = {
+  categorie: 'Notification',
+  icone: 'lucideBell',
+  ton: 'cacao',
+  action: 'Voir',
+  aDecider: false,
+};
+
+/** Infos d'affichage par type ; un type inconnu reçoit INFOS_INCONNU au lieu de undefined. */
+export const INFOS_TYPES: Record<TypeNotification, InfosType> = new Proxy(INFOS, {
+  get: (infos, type) => infos[type as TypeNotification] ?? INFOS_INCONNU,
+});
 
 /** Proposition d'un ustensile (sinon : d'un ingrédient), d'après le titre « Ustensile proposé : … ». */
 export function estPropositionUstensile(n: NotificationResponse): boolean {
@@ -97,7 +392,9 @@ export function estPropositionUstensile(n: NotificationResponse): boolean {
 }
 
 /** Page du dashboard où se trouve l'élément concerné (null s'il n'y en a pas). */
-export function lienCible(n: NotificationResponse): { lien: string[]; parametres?: Record<string, string> } | null {
+export function lienCible(
+  n: NotificationResponse,
+): { lien: string[]; parametres?: Record<string, string> } | null {
   if (!n.cibleId) {
     return null;
   }
@@ -127,11 +424,27 @@ export function lienCible(n: NotificationResponse): { lien: string[]; parametres
     case 'DEMANDE_CHEF':
       return { lien: ['/utilisateurs', n.cibleId], parametres: { role: n.acteurRole ?? 'CHEF' } };
     case 'DEMANDE_PRODUCTEUR':
-      return { lien: ['/utilisateurs', n.cibleId], parametres: { role: n.acteurRole ?? 'PRODUCTEUR' } };
+      return {
+        lien: ['/utilisateurs', n.cibleId],
+        parametres: { role: n.acteurRole ?? 'PRODUCTEUR' },
+      };
     case 'ADMIN_AJOUTE':
       return { lien: ['/utilisateurs', n.cibleId], parametres: { role: 'ADMIN' } };
     case 'INSCRIPTION':
       return { lien: ['/utilisateurs', n.cibleId], parametres: { role: 'CUISINIER' } };
+    case 'DEMANDE_LIVREUR':
+      return {
+        lien: ['/utilisateurs', n.cibleId],
+        parametres: { role: n.acteurRole ?? 'CUISINIER' },
+      };
+    case 'AUCUN_FOURNISSEUR':
+    case 'AUCUN_LIVREUR':
+    case 'ECHEC_LIVRAISON':
+    case 'LITIGE_OUVERT':
+    case 'LITIGE_RESOLU':
+    case 'CODE_LIVRAISON_BLOQUE':
+    case 'VERSEMENT_ECHOUE':
+      return { lien: ['/marche/commandes', n.cibleId] };
     // Les propositions en attente sont en tête de la page du catalogue
     case 'CATALOGUE_A_VALIDER':
       return { lien: [estPropositionUstensile(n) ? '/ustensiles' : '/ingredients'] };

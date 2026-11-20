@@ -4,7 +4,18 @@
 @use '@angular/material' as mat;
 
 @mixin theme-gwaso {
+  // Clair par défaut ; le thème sombre (styles.scss) passe color-scheme à dark sur :root
   color-scheme: light;
+
+  &[data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &:not([data-theme='light']) {
+      color-scheme: dark;
+    }
+  }
 
   @include mat.theme(
     (
@@ -27,11 +38,11 @@
   @include mat.theme-overrides(
     (
       primary: var(--gw-action),
-      on-primary: var(--gw-blanc),
+      on-primary: var(--gw-sur-plein),
       primary-container: var(--gw-terre-cuite-pale),
       on-primary-container: var(--gw-karite),
       secondary: var(--gw-karite),
-      on-secondary: var(--gw-blanc),
+      on-secondary: var(--gw-sur-plein),
       secondary-container: var(--gw-karite-pale),
       on-secondary-container: var(--gw-karite),
       surface: var(--gw-surface),
@@ -45,10 +56,10 @@
       outline: var(--gw-contour-champ),
       outline-variant: var(--gw-bordure),
       error: var(--gw-danger),
-      on-error: var(--gw-blanc),
+      on-error: var(--gw-sur-plein),
       error-container: var(--gw-danger-fond),
       on-error-container: var(--gw-danger),
-      inverse-surface: var(--gw-cacao),
+      inverse-surface: var(--gw-cacao-fixe),
       inverse-on-surface: var(--gw-sidebar-texte),
       inverse-primary: var(--gw-terre-cuite),
       corner-extra-small: 6px,

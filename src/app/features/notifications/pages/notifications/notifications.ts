@@ -1,3 +1,5 @@
+import { MarcheService } from '../../../marche/services/marche.service';
+import { STATUTS_COMMANDE } from '../../../marche/models/marche.model';
 import { DatePipe } from '@angular/common';
 import {
   Component,
@@ -29,7 +31,12 @@ import { LIBELLES_TYPE_COMPTE } from '../../../utilisateurs/models/utilisateur.m
 import { UtilisateurService } from '../../../utilisateurs/services/utilisateur.service';
 import { formaterDuree } from '../../../videos/models/video.model';
 import { VideoService } from '../../../videos/services/video.service';
-import { estPropositionUstensile, INFOS_TYPES, lienCible, NotificationResponse } from '../../models/notification.model';
+import {
+  estPropositionUstensile,
+  INFOS_TYPES,
+  lienCible,
+  NotificationResponse,
+} from '../../models/notification.model';
 import { IngredientResponse } from '../../../ingredients/models/ingredient.model';
 //import { IngredientService } from '../../../ingredients/services/ingredient.service';
 import { UstensileResponse } from '../../../ustensiles/models/ustensile.model';
@@ -88,6 +95,7 @@ export class Notifications implements OnInit {
   private utilisateurService = inject(UtilisateurService);
   private ingredientService = inject(IngredientService);
   private ustensileService = inject(UstensileService);
+  private marcheService = inject(MarcheService);
   private toast = inject(NotificationService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -341,6 +349,56 @@ export class Notifications implements OnInit {
                   ),
                 ),
               );
+      // Marché : la commande concernée
+      case 'AUCUN_FOURNISSEUR':
+      case 'AUCUN_LIVREUR':
+      case 'ECHEC_LIVRAISON':
+      case 'LITIGE_OUVERT':
+      case 'LITIGE_RESOLU':
+      case 'CODE_LIVRAISON_BLOQUE':
+      case 'VERSEMENT_ECHOUE':
+        return this.marcheService.getCommande(id).pipe(
+          map(({ resume, client, fournisseur }) => ({
+            titre: `Commande ${resume.reference}`,
+            sousTitre: `${client.nom}${fournisseur ? ' · ' + fournisseur.nom : ''}`,
+            image: null,
+            video: null,
+            statut: null,
+            details: [
+              STATUTS_COMMANDE[resume.statut]?.libelle ?? resume.statut,
+              `${(resume.montant ?? resume.montantProduits).toLocaleString('fr-FR')} FCFA`,
+            ],
+          })),
+        );
+      // Demande pour devenir livreur : encore cuisinier, ou déjà livreur une fois validée
+      case 'DEMANDE_LIVREUR':
+        return n.acteurRole === 'CUISINIER'
+          ? this.utilisateurService
+              .getCuisinier(id)
+              .pipe(
+                map((c) =>
+                  this.apercuCompte(
+                    `${c.prenom} ${c.nom}`,
+                    c.email ?? c.telephone,
+                    c.photoProfil,
+                    'EN_ATTENTE',
+                    ['Cuisinier → livreur'],
+                  ),
+                ),
+              )
+          : this.utilisateurService
+              .getLivreur(id)
+              .pipe(
+                map((l) =>
+                  this.apercuCompte(
+                    `${l.prenom} ${l.nom}`,
+                    l.email ?? l.telephone,
+                    l.photoProfil,
+                    l.statutRole,
+                    ['Livreur'],
+                  ),
+                ),
+              );
       case 'ADMIN_AJOUTE':
         return this.utilisateurService
           .getAdmin(id)
@@ -357,12 +415,16 @@ export class Notifications implements OnInit {
           );
       case 'CATALOGUE_A_VALIDER': {
         const ustensile = estPropositionUstensile(n);
-        const element$: Observable<{ element: IngredientResponse | UstensileResponse; detail: string | null }> =
-          ustensile
-            ? this.ustensileService.getById(id).pipe(map((u) => ({ element: u, detail: u.description })))
-            : this.ingredientService
-                .getById(id)
-                .pipe(map((i) => ({ element: i, detail: i.unite ? `Unité : ${i.unite}` : null })));
+        const element$: Observable<{
+          element: IngredientResponse | UstensileResponse;
+          detail: string | null;
+        }> = ustensile
+          ? this.ustensileService
+              .getById(id)
+              .pipe(map((u) => ({ element: u, detail: u.description })))
+          : this.ingredientService
+              .getById(id)
+              .pipe(map((i) => ({ element: i, detail: i.unite ? `Unité : ${i.unite}` : null })));
         return element$.pipe(
           map(({ element, detail }) => ({
             titre: element.nom,

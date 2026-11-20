@@ -119,14 +119,14 @@
 .pastille-active {
   border-color: var(--gw-cacao);
   background: var(--gw-cacao);
-  color: var(--gw-blanc);
+  color: var(--gw-sur-plein);
 
   ng-icon {
     color: var(--gw-terre-cuite);
   }
 
   .pastille-nombre {
-    background: rgb(255 255 255 / 0.18);
+    background: color-mix(in srgb, var(--gw-sur-plein) 18%, transparent);
   }
 }
 

@@ -10,6 +10,7 @@ import { AValiderService } from '../../../core/services/a-valider.service';
 import { ConfirmationService } from '../../../core/services/confirmation.service';
 import { FilArianeService } from '../../../core/services/fil-ariane.service';
 import { SessionService } from '../../../core/services/session.service';
+import { ChoixTheme, ThemeService } from '../../../core/services/theme.service';
 import {
   INFOS_TYPES,
   NotificationResponse,
@@ -49,6 +50,14 @@ interface ElementAValider {
 })
 export class Header {
   protected session = inject(SessionService);
+  protected theme = inject(ThemeService);
+
+  /** Choix du menu Apparence. */
+  protected readonly themes: { valeur: ChoixTheme; libelle: string; icone: string }[] = [
+    { valeur: 'clair', libelle: 'Clair', icone: 'lucideSun' },
+    { valeur: 'sombre', libelle: 'Sombre', icone: 'lucideMoon' },
+    { valeur: 'systeme', libelle: 'Comme le système', icone: 'lucideSunMoon' },
+  ];
   protected filAriane = inject(FilArianeService);
   protected aValider = inject(AValiderService);
   protected notifications = inject(NotificationsService);

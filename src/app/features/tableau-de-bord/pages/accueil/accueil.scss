@@ -109,21 +109,21 @@
   flex-basis: 0;
 }
 
-// Quatre tons de la charte, du plus sombre au plus vif (aplats, sans dégradé)
+// Quatre couleurs des répartitions (--gw-donnee-*), aplats sans dégradé
 .segment-0 {
-  background: var(--gw-cacao);
+  background: var(--gw-donnee-1);
 }
 
 .segment-1 {
-  background: var(--gw-action);
+  background: var(--gw-donnee-2);
 }
 
 .segment-2 {
-  background: var(--gw-karite);
+  background: var(--gw-donnee-3);
 }
 
 .segment-3 {
-  background: var(--gw-terre-cuite);
+  background: var(--gw-donnee-4);
 }
 
 .legende {
@@ -465,15 +465,15 @@
 }
 
 .part-publiees {
-  background: var(--gw-karite);
+  background: var(--gw-donnee-3);
 }
 
 .part-attente {
-  background: var(--gw-terre-cuite);
+  background: var(--gw-donnee-2);
 }
 
 .part-brouillons {
-  background: var(--gw-terre-cuite-pale-2);
+  background: var(--gw-donnee-4);
 }
 
 .part-rejetees {

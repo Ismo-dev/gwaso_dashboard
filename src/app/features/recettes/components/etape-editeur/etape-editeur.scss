@@ -19,7 +19,7 @@
   align-items: center;
   gap: var(--gw-espace-4);
   padding: var(--gw-espace-5) var(--gw-espace-5) var(--gw-espace-5) var(--gw-espace-6);
-  background: var(--gw-cacao);
+  background: var(--gw-cacao-fixe);
   color: var(--gw-sidebar-texte);
 
   button {
@@ -229,7 +229,7 @@
   cursor: pointer;
 
   &:hover {
-    background: rgb(112 61 30 / 0.12);
+    background: var(--gw-teinte-karite);
   }
 }
 
@@ -260,7 +260,7 @@
 .bouton-ajout {
   --mat-icon-button-state-layer-size: 48px;
   background: var(--gw-action);
-  color: var(--gw-blanc);
+  color: var(--gw-sur-plein);
 
   &:disabled {
     background: var(--gw-desactive);
