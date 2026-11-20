@@ -2,12 +2,19 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButton, MatIconButton } from '@angular/material/button';
-import { MatError, MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/form-field';
+import {
+  MatError,
+  MatFormField,
+  MatLabel,
+  MatPrefix,
+  MatSuffix,
+} from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { SessionService } from '../../../../core/services/session.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -33,6 +40,8 @@ export class Login {
   private session = inject(SessionService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  /** Logo clair sur le fond cacao du thème sombre. */
+  protected theme = inject(ThemeService);
 
   protected formulaire = inject(FormBuilder).nonNullable.group({
     identifiant: ['', Validators.required],

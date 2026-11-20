@@ -85,7 +85,7 @@
   height: 32px;
   border-radius: 50%;
   background: var(--gw-cacao);
-  color: var(--gw-blanc);
+  color: var(--gw-sur-plein);
   font-weight: 600;
 }
 
@@ -361,7 +361,7 @@
 }
 
 .resume-media {
-  background: var(--gw-cacao);
+  background: var(--gw-cacao-fixe);
   color: var(--gw-sidebar-texte);
 }
 
@@ -517,7 +517,7 @@
   .point-repere {
     border-color: var(--gw-action);
     background: var(--gw-action);
-    color: var(--gw-blanc);
+    color: var(--gw-sur-plein);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--gw-action) 18%, transparent);
   }
 
@@ -603,7 +603,7 @@
     cursor: pointer;
 
     &:hover {
-      background: rgb(112 61 30 / 0.12);
+      background: var(--gw-teinte-karite);
     }
   }
 }

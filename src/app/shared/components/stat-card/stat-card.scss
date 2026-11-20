@@ -102,19 +102,19 @@
 }
 
 .ton-cacao {
-  background: var(--gw-cacao);
+  background: var(--gw-donnee-1);
 }
 
 .ton-terre {
-  background: var(--gw-terre-cuite);
+  background: var(--gw-donnee-2);
 }
 
 .ton-karite {
-  background: var(--gw-karite);
+  background: var(--gw-donnee-3);
 }
 
 .ton-sable {
-  background: var(--gw-terre-cuite-pale-2);
+  background: var(--gw-donnee-4);
 }
 
 @include ecran.mobile {

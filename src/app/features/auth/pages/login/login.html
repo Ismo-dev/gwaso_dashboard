@@ -1,6 +1,12 @@
 <main class="page-connexion">
   <div class="colonne">
-    <img class="logo apparition" src="images/logo-gwaso.png" alt="Gwaso" width="120" height="128" />
+    <img
+      class="logo apparition"
+      [src]="theme.sombre() ? 'images/logo-gwaso-clair.png' : 'images/logo-gwaso.png'"
+      alt="Gwaso"
+      width="120"
+      height="128"
+    />
 
     <section class="carte apparition" aria-labelledby="titre-connexion">
       <p class="surtitre">Administration</p>
@@ -17,14 +23,26 @@
       <form [formGroup]="formulaire" (ngSubmit)="connecter()" novalidate>
         <mat-form-field class="champ">
           <mat-label>Email ou téléphone</mat-label>
-          <ng-icon matPrefix class="icone-champ" name="lucideUser" size="1.125rem" aria-hidden="true" />
+          <ng-icon
+            matPrefix
+            class="icone-champ"
+            name="lucideUser"
+            size="1.125rem"
+            aria-hidden="true"
+          />
           <input matInput formControlName="identifiant" autocomplete="username" />
           <mat-error>Saisissez votre email ou votre numéro de téléphone.</mat-error>
         </mat-form-field>
 
         <mat-form-field class="champ">
           <mat-label>Mot de passe</mat-label>
-          <ng-icon matPrefix class="icone-champ" name="lucideKeyRound" size="1.125rem" aria-hidden="true" />
+          <ng-icon
+            matPrefix
+            class="icone-champ"
+            name="lucideKeyRound"
+            size="1.125rem"
+            aria-hidden="true"
+          />
           <input
             matInput
             formControlName="motDePasse"
@@ -35,11 +53,17 @@
             matIconButton
             matSuffix
             type="button"
-            [attr.aria-label]="motDePasseVisible() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+            [attr.aria-label]="
+              motDePasseVisible() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'
+            "
             [attr.aria-pressed]="motDePasseVisible()"
             (click)="basculerMotDePasse()"
           >
-            <ng-icon [name]="motDePasseVisible() ? 'lucideEyeOff' : 'lucideEye'" size="1.25rem" aria-hidden="true" />
+            <ng-icon
+              [name]="motDePasseVisible() ? 'lucideEyeOff' : 'lucideEye'"
+              size="1.25rem"
+              aria-hidden="true"
+            />
           </button>
           <mat-error>Saisissez votre mot de passe.</mat-error>
         </mat-form-field>

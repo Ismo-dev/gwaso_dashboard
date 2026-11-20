@@ -10,7 +10,7 @@
   margin-bottom: var(--gw-espace-5);
   padding: var(--gw-espace-6);
   border-radius: var(--gw-rayon-lg);
-  background: var(--gw-cacao);
+  background: var(--gw-cacao-fixe);
   color: var(--gw-sidebar-texte);
 
   @include ecran.mobile {
@@ -422,7 +422,7 @@
   width: 40px;
   height: 40px;
   border-radius: var(--gw-rayon-sm);
-  background: var(--gw-cacao);
+  background: var(--gw-cacao-fixe);
   color: var(--gw-blanc);
 
   img {

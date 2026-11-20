@@ -394,7 +394,7 @@ h1 {
   height: 36px;
   border-radius: 50%;
   background: var(--gw-cacao);
-  color: var(--gw-blanc);
+  color: var(--gw-sur-plein);
   font-weight: 600;
 }
 
@@ -503,7 +503,7 @@ h1 {
     max-height: 280px;
     border-radius: var(--gw-rayon);
     object-fit: cover;
-    background: var(--gw-cacao);
+    background: var(--gw-cacao-fixe);
   }
 
   video {

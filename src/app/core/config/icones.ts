@@ -53,6 +53,9 @@ import {
   lucideShoppingBag,
   lucideMessageSquareWarning,
   lucideChartColumn,
+  lucideSun,
+  lucideMoon,
+  lucideSunMoon,
   lucideStore,
   lucideTrash2,
   lucideTriangleAlert,
@@ -227,4 +230,7 @@ export const ICONES = {
   lucideShoppingBag,
   lucideMessageSquareWarning,
   lucideChartColumn,
+  lucideSun,
+  lucideMoon,
+  lucideSunMoon,
 };

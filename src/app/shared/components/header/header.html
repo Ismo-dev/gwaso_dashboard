@@ -30,6 +30,39 @@
   </nav>
 
   <div class="actions">
+    <!-- Apparence : clair, sombre ou comme le système -->
+    <button
+      matIconButton
+      type="button"
+      class="bouton-theme"
+      [matMenuTriggerFor]="menuTheme"
+      [attr.aria-label]="theme.sombre() ? 'Apparence : sombre' : 'Apparence : claire'"
+    >
+      <ng-icon
+        [name]="theme.sombre() ? 'lucideMoon' : 'lucideSun'"
+        size="1.25rem"
+        aria-hidden="true"
+      />
+    </button>
+    <mat-menu #menuTheme="matMenu" xPosition="before">
+      @for (t of themes; track t.valeur) {
+        <button
+          mat-menu-item
+          type="button"
+          role="menuitemradio"
+          [attr.aria-checked]="theme.choix() === t.valeur"
+          [class.theme-actif]="theme.choix() === t.valeur"
+          (click)="theme.choisir(t.valeur)"
+        >
+          <ng-icon [name]="t.icone" size="1.125rem" aria-hidden="true" />
+          <span>{{ t.libelle }}</span>
+          @if (theme.choix() === t.valeur) {
+            <ng-icon class="theme-coche" name="lucideCheck" size="1rem" aria-hidden="true" />
+          }
+        </button>
+      }
+    </mat-menu>
+
     <!-- Notifications : ce qui s'est passé, dont ce qui attend une décision.
          Téléphone : la cloche ouvre directement la page (un menu flottant y serait trop étroit) -->
     @if (mobile()) {
@@ -77,7 +110,9 @@
         <p class="menu-titre">Notifications</p>
         <p class="menu-sous-titre">
           @if (notifications.nombreNonLues() > 0) {
-            {{ notifications.nombreNonLues() }} non lue{{ notifications.nombreNonLues() > 1 ? 's' : '' }}
+            {{ notifications.nombreNonLues() }} non lue{{
+              notifications.nombreNonLues() > 1 ? 's' : ''
+            }}
           } @else {
             Vous êtes à jour
           }
@@ -89,7 +124,11 @@
           <p class="a-valider-titre">À valider</p>
           <div class="a-valider-liste">
             @for (element of elementsAValider(); track element.libelle) {
-              <a class="a-valider-puce" [routerLink]="element.lien" [queryParams]="element.parametres">
+              <a
+                class="a-valider-puce"
+                [routerLink]="element.lien"
+                [queryParams]="element.parametres"
+              >
                 <ng-icon [name]="element.icone" size="0.875rem" aria-hidden="true" />
                 {{ element.libelle }}
                 <span class="gw-chiffres">{{ element.nombre }}</span>

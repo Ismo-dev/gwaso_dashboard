@@ -13,7 +13,7 @@
 
 // Succès : couleur de la sidebar (cacao), pastille verte pour le sens
 .toast-succes {
-  background: var(--gw-cacao);
+  background: var(--gw-cacao-fixe);
   color: var(--gw-sidebar-texte);
 
   .pastille {
@@ -27,7 +27,7 @@
 }
 
 .toast-info {
-  background: var(--gw-cacao);
+  background: var(--gw-cacao-fixe);
   color: var(--gw-sidebar-texte);
 
   .pastille {

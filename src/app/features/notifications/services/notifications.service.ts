@@ -21,7 +21,9 @@ export class NotificationsService {
 
   rechercher(filtres: FiltresNotifications = {}): Observable<PageResponse<NotificationResponse>> {
     return this.http
-      .get<ApiResponse<PageResponse<NotificationResponse>>>(this.url, { params: versParams(filtres) })
+      .get<ApiResponse<PageResponse<NotificationResponse>>>(this.url, {
+        params: versParams(filtres),
+      })
       .pipe(map((reponse) => reponse.data));
   }
 
@@ -32,9 +34,10 @@ export class NotificationsService {
   }
 
   rafraichirNombre(): void {
-    this.http
-      .get<ApiResponse<number>>(`${this.url}/nombre-non-lues`)
-      .subscribe({ next: (reponse) => this.nombreNonLues.set(reponse.data), error: () => undefined });
+    this.http.get<ApiResponse<number>>(`${this.url}/nombre-non-lues`).subscribe({
+      next: (reponse) => this.nombreNonLues.set(reponse.data),
+      error: () => undefined,
+    });
   }
 
   marquerLue(id: string): Observable<NotificationResponse> {
